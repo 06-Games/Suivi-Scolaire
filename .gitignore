@@ -1,0 +1,16 @@
+.gradle/
+.vs/
+.vscode/
+*.csproj
+*.leu
+*.sln
+*.userprefs
+/Library/*
+!/Library/PackageCache/
+/Library/PackageCache/com.unity.*
+/Library/PackageCache/nuget.*
+Logs/
+obj/
+Temp/
+put
+*.log
