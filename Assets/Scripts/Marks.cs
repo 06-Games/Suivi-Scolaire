@@ -15,7 +15,7 @@ public class Account
 
 public class Marks : MonoBehaviour
 {
-    public GameObject EcoleDirecte;
+    public GameObject FirstStart;
     public GameObject Loading;
 
     void Awake()
@@ -27,19 +27,26 @@ public class Marks : MonoBehaviour
 
     void Start()
     {
-        EcoleDirecte.SetActive(true);
-        for (int i = 0; i < EcoleDirecte.transform.childCount; i++) EcoleDirecte.transform.GetChild(i).gameObject.SetActive(false);
+        FirstStart.SetActive(true);
         try
         {
             var account = FileFormat.XML.Utils.XMLtoClass<Account>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Connection"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
             if (account.type == Account.Type.EcoleDirecte) StartCoroutine(SyncED(account, false));
         }
-        catch { EcoleDirecte.transform.Find("Connect").gameObject.SetActive(true); }
+        catch { }
+    }
+
+    public void ConnectWithED()
+    {
+        var EcoleDirecte = FirstStart.transform.Find("EcoleDirecte");
+        EcoleDirecte.gameObject.SetActive(true);
+        for (int i = 0; i < EcoleDirecte.childCount; i++) EcoleDirecte.GetChild(i).gameObject.SetActive(false);
+        EcoleDirecte.Find("Connect").gameObject.SetActive(true);
     }
 
     public void ConnectToED()
     {
-        var connect = EcoleDirecte.transform.Find("Connect").Find("Content");
+        var connect = FirstStart.transform.Find("EcoleDirecte").Find("Connect").Find("Content");
         var account = new Account()
         {
             type = Account.Type.EcoleDirecte,
@@ -52,6 +59,7 @@ public class Marks : MonoBehaviour
     IEnumerator SyncED(Account account, bool save)
     {
         Log("Establishing the connection with EcoleDirecte");
+        var EcoleDirecte = FirstStart.transform.Find("EcoleDirecte");
 
         //Get Token
         var accountRequest = UnityEngine.Networking.UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
@@ -59,47 +67,56 @@ public class Marks : MonoBehaviour
         var accountInfos = new FileFormat.JSON(accountRequest.downloadHandler.text);
         if (accountInfos.Value<int>("code") != 200)
         {
-            EcoleDirecte.transform.Find("Connect").Find("Content").Find("Error").GetComponent<Text>().text = accountInfos.Value<string>("message");
+            EcoleDirecte.Find("Connect").Find("Content").Find("Error").GetComponent<Text>().text = accountInfos.Value<string>("message");
             Loading.SetActive(false);
             yield break;
         }
+        Logging.Log("Connected\n\n" + accountInfos);
 
-        if (account.child == null)
+        var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
+        if (Account.Value<string>("typeCompte") == "E")
         {
-            //Get eleves
-            var eleves = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault().SelectToken("profile").Value<JArray>("eleves");
-            var childs = EcoleDirecte.transform.Find("Childs");
-            var btns = childs.Find("btns");
-            for (int i = 1; i < btns.childCount; i++) Destroy(btns.GetChild(i).gameObject);
-            foreach (var eleve in eleves)
-            {
-                var btn = Instantiate(btns.GetChild(0).gameObject, btns);
-                btn.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(SyncChild(eleve)));
-                btn.transform.GetChild(0).GetComponent<Text>().text = eleve.Value<string>("prenom") + "\n" + eleve.Value<string>("nom");
-
-                //Get picture
-                var profileRequest = UnityEngine.Networking.UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
-                profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Eleves/{eleve.Value<string>("id")}/Notes");
-                yield return profileRequest.SendWebRequest();
-                if (!profileRequest.isHttpError)
-                {
-                    var tex = UnityEngine.Networking.DownloadHandlerTexture.GetContent(profileRequest);
-                    btn.GetComponent<Image>().sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-                }
-                else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
-
-
-                btn.SetActive(true);
-            }
-
-            EcoleDirecte.transform.Find("Connect").gameObject.SetActive(false);
-            childs.gameObject.SetActive(true);
-            Loading.SetActive(false);
+            StartCoroutine(SyncChild(Account));
         }
-        else
+        else if (Account.Value<string>("typeCompte") == "2")
         {
-            var eleve = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault().SelectToken("profile").Value<JArray>("eleves").FirstOrDefault(e => e.Value<string>("id") == account.child);
-            StartCoroutine(SyncChild(eleve));
+            if (account.child == null)
+            {
+                //Get eleves
+                var eleves = Account.SelectToken("profile").Value<JArray>("eleves");
+                var childs = EcoleDirecte.Find("Childs");
+                var btns = childs.Find("btns");
+                for (int i = 1; i < btns.childCount; i++) Destroy(btns.GetChild(i).gameObject);
+                foreach (var eleve in eleves)
+                {
+                    var btn = Instantiate(btns.GetChild(0).gameObject, btns);
+                    btn.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(SyncChild(eleve)));
+                    btn.transform.GetChild(0).GetComponent<Text>().text = eleve.Value<string>("prenom") + "\n" + eleve.Value<string>("nom");
+
+                    //Get picture
+                    var profileRequest = UnityEngine.Networking.UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
+                    profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Eleves/{eleve.Value<string>("id")}/Notes");
+                    yield return profileRequest.SendWebRequest();
+                    if (!profileRequest.isHttpError)
+                    {
+                        var tex = UnityEngine.Networking.DownloadHandlerTexture.GetContent(profileRequest);
+                        btn.GetComponent<Image>().sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+                    }
+                    else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
+
+
+                    btn.SetActive(true);
+                }
+
+                childs.gameObject.SetActive(true);
+                EcoleDirecte.Find("Connect").gameObject.SetActive(false);
+                Loading.SetActive(false);
+            }
+            else
+            {
+                var eleve = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault().SelectToken("profile").Value<JArray>("eleves").FirstOrDefault(e => e.Value<string>("id") == account.child);
+                StartCoroutine(SyncChild(eleve));
+            }
         }
 
         IEnumerator SyncChild(JToken eleve)
@@ -112,7 +129,13 @@ public class Marks : MonoBehaviour
             Log("Getting marks");
             var markRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{eleve.Value<string>("id")}/notes.awp?verbe=get&", $"data={{\"token\": \"{accountInfos.Value<string>("token")}\"}}");
             yield return markRequest.SendWebRequest();
-            var marks = new FileFormat.JSON(markRequest.downloadHandler.text).jToken.SelectToken("data.notes").Values<JObject>().Select(obj => new Note()
+            var markR = new FileFormat.JSON(markRequest.downloadHandler.text);
+            if(markR.Value<int>("code") != 200)
+            {
+                Debug.LogError("Error getting marks, server returned \"" + markR.Value<string>("message") + "\"");
+                yield break;
+            }
+            var marks = markR.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Note()
             {
                 nom = obj.Value<string>("devoir"),
                 codePeriode = obj.Value<string>("codePeriode"),
