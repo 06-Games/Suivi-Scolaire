@@ -57,6 +57,12 @@ public class Marks : MonoBehaviour
         var accountRequest = UnityEngine.Networking.UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
         yield return accountRequest.SendWebRequest();
         var accountInfos = new FileFormat.JSON(accountRequest.downloadHandler.text);
+        if (accountInfos.Value<int>("code") != 200)
+        {
+            EcoleDirecte.transform.Find("Connect").Find("Content").Find("Error").GetComponent<Text>().text = accountInfos.Value<string>("message");
+            Loading.SetActive(false);
+            yield break;
+        }
 
         if (account.child == null)
         {
