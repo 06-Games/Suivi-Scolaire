@@ -981,7 +981,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fps: 60
-  SpriteSheet: Assets/Images/Loading.png
+  SpriteSheet:
+    m_AssetGUID: a4c15991e3567b44d8a4b11591991099
 --- !u!114 &800770454
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1046,6 +1047,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 178404748}
   - {fileID: 683037529}
   - {fileID: 704541289}
   - {fileID: 912468746}

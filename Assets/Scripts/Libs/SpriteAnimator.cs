@@ -3,13 +3,12 @@ using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.AddressableAssets;
 
 [RequireComponent(typeof(Image))]
 public class SpriteAnimator : MonoBehaviour
 {
     public int fps;
-    public string SpriteSheet;
+    public UnityEngine.AddressableAssets.AssetReference SpriteSheet;
     Sprite[] frames;
 
     Image spriteRenderer;
@@ -18,11 +17,15 @@ public class SpriteAnimator : MonoBehaviour
     public int currentFrame { get; private set; }
     public bool loop { get; private set; }
 
-    void Awake() { 
+    void Awake()
+    {
         spriteRenderer = GetComponent<Image>();
-        Addressables.LoadAssetAsync<IList<Sprite>>(SpriteSheet).Completed += (a) => { 
-            frames = a.Result?.ToArray(); 
-            if(gameObject.activeInHierarchy) Play(); 
+        spriteRenderer.enabled = false;
+        SpriteSheet.LoadAssetAsync<IList<Sprite>>().Completed += (a) =>
+        {
+            frames = a.Result?.ToArray();
+            if (gameObject.activeInHierarchy) Play();
+            spriteRenderer.enabled = true;
         };
     }
     void OnEnable() { Play(); }
@@ -36,7 +39,8 @@ public class SpriteAnimator : MonoBehaviour
 
     public void ForcePlay(bool loop = true, int startFrame = 0)
     {
-        if (frames != null) {
+        if (frames != null)
+        {
             this.loop = loop;
             playing = true;
             currentFrame = startFrame;
