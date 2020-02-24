@@ -18,6 +18,13 @@ public class Marks : MonoBehaviour
     public GameObject EcoleDirecte;
     public GameObject Loading;
 
+    void Awake()
+    {
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+        UnityThread.initUnityThread();
+        Logging.Initialise();
+    }
+
     void Start()
     {
         EcoleDirecte.SetActive(true);
@@ -73,7 +80,7 @@ public class Marks : MonoBehaviour
                     var tex = UnityEngine.Networking.DownloadHandlerTexture.GetContent(profileRequest);
                     btn.GetComponent<Image>().sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
                 }
-                else { Debug.LogWarning("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url); }
+                else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
 
 
                 btn.SetActive(true);
@@ -91,17 +98,12 @@ public class Marks : MonoBehaviour
 
         IEnumerator SyncChild(JToken eleve)
         {
-            Debug.Log(eleve.Value<string>("prenom") + " has been selected");
+            Logging.Log(eleve.Value<string>("prenom") + " has been selected");
             account.child = eleve.Value<string>("id");
-            if (save)
-            {
-                Debug.Log(FileFormat.XML.Utils.ClassToXML(account, false));
-                PlayerPrefs.SetString("Connection", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(account), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
-            }
-
-            Log("Getting marks");
+            if (save) PlayerPrefs.SetString("Connection", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(account), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
 
             //Get Marks
+            Log("Getting marks");
             var markRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{eleve.Value<string>("id")}/notes.awp?verbe=get&", $"data={{\"token\": \"{accountInfos.Value<string>("token")}\"}}");
             yield return markRequest.SendWebRequest();
             var marks = new FileFormat.JSON(markRequest.downloadHandler.text).jToken.SelectToken("data.notes").Values<JObject>().Select(obj => new Note()
@@ -141,7 +143,7 @@ public class Marks : MonoBehaviour
 
     void Log(string txt)
     {
-        Debug.Log(txt);
+        Logging.Log(txt);
         Loading.transform.GetChild(1).GetComponent<Text>().text = txt;
         Loading.SetActive(true);
     }
