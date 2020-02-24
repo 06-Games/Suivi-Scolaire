@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class Marks : MonoBehaviour
 {
     public GameObject EcoleDirecte;
+    public GameObject Loading;
 
     void Start()
     {
@@ -17,7 +18,7 @@ public class Marks : MonoBehaviour
     public void ConnectToED() { StartCoroutine(SyncED()); }
     IEnumerator SyncED()
     {
-        Debug.Log("Establishing the connection with EcoleDirecte");
+        Log("Establishing the connection with EcoleDirecte");
 
         var connect = EcoleDirecte.transform.Find("Connect");
         string id = connect.Find("ID").GetComponent<InputField>().text;
@@ -43,7 +44,7 @@ public class Marks : MonoBehaviour
             var profileRequest = UnityEngine.Networking.UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
             profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Eleves/{eleve.Value<string>("id")}/Notes");
             yield return profileRequest.SendWebRequest();
-            if(!profileRequest.isHttpError)
+            if (!profileRequest.isHttpError)
             {
                 var tex = UnityEngine.Networking.DownloadHandlerTexture.GetContent(profileRequest);
                 btn.GetComponent<Image>().sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
@@ -56,10 +57,12 @@ public class Marks : MonoBehaviour
 
         connect.gameObject.SetActive(false);
         childs.gameObject.SetActive(true);
+        Loading.SetActive(false);
 
         IEnumerator SyncChild(JToken eleve)
         {
             Debug.Log(eleve.Value<string>("prenom") + " has been selected");
+            Log("Getting marks");
 
             //Get Marks
             var markRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{eleve.Value<string>("id")}/notes.awp?verbe=get&", $"data={{\"token\": \"{accountInfos.Value<string>("token")}\"}}");
@@ -93,8 +96,17 @@ public class Marks : MonoBehaviour
                     libelleCat = c.Value<string>("libelleCompetence")
                 }).ToArray(),
             }).ToArray();
+
+            Loading.SetActive(false);
             Debug.Log(FileFormat.XML.Utils.ClassToXML(marks, false));
         }
+    }
+
+    void Log(string txt)
+    {
+        Debug.Log(txt);
+        Loading.transform.GetChild(1).GetComponent<Text>().text = txt;
+        Loading.SetActive(true);
     }
 }
 
