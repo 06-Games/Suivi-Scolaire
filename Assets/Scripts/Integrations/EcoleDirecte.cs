@@ -13,7 +13,7 @@ namespace Integrations
 
         public IEnumerator Connect(Account account, bool save)
         {
-            Log("Establishing the connection with EcoleDirecte");
+            Manager.UpdateLoadingStatus("Establishing the connection with EcoleDirecte");
 
             //Get Token
             var accountRequest = UnityEngine.Networking.UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
@@ -22,7 +22,7 @@ namespace Integrations
             if (accountInfos.Value<int>("code") != 200)
             {
                 OnError?.Invoke(accountInfos.Value<string>("message"));
-                Loading.SetActive(false);
+                Manager.HideLoadingPanel();
                 yield break;
             }
 
@@ -54,8 +54,8 @@ namespace Integrations
 
                         childs.Add((action, name, picture));
                     }
-                    Loading.SetActive(false);
-                    SelectChilds(childs);
+                    Manager.HideLoadingPanel();
+                    FirstStart.SelectChilds(childs);
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace Integrations
                 if (save) PlayerPrefs.SetString("Connection", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(account), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
 
                 //Get Marks
-                Log("Getting marks");
+                Manager.UpdateLoadingStatus("Getting marks");
                 var markRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{eleve.Value<string>("id")}/notes.awp?verbe=get&", $"data={{\"token\": \"{accountInfos.Value<string>("token")}\"}}");
                 yield return markRequest.SendWebRequest();
                 var markR = new FileFormat.JSON(markRequest.downloadHandler.text);
@@ -110,7 +110,7 @@ namespace Integrations
                     }).ToArray(),
                 }).ToArray());
 
-                Loading.SetActive(false);
+                Manager.HideLoadingPanel();
             }
         }
     }
