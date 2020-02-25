@@ -7,19 +7,20 @@ namespace Marks
 {
     public class Marks : MonoBehaviour
     {
-        internal static Period[] periods;
-        internal static Subject[] subjects;
-        internal static Mark[] marks;
+        internal static List<Period> periods;
+        internal static List<Subject> subjects;
+        internal static List<Mark> marks;
 
-        public void Initialise(Period[] _periods, Subject[] _subjects, Mark[] _marks)
+        public void Initialise(List<Period> _periods, List<Subject> _subjects, List<Mark> _marks)
         {
             periods = _periods;
             subjects = _subjects;
             marks = _marks;
 
             period.ClearOptions();
-            period.AddOptions(new System.Collections.Generic.List<string>() { "Tout" });
+            period.AddOptions(new List<string>() { "Tout" });
             period.AddOptions(periods.Select(p => p.name).ToList());
+            period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
 
             Refresh();
             Manager.OpenModule(gameObject);
@@ -45,7 +46,7 @@ namespace Marks
                 foreach (var m in marks.Where(m => period.value == 0 || m.period == periods[period.value - 1]))
                 {
                     var btn = Instantiate(subjectsPanel.GetChild(0).gameObject, subjectsPanel).transform;
-                    btn.GetComponent<Text>().text = m.mark == null ? "Abs" : (m.notSignificant ? $"({m.mark}<size=12>/{m.markOutOf}</size>)" : $"{m.mark}<size=12>/{m.markOutOf}</size>");
+                    btn.GetComponent<Text>().text = m.mark == null ? "Abs" : (m.notSignificant ? $"<color=grey>({m.mark}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=12>/{m.markOutOf}</size>");
                     btn.gameObject.SetActive(true);
 
                     if (m.mark != null && !m.notSignificant)

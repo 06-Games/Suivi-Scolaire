@@ -87,7 +87,7 @@ namespace Integrations
                     name = obj.Value<string>("periode"),
                     start = obj.Value<System.DateTime>("dateDebut"),
                     end = obj.Value<System.DateTime>("dateFin")
-                }).ToArray();
+                }).ToList();
 
                 var subjects = markResult.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
                     .Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>())
@@ -97,7 +97,7 @@ namespace Integrations
                         name = obj.SelectToken("discipline").Value<string>(),
                         coef = float.TryParse(obj.SelectToken("coef").Value<string>().Replace(",", "."), out var coef) ? coef : 1,
                         teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
-                    }).ToArray();
+                    }).ToList();
 
                 var marks = markResult.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Marks.Mark()
                 {
@@ -122,7 +122,7 @@ namespace Integrations
                     }).ToArray(),
                     classAverage = float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var m) ? m : (float?)null,
                     notSignificant = obj.Value<bool>("nonSignificatif")
-                }).ToArray();
+                }).ToList();
 
                 FirstStart.OnComplete?.Invoke(periods, subjects, marks);
 

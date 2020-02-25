@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Marks;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Integrations
 {
@@ -7,6 +9,6 @@ namespace Integrations
         public string Name => "Local";
         public bool NeedAuth => false;
 
-        public IEnumerator Connect(Account account, bool save) { FirstStart.OnComplete?.Invoke(new Marks.Period[0], new Marks.Subject[0], new Marks.Mark[0]); yield break; }
+        public IEnumerator Connect(Account account, bool save) { FirstStart.OnComplete?.Invoke(new List<Period>(), new List<Subject>(), new List<Mark>()); yield break; }
     }
 }

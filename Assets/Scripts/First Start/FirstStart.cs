@@ -1,10 +1,12 @@
 ﻿using Integrations;
+using Marks;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class FirstStart : MonoBehaviour
 {
-    public System.Action<Marks.Period[], Marks.Subject[], Marks.Mark[]> OnComplete;
+    public System.Action<List<Period>, List<Subject>, List<Mark>> OnComplete;
 
     public void Initialise()
     {
