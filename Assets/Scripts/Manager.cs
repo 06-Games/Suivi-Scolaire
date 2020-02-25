@@ -6,12 +6,12 @@ public class Manager : MonoBehaviour
 
     [Header("Modules")]
     public FirstStart FirstStart;
-    public Marks Marks;
+    public Marks.Marks Marks;
 
 
     void Start()
     {
-        FirstStart.OnComplete += (marks) => Debug.Log(FileFormat.XML.Utils.ClassToXML(marks, false));
+        FirstStart.OnComplete += Marks.Initialise;
         FirstStart.Initialise();
     }
 

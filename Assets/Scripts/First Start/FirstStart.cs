@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class FirstStart : MonoBehaviour
 {
-    public System.Action<Note[]> OnComplete;
+    public System.Action<Marks.Period[], Marks.Subject[], Marks.Mark[]> OnComplete;
 
     public void Initialise()
     {
@@ -14,7 +14,6 @@ public class FirstStart : MonoBehaviour
             auth.parent.gameObject.SetActive(true);
             auth.Find("Error").GetComponent<Text>().text = error;
         };
-        ModelClass.OnComplete += OnComplete;
         ModelClass.FirstStart = this;
 
         try

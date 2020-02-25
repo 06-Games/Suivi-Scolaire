@@ -14,7 +14,6 @@ namespace Integrations
     public class ModelClass
     {
         public static System.Action<string> OnError { get; set; }
-        public static System.Action<Note[]> OnComplete { get; set; }
         public static FirstStart FirstStart { get; set; }
     }
 
