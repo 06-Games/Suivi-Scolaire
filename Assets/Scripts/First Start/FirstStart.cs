@@ -44,7 +44,7 @@ public class FirstStart : MonoBehaviour
                 {
                     type = provider,
                     id = auth.Find("ID").GetComponent<InputField>().text,
-                    password = auth.Find("MDP").GetComponent<InputField>().text
+                    password = auth.Find("PASSWORD").GetComponent<InputField>().text
                 };
 
                 StartCoroutine(Provider.Connect(account, auth.Find("RememberMe").GetComponent<Toggle>().isOn));
