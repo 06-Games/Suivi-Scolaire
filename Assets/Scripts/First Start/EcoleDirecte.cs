@@ -126,7 +126,6 @@ namespace Integrations
 
                 FirstStart.OnComplete?.Invoke(periods, subjects, marks);
 
-                Debug.Log(markResult.jToken.SelectToken("data"));
                 Manager.HideLoadingPanel();
             }
         }

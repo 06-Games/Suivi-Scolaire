@@ -54,8 +54,19 @@ public class FirstStart : MonoBehaviour
         }
         else StartCoroutine(Provider.Connect(new Account() { type = provider }, false));
     }
+    public void ShowPassword(InputField pass)
+    {
+        pass.contentType = pass.contentType == InputField.ContentType.Password ? InputField.ContentType.Standard : InputField.ContentType.Password;
+        pass.Select();
+        StartCoroutine(Deselect());
+        System.Collections.IEnumerator Deselect()
+        {
+            yield return 0; // Skip the first frame in which this is called.
+            pass.MoveTextEnd(false); // Do this during the next frame.
+        }
+    }
 
-    public void SelectChilds(System.Collections.Generic.List<(System.Action, string, Sprite)> childs)
+    public void SelectChilds(List<(System.Action, string, Sprite)> childs)
     {
         var Childs = transform.Find("Childs").Find("Content");
         for (int i = 1; i < Childs.childCount; i++) Destroy(Childs.GetChild(i).gameObject);
