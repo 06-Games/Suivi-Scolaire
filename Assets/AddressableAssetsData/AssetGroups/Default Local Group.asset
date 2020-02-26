@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_Data:
     m_SerializedData: []
-  m_GUID: 08dbcdb838954254c9199aefdd317392
+  m_GUID: ff7bfa7d10c480e4cbd1410555644d0e
   m_SerializeEntries:
   - m_GUID: a4c15991e3567b44d8a4b11591991099
     m_Address: Assets/Images/Loading.png
@@ -25,5 +25,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 436339a71ad8dae4d809de4d2e34c8f4, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 59c67954450fab047b4c8ff46a474438, type: 2}
-    - {fileID: 11400000, guid: e9b94a26e5b08344b9240a736d520c76, type: 2}
+    - {fileID: 11400000, guid: 4015dba6a29c65f47bd2dfd228bdffc3, type: 2}
+    - {fileID: 11400000, guid: d8286aee55d24fe458c709a31eb5166e, type: 2}
