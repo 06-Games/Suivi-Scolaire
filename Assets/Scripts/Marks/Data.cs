@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using DateTime = System.DateTime;
 
 namespace Marks
 {
@@ -6,8 +6,8 @@ namespace Marks
     {
         public string id;
         public string name;
-        public System.DateTime start;
-        public System.DateTime end;
+        public DateTime start;
+        public DateTime end;
     }
 
     public class Subject
@@ -22,8 +22,8 @@ namespace Marks
     {
         //Date
         public Period period;
-        public System.DateTime date;
-        public System.DateTime dateAdded;
+        public DateTime date;
+        public DateTime dateAdded;
 
         //Infos
         public Subject subject;
