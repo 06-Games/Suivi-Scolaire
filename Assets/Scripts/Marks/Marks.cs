@@ -26,6 +26,14 @@ namespace Marks
             Manager.OpenModule(gameObject);
         }
 
+        public LayoutSwitcher topLayoutSwitcher;
+        public HorizontalLayoutGroup subjectBtns;
+        void Update()
+        {
+            topLayoutSwitcher.Switch(Screen.width > Screen.height ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
+            subjectBtns.childAlignment = topLayoutSwitcher.mode == LayoutSwitcher.Mode.Horizontal ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
+        }
+
         public Dropdown groupBy;
         public Dropdown period;
 
@@ -36,7 +44,7 @@ namespace Marks
         }
         void DisplayMarks(IEnumerable<Mark> marks, Subject selectedSubject = null)
         {
-            var top = transform.Find("Top");
+            var top = topLayoutSwitcher.transform;
             if(selectedSubject != null) top.Find("Subject Btns").Find("Subject").GetComponent<Text>().text = selectedSubject.name;
             for (int i = 1; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(selectedSubject == null ? i == 1 : i == 2);
             var contentPanel = transform.Find("Content");
@@ -74,7 +82,7 @@ namespace Marks
         }
         public void DisplaySubjects()
         {
-            var top = transform.Find("Top");
+            var top = topLayoutSwitcher.transform;
             for (int i = 1; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(i == 1);
             var contentPanel = transform.Find("Content");
             for (int i = 0; i < contentPanel.childCount; i++) contentPanel.GetChild(i).gameObject.SetActive(i == 1);
