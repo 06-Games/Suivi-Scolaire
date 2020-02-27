@@ -1,14 +1,15 @@
 ﻿using Marks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Integrations
 {
-    public class Local : ModelClass, Model
+    public class Local : Provider
     {
         public string Name => "Local";
         public bool NeedAuth => false;
-
-        public IEnumerator Connect(Account account, bool save) { FirstStart.OnComplete?.Invoke(new List<Period>(), new List<Subject>(), new List<Mark>()); yield break; }
+        
+        public IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete) { onComplete?.Invoke(new List<Period>(), new List<Subject>(), new List<Mark>()); yield break; }
     }
 }

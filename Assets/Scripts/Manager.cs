@@ -8,14 +8,18 @@ public class Manager : MonoBehaviour
     public FirstStart FirstStart;
     public Marks.Marks Marks;
 
-
+    Integrations.Provider provider;
     void Start()
     {
-        FirstStart.OnComplete += Marks.Initialise;
+        FirstStart.onComplete += (Provider) =>
+        {
+            provider = Provider;
+            UnityThread.executeCoroutine(provider.GetMarks(Marks.Initialise));
+        };
         FirstStart.Initialise();
     }
 
-    static Manager instance;
+    internal static Manager instance;
     void Awake()
     {
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;

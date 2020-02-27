@@ -6,24 +6,27 @@ using UnityEngine.UI;
 
 public class FirstStart : MonoBehaviour
 {
-    public System.Action<List<Period>, List<Subject>, List<Mark>> OnComplete;
-
+    public System.Action<Provider> onComplete;
     public void Initialise()
     {
-        ModelClass.OnError += (error) =>
+        Account account = null;
+        try { account = FileFormat.XML.Utils.XMLtoClass<Account>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Connection"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")); } catch {}
+        if (account != null)
         {
-            var auth = transform.Find("Auth").Find("Content");
-            auth.parent.gameObject.SetActive(true);
-            auth.Find("Error").GetComponent<Text>().text = error;
-        };
-        ModelClass.FirstStart = this;
-
-        try
-        {
-            var account = FileFormat.XML.Utils.XMLtoClass<Account>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Connection"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
-            UnityThread.executeCoroutine(Account.Types[account.type].Connect(account, false));
+            var Provider = Account.Providers[account.provider];
+            if (Provider.NeedAuth) UnityThread.executeCoroutine(Account.Providers[account.provider].GetModule<Auth>().Connect(account,
+                (a) => { onComplete?.Invoke(Provider); },
+                (error) =>
+                {
+                    gameObject.SetActive(true);
+                    var auth = transform.Find("Auth");
+                    auth.gameObject.SetActive(true);
+                    auth.Find("Content").Find("Error").GetComponent<Text>().text = error;
+                }
+            ));
+            else onComplete?.Invoke(Provider);
         }
-        catch
+        else
         {
             for (int i = 0; i < transform.childCount; i++) transform.GetChild(i).gameObject.SetActive(false);
             transform.Find("Welcome").gameObject.SetActive(true);
@@ -33,7 +36,7 @@ public class FirstStart : MonoBehaviour
 
     public void ConnectWith(string provider)
     {
-        var Provider = Account.Types[provider];
+        var Provider = Account.Providers[provider];
         if (Provider.NeedAuth)
         {
             var auth = transform.Find("Auth").Find("Content");
@@ -43,16 +46,27 @@ public class FirstStart : MonoBehaviour
                 auth.parent.gameObject.SetActive(false);
                 var account = new Account()
                 {
-                    type = provider,
+                    provider = provider,
                     id = auth.Find("ID").GetComponent<InputField>().text,
                     password = auth.Find("PASSWORD").GetComponent<InputField>().text
                 };
 
-                StartCoroutine(Provider.Connect(account, auth.Find("RememberMe").GetComponent<Toggle>().isOn));
+                StartCoroutine(Provider.GetModule<Auth>().Connect(account, (acc) =>
+                    {
+                        if (auth.Find("RememberMe").GetComponent<Toggle>().isOn)
+                            PlayerPrefs.SetString("Connection", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(acc), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
+                        onComplete?.Invoke(Provider);
+                    },
+                    (error) =>
+                    {
+                        auth.parent.gameObject.SetActive(true);
+                        auth.Find("Error").GetComponent<Text>().text = error;
+                    }
+                ));
             });
             auth.parent.gameObject.SetActive(true);
         }
-        else StartCoroutine(Provider.Connect(new Account() { type = provider }, false));
+        else onComplete?.Invoke(Provider);
     }
     public void ShowPassword(InputField pass)
     {
@@ -66,16 +80,16 @@ public class FirstStart : MonoBehaviour
         }
     }
 
-    public void SelectChilds(List<(System.Action, string, Sprite)> childs)
+    public static void SelectChilds(List<(System.Action, string, Sprite)> childs)
     {
-        var Childs = transform.Find("Childs").Find("Content");
+        var Childs = Manager.instance.FirstStart.transform.Find("Childs").Find("Content");
         for (int i = 1; i < Childs.childCount; i++) Destroy(Childs.GetChild(i).gameObject);
         foreach (var child in childs)
         {
             var btn = Instantiate(Childs.GetChild(0).gameObject, Childs);
             btn.GetComponent<Button>().onClick.AddListener(() => { Childs.parent.gameObject.SetActive(false); child.Item1(); });
             btn.transform.GetChild(0).GetComponent<Text>().text = child.Item2;
-            if(child.Item3 != null) btn.GetComponent<Image>().sprite = child.Item3;
+            if (child.Item3 != null) btn.GetComponent<Image>().sprite = child.Item3;
             btn.SetActive(true);
         }
         Childs.parent.gameObject.SetActive(true);
