@@ -2,7 +2,7 @@ Suivi Scolaire is a mobile/web application that allows easy use of different sch
 
 ## Supported School life services
 * [EcoleDirecte](https://www.ecoledirecte.com)
-* [Agora 06 (Soon)](https://www.agora06.fr)
+* [Agora 06](https://www.agora06.fr) (Soon)
 
 ## Supported modules
 * Marks
