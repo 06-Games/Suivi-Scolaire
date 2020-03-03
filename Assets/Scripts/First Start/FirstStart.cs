@@ -94,4 +94,10 @@ public class FirstStart : MonoBehaviour
         }
         Childs.parent.gameObject.SetActive(true);
     }
+
+    public void Logout()
+    {
+        PlayerPrefs.SetString("Connection", "");
+        Manager.OpenModule(gameObject);
+    }
 }

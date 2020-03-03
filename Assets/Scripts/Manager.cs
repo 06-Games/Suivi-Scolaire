@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class Manager : MonoBehaviour
     [Header("Modules")]
     public FirstStart FirstStart;
     public Marks.Marks Marks;
+    public GameObject[] notModules;
 
     Integrations.Provider provider;
     void Start()
@@ -29,9 +31,14 @@ public class Manager : MonoBehaviour
         OpenModule(gameObject); //Close all modules
     }
 
+    public void OpenModuleEditor(GameObject module) { OpenModule(module); }
     public static void OpenModule(GameObject module)
     {
-        for (int i = 0; i < instance.transform.childCount; i++) instance.transform.GetChild(i).gameObject.SetActive(false);
+        for (int i = 0; i < instance.transform.childCount; i++)
+        {
+            var obj = instance.transform.GetChild(i).gameObject;
+            if(!instance.notModules.Contains(obj)) obj.SetActive(false);
+        }
         module.SetActive(true);
     }
 

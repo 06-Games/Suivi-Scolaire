@@ -46,7 +46,7 @@ namespace Marks
         {
             var top = topLayoutSwitcher.transform;
             if(selectedSubject != null) top.Find("Subject Btns").Find("Subject").GetComponent<Text>().text = selectedSubject.name;
-            for (int i = 1; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(selectedSubject == null ? i == 1 : i == 2);
+            for (int i = 2; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(selectedSubject == null ? i == 2 : i == 3);
             var contentPanel = transform.Find("Content");
             for (int i = 0; i < contentPanel.childCount; i++) contentPanel.GetChild(i).gameObject.SetActive(i == 0);
             var subjectsPanel = contentPanel.Find("Marks").GetComponent<ScrollRect>().content;
@@ -83,7 +83,7 @@ namespace Marks
         public void DisplaySubjects()
         {
             var top = topLayoutSwitcher.transform;
-            for (int i = 1; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(i == 1);
+            for (int i = 2; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(i == 2);
             var contentPanel = transform.Find("Content");
             for (int i = 0; i < contentPanel.childCount; i++) contentPanel.GetChild(i).gameObject.SetActive(i == 1);
             var subjectsPanel = contentPanel.Find("Subjects").GetComponent<ScrollRect>().content;
