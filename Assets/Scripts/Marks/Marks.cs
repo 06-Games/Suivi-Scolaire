@@ -11,6 +11,16 @@ namespace Marks
         internal static List<Subject> subjects;
         internal static List<Mark> marks;
 
+        public void OnEnable()
+        {
+            if (!Manager.isReady) { gameObject.SetActive(false); return; }
+            if (marks == null) StartCoroutine(Manager.provider.GetMarks(Initialise));
+            else
+            {
+                Refresh();
+                Manager.OpenModule(gameObject);
+            }
+        }
         public void Initialise(IEnumerable<Period> _periods, IEnumerable<Subject> _subjects, IEnumerable<Mark> _marks)
         {
             periods = _periods.OrderBy(s => s.start).ToList();
@@ -45,7 +55,7 @@ namespace Marks
         void DisplayMarks(IEnumerable<Mark> marks, Subject selectedSubject = null)
         {
             var top = topLayoutSwitcher.transform;
-            if(selectedSubject != null) top.Find("Subject Btns").Find("Subject").GetComponent<Text>().text = selectedSubject.name;
+            if (selectedSubject != null) top.Find("Subject Btns").Find("Subject").GetComponent<Text>().text = selectedSubject.name;
             for (int i = 2; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(selectedSubject == null ? i == 2 : i == 3);
             var contentPanel = transform.Find("Content");
             for (int i = 0; i < contentPanel.childCount; i++) contentPanel.GetChild(i).gameObject.SetActive(i == 0);
@@ -73,7 +83,8 @@ namespace Marks
                 }
             }
 
-            var generalAverage = average.Sum(a => {
+            var generalAverage = average.Sum(a =>
+            {
                 var subAv = a.Value / coef[a.Key] * subCoef[a.Key];
                 return float.IsNaN(subAv) ? 0 : subAv;
             });

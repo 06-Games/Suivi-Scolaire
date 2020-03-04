@@ -1,4 +1,6 @@
-﻿using Marks;
+﻿using Home;
+using Homeworks;
+using Marks;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -23,6 +25,8 @@ namespace Integrations
         bool NeedAuth { get; }
 
         IEnumerator GetMarks(System.Action<List<Period>, List<Subject>, List<Mark>> onComplete);
+        IEnumerator GetHomeworks(System.Action<List<Homework>> onComplete);
+        IEnumerator GetHolidays(System.Action<List<Holiday>> onComplete);
     }
     public static class ProviderExtension
     {

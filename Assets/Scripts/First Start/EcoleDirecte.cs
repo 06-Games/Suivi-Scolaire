@@ -1,5 +1,8 @@
-﻿using Marks;
+﻿using Home;
+using Homeworks;
+using Marks;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +17,7 @@ namespace Integrations
 
         static string token;
         static string childID;
-        public IEnumerator Connect(Account account, System.Action<Account> onComplete, System.Action<string> onError)
+        public IEnumerator Connect(Account account, Action<Account> onComplete, System.Action<string> onError)
         {
             Manager.UpdateLoadingStatus("Establishing the connection with EcoleDirecte");
 
@@ -42,10 +45,10 @@ namespace Integrations
                 {
                     //Get eleves
                     var eleves = Account.SelectToken("profile").Value<JArray>("eleves");
-                    var childs = new List<(System.Action, string, Sprite)>();
+                    var childs = new List<(Action, string, Sprite)>();
                     foreach (var eleve in eleves)
                     {
-                        System.Action action = () =>
+                        Action action = () =>
                         {
                             Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                             account.child = childID = eleve.Value<string>("id");
@@ -80,7 +83,7 @@ namespace Integrations
             }
         }
 
-        public IEnumerator GetMarks(System.Action<List<Period>, List<Subject>, List<Mark>> onComplete)
+        public IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting marks");
             var markRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
@@ -96,8 +99,8 @@ namespace Integrations
             {
                 id = obj.Value<string>("idPeriode"),
                 name = obj.Value<string>("periode"),
-                start = obj.Value<System.DateTime>("dateDebut"),
-                end = obj.Value<System.DateTime>("dateFin")
+                start = obj.Value<DateTime>("dateDebut"),
+                end = obj.Value<DateTime>("dateFin")
             }).ToList();
 
             var subjects = markResult.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
@@ -114,8 +117,8 @@ namespace Integrations
             {
                 //Date
                 period = periods.FirstOrDefault(p => p.id == obj.Value<string>("codePeriode")),
-                date = obj.Value<System.DateTime>("date"),
-                dateAdded = obj.Value<System.DateTime>("dateSaisie"),
+                date = obj.Value<DateTime>("date"),
+                dateAdded = obj.Value<DateTime>("dateSaisie"),
 
                 //Infos
                 subject = subjects.FirstOrDefault(s => s.id == obj.Value<string>("codeMatiere")),
@@ -136,7 +139,51 @@ namespace Integrations
             }).ToList();
 
             onComplete.Invoke(periods, subjects, marks);
+            Manager.HideLoadingPanel();
+        }
 
+        public IEnumerator GetHomeworks(Action<List<Homework>> onComplete)
+        {
+            Manager.UpdateLoadingStatus("Getting Homeworks");
+            onComplete?.Invoke(null);
+            yield break;
+        }
+
+        public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
+        {
+            Manager.UpdateLoadingStatus("Getting holidays");
+            var establishmentRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            yield return establishmentRequest.SendWebRequest();
+            var establishmentResult = new FileFormat.JSON(establishmentRequest.downloadHandler.text);
+            if (establishmentResult.Value<int>("code") != 200)
+            {
+                Logging.Log("Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"", LogType.Error);
+                yield break;
+            }
+            var adress = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse"))).Replace("\r", "").Replace("\n", " ");
+            Logging.Log("The address of the establishment is " + adress);
+
+            var gouvRequest = UnityEngine.Networking.UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education&q={adress}&rows=1");
+            yield return gouvRequest.SendWebRequest();
+            var gouvResult = new FileFormat.JSON(gouvRequest.downloadHandler.text);
+            var academy = gouvResult.jToken.SelectToken("records[0].fields")?.Value<string>("libelle_academie");
+            Logging.Log("It depends on the academy of " + academy);
+
+            var holidaysRequest = UnityEngine.Networking.UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-calendrier-scolaire&q={academy}&sort=end_date");
+            yield return holidaysRequest.SendWebRequest();
+            var holidaysResult = new FileFormat.JSON(holidaysRequest.downloadHandler.text);
+            var holidays = holidaysResult.jToken.SelectToken("records").Select(v =>
+            {
+                var obj = v.SelectToken("fields");
+                return new Holiday()
+                {
+                    name = obj.Value<string>("description"),
+                    start = obj.Value<DateTime>("start_date"),
+                    end = obj.Value<DateTime>("end_date")
+                };
+            }).ToList();
+
+            onComplete?.Invoke(holidays);
             Manager.HideLoadingPanel();
         }
     }

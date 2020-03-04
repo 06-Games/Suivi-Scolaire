@@ -7,16 +7,19 @@ public class Manager : MonoBehaviour
 
     [Header("Modules")]
     public FirstStart FirstStart;
+    public Home.Home Home;
     public Marks.Marks Marks;
+    public Homeworks.Homeworks Homeworks;
     public GameObject[] notModules;
 
-    Integrations.Provider provider;
+    public static Integrations.Provider provider;
     void Start()
     {
         FirstStart.onComplete += (Provider) =>
         {
             provider = Provider;
-            UnityThread.executeCoroutine(provider.GetMarks(Marks.Initialise));
+            HideLoadingPanel();
+            OpenModule(Home.gameObject);
         };
         FirstStart.Initialise();
     }
@@ -28,7 +31,7 @@ public class Manager : MonoBehaviour
         UnityThread.initUnityThread();
         Logging.Initialise();
         instance = this;
-        OpenModule(gameObject); //Close all modules
+        for (int i = 0; i < instance.transform.childCount; i++) instance.transform.GetChild(i).gameObject.SetActive(false); //Close all modules
     }
 
     public void OpenModuleEditor(GameObject module) { OpenModule(module); }
@@ -37,9 +40,8 @@ public class Manager : MonoBehaviour
         for (int i = 0; i < instance.transform.childCount; i++)
         {
             var obj = instance.transform.GetChild(i).gameObject;
-            if(!instance.notModules.Contains(obj)) obj.SetActive(false);
+            if(!instance.notModules.Contains(obj)) obj.SetActive(obj == module);
         }
-        module.SetActive(true);
     }
 
     public static void UpdateLoadingStatus(string txt)
@@ -49,4 +51,6 @@ public class Manager : MonoBehaviour
         instance.Loading.SetActive(true);
     }
     public static void HideLoadingPanel() { instance.Loading.SetActive(false); }
+
+    public static bool isReady => provider != null;
 }
