@@ -22,6 +22,7 @@ public class LayoutSwitcher : MonoBehaviour
 
     [Header("Events")]
     public LayoutSwitcher[] childs;
+    public bool Inversed;
 
     Mode lastMode = (Mode)(-1);
     void Update()
@@ -65,7 +66,11 @@ public class LayoutSwitcher : MonoBehaviour
 
             UnityThread.executeInUpdate(() =>
             {
-                foreach (var child in childs) { child.Switch(mode); LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)child.transform); }
+                foreach (var child in childs)
+                {
+                    child.Switch(Inversed ? (mode == Mode.Vertical ? Mode.Horizontal : Mode.Vertical) : mode);
+                    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)child.transform);
+                }
             });
         }
         catch { }

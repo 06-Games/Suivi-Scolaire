@@ -1,5 +1,13 @@
 ﻿using DateTime = System.DateTime;
 
+public class Subject
+{
+    public string id;
+    public string name;
+    public float coef;
+    public string[] teachers;
+}
+
 namespace Marks
 {
     public class Period
@@ -8,14 +16,6 @@ namespace Marks
         public string name;
         public DateTime start;
         public DateTime end;
-    }
-
-    public class Subject
-    {
-        public string id;
-        public string name;
-        public float coef;
-        public string[] teachers;
     }
 
     public class Mark

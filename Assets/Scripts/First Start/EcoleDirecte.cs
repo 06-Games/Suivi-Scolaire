@@ -145,8 +145,42 @@ namespace Integrations
         public IEnumerator GetHomeworks(Action<List<Homework>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting Homeworks");
-            onComplete?.Invoke(null);
-            yield break;
+            var homeworksRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            yield return homeworksRequest.SendWebRequest();
+            var homeworksResult = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
+            if (homeworksResult.Value<int>("code") != 200)
+            {
+                Logging.Log("Error getting homeworks, server returned \"" + homeworksResult.Value<string>("message") + "\"", LogType.Error);
+                yield break;
+            }
+            var dates = homeworksResult.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
+
+            var homeworks = new List<Homework>();
+            foreach (var date in dates)
+            {
+                var request = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                yield return request.SendWebRequest();
+                var result = new FileFormat.JSON(request.downloadHandler.text);
+                if (result.Value<int>("code") != 200)
+                {
+                    Logging.Log($"Error getting homeworks for {date}, server returned \"" + result.Value<string>("message") + "\"", LogType.Error);
+                    continue;
+                }
+
+                homeworks.AddRange(result.jToken.SelectToken("data.matieres").Select(v => new Homework()
+                {
+                    subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                    forThe = DateTime.Parse(date),
+                    addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
+                    addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
+                    content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
+                    done = v.SelectToken("aFaire").Value<bool>("effectue"),
+                    exam = v.Value<bool>("interrogation")
+                }));
+            }
+
+            onComplete?.Invoke(homeworks);
+            Manager.HideLoadingPanel();
         }
 
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
@@ -160,7 +194,7 @@ namespace Integrations
                 Logging.Log("Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"", LogType.Error);
                 yield break;
             }
-            var adress = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse"))).Replace("\r", "").Replace("\n", " ");
+            var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
             Logging.Log("The address of the establishment is " + adress);
 
             var gouvRequest = UnityEngine.Networking.UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education&q={adress}&rows=1");
@@ -186,5 +220,13 @@ namespace Integrations
             onComplete?.Invoke(holidays);
             Manager.HideLoadingPanel();
         }
+
+        string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+        string HtmlToRichText(string html)
+        {
+            return System.Net.WebUtility.HtmlDecode(html).Replace("<p>", "").Replace("</p>", "")
+                .Replace("<a href=", "<link=").Replace("</a>", "</link>");
+        }
+        string RemoveEmptyLines(string lines) => System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
     }
 }
