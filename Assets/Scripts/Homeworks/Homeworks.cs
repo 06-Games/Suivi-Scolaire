@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -9,17 +10,33 @@ namespace Homeworks
 {
     public class Homeworks : MonoBehaviour
     {
-        internal static List<Homework> homeworks;
+        internal static Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
+        DateTime? periodStart = null;
+
         public void OnEnable()
         {
             StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
-            if (homeworks == null) StartCoroutine(Manager.provider.GetHomeworks(Initialise));
+            if (periodStart == null) Initialise(null);
             else Manager.OpenModule(gameObject);
         }
-        public void Initialise(IEnumerable<Homework> _homeworks)
+        public void Initialise(DateTime? start)
         {
-            homeworks = _homeworks.OrderBy(h => h.forThe).ToList();
+            periodStart = start;
+            var period = !start.HasValue ? null : new TimeRange(start.Value, start.Value + new TimeSpan(6, 0, 0, 0));
+            Action<List<Homework>> action = (homeworks) =>
+            {
+                Refresh(homeworks.OrderBy(h => h.forThe), period);
+                Manager.OpenModule(gameObject);
+            };
+            if (periodHomeworks.TryGetValue(period?.ToString("yyyy-MM-dd") ?? "Upcomming", out var _homeworks)) action(_homeworks);
+            else StartCoroutine(Manager.provider.GetHomeworks(period, (h) => { periodHomeworks.Add(period?.ToString("yyyy-MM-dd") ?? "Upcomming", h); action(h); }));
+        }
+        void Refresh(IEnumerable<Homework> homeworks, TimeRange period)
+        {
+            var WeekSwitcher = transform.Find("Top").Find("Week");
+            WeekSwitcher.Find("Text").GetComponent<Text>().text = period == null ? "A Venir" : $"du {period.Start.ToString("dd/MM")} au {period.End.ToString("dd/MM")}";
+            WeekSwitcher.Find("Next").GetComponent<Button>().interactable = period != null;
 
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);
@@ -46,20 +63,31 @@ namespace Homeworks
                 panel.gameObject.SetActive(false);
                 datePanel.gameObject.SetActive(true);
             }
-
-            Manager.OpenModule(gameObject);
         }
+
+        public void ChangePeriod(bool next)
+        {
+            var start = periodStart ?? DateTime.Now;
+            int delta = DayOfWeek.Monday - start.DayOfWeek;
+            if (delta > 0) delta -= 7;
+            DateTime monday = start.AddDays(delta);
+            var week = periodStart == null && !next ? monday : monday + new TimeSpan(next ? 7 : -7, 0, 0, 0);
+            Initialise(week > DateTime.Now ? null : (DateTime?)week);
+        }
+
 
         IEnumerator CheckOriantation()
         {
+            var Top = transform.Find("Top").GetComponent<LayoutSwitcher>();
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             while (true)
             {
                 bool paysage = Screen.width > Screen.height;
+                Top.Switch(paysage ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
                 for (int i = 1; i < Content.childCount; i++)
                 {
-                    foreach (var switcher in Content.GetChild(i).Find("Panel").GetComponentsInChildren<LayoutSwitcher>()) 
-                        switcher.Switch(Screen.width > Screen.height ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
+                    foreach (var switcher in Content.GetChild(i).Find("Panel").GetComponentsInChildren<LayoutSwitcher>())
+                        switcher.Switch(paysage ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
                 }
                 yield return new WaitWhile(() => paysage == Screen.width > Screen.height);
             }

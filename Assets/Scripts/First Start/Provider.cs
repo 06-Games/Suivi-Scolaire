@@ -1,6 +1,7 @@
 ﻿using Home;
 using Homeworks;
 using Marks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -24,9 +25,9 @@ namespace Integrations
         string Name { get; }
         bool NeedAuth { get; }
 
-        IEnumerator GetMarks(System.Action<List<Period>, List<Subject>, List<Mark>> onComplete);
-        IEnumerator GetHomeworks(System.Action<List<Homework>> onComplete);
-        IEnumerator GetHolidays(System.Action<List<Holiday>> onComplete);
+        IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete);
+        IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete);
+        IEnumerator GetHolidays(Action<List<Holiday>> onComplete);
     }
     public static class ProviderExtension
     {
@@ -37,5 +38,5 @@ namespace Integrations
         }
     }
 
-    public interface Auth { IEnumerator Connect(Account account, System.Action<Account> onComplete, System.Action<string> onError); }
+    public interface Auth { IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError); }
 }

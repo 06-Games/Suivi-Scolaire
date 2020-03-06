@@ -68,6 +68,7 @@ public class LayoutSwitcher : MonoBehaviour
             {
                 foreach (var child in childs)
                 {
+                    if (child == null) continue;
                     child.Switch(Inversed ? (mode == Mode.Vertical ? Mode.Horizontal : Mode.Vertical) : mode);
                     LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)child.transform);
                 }

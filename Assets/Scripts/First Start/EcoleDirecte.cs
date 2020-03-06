@@ -142,18 +142,24 @@ namespace Integrations
             Manager.HideLoadingPanel();
         }
 
-        public IEnumerator GetHomeworks(Action<List<Homework>> onComplete)
+        public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting Homeworks");
-            var homeworksRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
-            yield return homeworksRequest.SendWebRequest();
-            var homeworksResult = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
-            if (homeworksResult.Value<int>("code") != 200)
+
+            IEnumerable<string> dates = null;
+            if (period == null)
             {
-                Logging.Log("Error getting homeworks, server returned \"" + homeworksResult.Value<string>("message") + "\"", LogType.Error);
-                yield break;
+                var homeworksRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                yield return homeworksRequest.SendWebRequest();
+                var homeworksResult = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
+                if (homeworksResult.Value<int>("code") != 200)
+                {
+                    Logging.Log("Error getting homeworks, server returned \"" + homeworksResult.Value<string>("message") + "\"", LogType.Error);
+                    yield break;
+                }
+                dates = homeworksResult.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
-            var dates = homeworksResult.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
+            else dates = EachDay(period.Start, period.End).Select(d => d.ToString("yyyy-MM-dd"));
 
             var homeworks = new List<Homework>();
             foreach (var date in dates)
@@ -167,20 +173,29 @@ namespace Integrations
                     continue;
                 }
 
-                homeworks.AddRange(result.jToken.SelectToken("data.matieres").Select(v => new Homework()
+                try
                 {
-                    subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
-                    forThe = DateTime.Parse(date),
-                    addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
-                    addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
-                    content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
-                    done = v.SelectToken("aFaire").Value<bool>("effectue"),
-                    exam = v.Value<bool>("interrogation")
-                }));
+                    homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework()
+                    {
+                        subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                        forThe = DateTime.Parse(date),
+                        addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
+                        addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
+                        content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
+                        done = v.SelectToken("aFaire").Value<bool>("effectue"),
+                        exam = v.Value<bool>("interrogation")
+                    }));
+                }
+                catch { Debug.LogError(date + "\n\n" + result); }
             }
 
             onComplete?.Invoke(homeworks);
             Manager.HideLoadingPanel();
+        }
+        public IEnumerable<DateTime> EachDay(DateTime from, DateTime thru)
+        {
+            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
+                yield return day;
         }
 
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
