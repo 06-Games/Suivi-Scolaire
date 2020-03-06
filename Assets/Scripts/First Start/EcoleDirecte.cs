@@ -144,7 +144,7 @@ namespace Integrations
 
         public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
         {
-            Manager.UpdateLoadingStatus("Getting Homeworks");
+            Manager.UpdateLoadingStatus("Getting homeworks");
 
             IEnumerable<string> dates = null;
             if (period == null)
@@ -173,20 +173,16 @@ namespace Integrations
                     continue;
                 }
 
-                try
+                homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework()
                 {
-                    homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework()
-                    {
-                        subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
-                        forThe = DateTime.Parse(date),
-                        addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
-                        addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
-                        content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
-                        done = v.SelectToken("aFaire").Value<bool>("effectue"),
-                        exam = v.Value<bool>("interrogation")
-                    }));
-                }
-                catch { Debug.LogError(date + "\n\n" + result); }
+                    subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                    forThe = DateTime.Parse(date),
+                    addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
+                    addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
+                    content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
+                    done = v.SelectToken("aFaire").Value<bool>("effectue"),
+                    exam = v.Value<bool>("interrogation")
+                }));
             }
 
             onComplete?.Invoke(homeworks);
