@@ -13,11 +13,11 @@ namespace Integrations
     public class EcoleDirecte : Provider, Auth
     {
         public string Name => "EcoleDirecte";
-        public bool NeedAuth => true;
 
         static string token;
         static string childID;
-        public IEnumerator Connect(Account account, Action<Account> onComplete, System.Action<string> onError)
+
+        public IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError)
         {
             Manager.UpdateLoadingStatus("Establishing the connection with EcoleDirecte");
 
@@ -38,6 +38,7 @@ namespace Integrations
             {
                 account.child = childID = Account.Value<string>("id");
                 onComplete.Invoke(account);
+                Manager.HideLoadingPanel();
             }
             else if (Account.Value<string>("typeCompte") == "2")
             {
@@ -53,6 +54,7 @@ namespace Integrations
                             Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                             account.child = childID = eleve.Value<string>("id");
                             onComplete.Invoke(account);
+                            Manager.HideLoadingPanel();
                         };
                         var name = eleve.Value<string>("prenom") + "\n" + eleve.Value<string>("nom");
                         Sprite picture = null;
@@ -79,10 +81,10 @@ namespace Integrations
                     Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                     childID = eleve.Value<string>("id");
                     onComplete.Invoke(account);
+                    Manager.HideLoadingPanel();
                 }
             }
         }
-
         public IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting marks");
@@ -91,7 +93,7 @@ namespace Integrations
             var markResult = new FileFormat.JSON(markRequest.downloadHandler.text);
             if (markResult.Value<int>("code") != 200)
             {
-                Logging.Log("Error getting marks, server returned \"" + markResult.Value<string>("message") + "\"", LogType.Error);
+                Manager.FatalErrorDuringLoading(markResult.Value<string>("message"), "Error getting marks, server returned \"" + markResult.Value<string>("message") + "\"");
                 yield break;
             }
 
@@ -141,7 +143,6 @@ namespace Integrations
             onComplete.Invoke(periods, subjects, marks);
             Manager.HideLoadingPanel();
         }
-
         public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting homeworks");
@@ -154,7 +155,7 @@ namespace Integrations
                 var homeworksResult = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
                 if (homeworksResult.Value<int>("code") != 200)
                 {
-                    Logging.Log("Error getting homeworks, server returned \"" + homeworksResult.Value<string>("message") + "\"", LogType.Error);
+                    Manager.FatalErrorDuringLoading(homeworksResult.Value<string>("message"), "Error getting homeworks, server returned \"" + homeworksResult.Value<string>("message") + "\"");
                     yield break;
                 }
                 dates = homeworksResult.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
@@ -188,7 +189,6 @@ namespace Integrations
             onComplete?.Invoke(homeworks);
             Manager.HideLoadingPanel();
         }
-
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting holidays");
@@ -197,7 +197,7 @@ namespace Integrations
             var establishmentResult = new FileFormat.JSON(establishmentRequest.downloadHandler.text);
             if (establishmentResult.Value<int>("code") != 200)
             {
-                Logging.Log("Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"", LogType.Error);
+                Manager.FatalErrorDuringLoading(establishmentResult.Value<string>("message"), "Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"");
                 yield break;
             }
             var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");

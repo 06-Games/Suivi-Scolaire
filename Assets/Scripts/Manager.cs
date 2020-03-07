@@ -1,13 +1,15 @@
 ﻿using UnityEngine;
+using System.Linq;
 
 public class Manager : MonoBehaviour
 {
     public GameObject Loading;
+    public Sprite LoadingError;
 
     [Header("Modules")]
     public FirstStart FirstStart;
     public Home.Home Home;
-    public GameObject[] modules;
+    public Transform[] notModules;
 
     public static Integrations.Provider provider;
     void Start()
@@ -15,7 +17,6 @@ public class Manager : MonoBehaviour
         FirstStart.onComplete += (Provider) =>
         {
             provider = Provider;
-            HideLoadingPanel();
             OpenModule(Home.gameObject);
         };
         FirstStart.Initialise();
@@ -32,13 +33,37 @@ public class Manager : MonoBehaviour
     }
 
     public void OpenModuleEditor(GameObject module) => OpenModule(module);
-    public static void OpenModule(GameObject module) { foreach (var obj in instance.modules) obj.SetActive(obj == module); }
+    public static void OpenModule(GameObject module)
+    {
+        foreach (Transform obj in instance.transform)
+            if (!instance.notModules.Contains(obj)) obj.gameObject.SetActive(obj.gameObject == module);
+    }
 
     public static void UpdateLoadingStatus(string txt)
     {
         Logging.Log(txt);
-        instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = txt;
         instance.Loading.SetActive(true);
+        var img = instance.Loading.transform.GetChild(0);
+        img.GetComponent<UnityEngine.UI.Image>().color = Color.white;
+        img.GetComponent<SpriteAnimator>().Play();
+        instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = txt;
+    }
+    public static void FatalErrorDuringLoading(string txt, string log)
+    {
+        Logging.Log(log, LogType.Error);
+        var img = instance.Loading.transform.GetChild(0);
+        img.GetComponent<SpriteAnimator>().Stop();
+        img.GetComponent<UnityEngine.UI.Image>().sprite = instance.LoadingError;
+        img.GetComponent<UnityEngine.UI.Image>().color = Color.red;
+        instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = $"<color=red>{txt}</color>";
+        instance.Loading.SetActive(true);
+
+        UnityThread.executeCoroutine(Wait());
+        System.Collections.IEnumerator Wait()
+        {
+            yield return new WaitForSeconds(2);
+            HideLoadingPanel();
+        }
     }
     public static void HideLoadingPanel() => instance.Loading.SetActive(false);
 

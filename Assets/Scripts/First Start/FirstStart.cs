@@ -13,16 +13,19 @@ public class FirstStart : MonoBehaviour
         if (account != null)
         {
             var Provider = Account.Providers[account.provider];
-            if (Provider.NeedAuth) UnityThread.executeCoroutine(Account.Providers[account.provider].GetModule<Auth>().Connect(account,
-                (a) => { onComplete?.Invoke(Provider); },
-                (error) =>
-                {
-                    gameObject.SetActive(true);
-                    var auth = transform.Find("Auth");
-                    auth.gameObject.SetActive(true);
-                    auth.Find("Content").Find("Error").GetComponent<Text>().text = error;
-                }
-            ));
+            if (Provider.GetModule<Auth>() != null)
+            {
+                UnityThread.executeCoroutine(Account.Providers[account.provider].GetModule<Auth>().Connect(account,
+                    (a) => { onComplete?.Invoke(Provider); },
+                    (error) =>
+                    {
+                        gameObject.SetActive(true);
+                        var auth = transform.Find("Auth");
+                        auth.gameObject.SetActive(true);
+                        auth.Find("Content").Find("Error").GetComponent<Text>().text = error;
+                    }
+                ));
+            }
             else onComplete?.Invoke(Provider);
         }
         else
@@ -36,7 +39,7 @@ public class FirstStart : MonoBehaviour
     public void ConnectWith(string provider)
     {
         var Provider = Account.Providers[provider];
-        if (Provider.NeedAuth)
+        if (Provider.GetModule<Auth>() != null)
         {
             var auth = transform.Find("Auth").Find("Content");
             auth.Find("Connexion").GetComponent<Button>().onClick.RemoveAllListeners();

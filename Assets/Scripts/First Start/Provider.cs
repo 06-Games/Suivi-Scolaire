@@ -23,7 +23,6 @@ namespace Integrations
     public interface Provider
     {
         string Name { get; }
-        bool NeedAuth { get; }
 
         IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete);
         IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete);
