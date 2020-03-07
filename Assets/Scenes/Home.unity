@@ -12971,11 +12971,11 @@ MonoBehaviour:
   Loading: {fileID: 1751721386}
   FirstStart: {fileID: 382148292}
   Home: {fileID: 1852027007}
-  Marks: {fileID: 218061635}
-  Homeworks: {fileID: 1488206856}
-  notModules:
-  - {fileID: 1751721386}
-  - {fileID: 338733327}
+  modules:
+  - {fileID: 382148290}
+  - {fileID: 1852027004}
+  - {fileID: 218061633}
+  - {fileID: 1488206854}
 --- !u!1 &1939773327
 GameObject:
   m_ObjectHideFlags: 0

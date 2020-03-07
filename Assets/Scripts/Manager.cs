@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
@@ -8,9 +7,7 @@ public class Manager : MonoBehaviour
     [Header("Modules")]
     public FirstStart FirstStart;
     public Home.Home Home;
-    public Marks.Marks Marks;
-    public Homeworks.Homeworks Homeworks;
-    public GameObject[] notModules;
+    public GameObject[] modules;
 
     public static Integrations.Provider provider;
     void Start()
@@ -34,15 +31,8 @@ public class Manager : MonoBehaviour
         for (int i = 0; i < instance.transform.childCount; i++) instance.transform.GetChild(i).gameObject.SetActive(false); //Close all modules
     }
 
-    public void OpenModuleEditor(GameObject module) { OpenModule(module); }
-    public static void OpenModule(GameObject module)
-    {
-        for (int i = 0; i < instance.transform.childCount; i++)
-        {
-            var obj = instance.transform.GetChild(i).gameObject;
-            if(!instance.notModules.Contains(obj)) obj.SetActive(obj == module);
-        }
-    }
+    public void OpenModuleEditor(GameObject module) => OpenModule(module);
+    public static void OpenModule(GameObject module) { foreach (var obj in instance.modules) obj.SetActive(obj == module); }
 
     public static void UpdateLoadingStatus(string txt)
     {
@@ -50,7 +40,7 @@ public class Manager : MonoBehaviour
         instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = txt;
         instance.Loading.SetActive(true);
     }
-    public static void HideLoadingPanel() { instance.Loading.SetActive(false); }
+    public static void HideLoadingPanel() => instance.Loading.SetActive(false);
 
     public static bool isReady => provider != null;
 }

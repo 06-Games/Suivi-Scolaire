@@ -159,7 +159,7 @@ namespace Integrations
                 }
                 dates = homeworksResult.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
-            else dates = EachDay(period.Start, period.End).Select(d => d.ToString("yyyy-MM-dd"));
+            else dates = period.DayList().Select(d => d.ToString("yyyy-MM-dd"));
 
             var homeworks = new List<Homework>();
             foreach (var date in dates)
@@ -187,11 +187,6 @@ namespace Integrations
 
             onComplete?.Invoke(homeworks);
             Manager.HideLoadingPanel();
-        }
-        public IEnumerable<DateTime> EachDay(DateTime from, DateTime thru)
-        {
-            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
-                yield return day;
         }
 
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)

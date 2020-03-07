@@ -1,5 +1,4 @@
 ﻿using Integrations;
-using Marks;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +9,7 @@ public class FirstStart : MonoBehaviour
     public void Initialise()
     {
         Account account = null;
-        try { account = FileFormat.XML.Utils.XMLtoClass<Account>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Connection"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")); } catch {}
+        try { account = FileFormat.XML.Utils.XMLtoClass<Account>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Connection"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")); } catch { }
         if (account != null)
         {
             var Provider = Account.Providers[account.provider];

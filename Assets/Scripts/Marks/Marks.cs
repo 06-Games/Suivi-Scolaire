@@ -89,7 +89,7 @@ namespace Marks
                 return float.IsNaN(subAv) ? 0 : subAv;
             });
             var generalCoef = subCoef.Sum(s => coef[s.Key] == 0 ? 0 : s.Value);
-            transform.Find("Bottom").Find("Average").GetComponent<Text>().text = generalCoef > 0 ? $"Ma moyenne{(selectedSubject == null ? "générale" : "")}: {(generalAverage / generalCoef).ToString("0.##")}<size=12>/20</size>" : "";
+            transform.Find("Bottom").Find("Average").GetComponent<Text>().text = generalCoef > 0 ? $"Ma moyenne{(selectedSubject == null ? " générale" : "")}: {(generalAverage / generalCoef).ToString("0.##")}<size=12>/20</size>" : "";
         }
         public void DisplaySubjects()
         {
