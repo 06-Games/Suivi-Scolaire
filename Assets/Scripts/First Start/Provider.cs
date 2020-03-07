@@ -1,7 +1,4 @@
-﻿using Home;
-using Homeworks;
-using Marks;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -24,9 +21,10 @@ namespace Integrations
     {
         string Name { get; }
 
-        IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete);
-        IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete);
-        IEnumerator GetHolidays(Action<List<Holiday>> onComplete);
+        IEnumerator GetHolidays(Action<List<Home.Holiday>> onComplete);
+        IEnumerator GetSchedule(TimeRange period, Action<List<Schedule.Event>> onComplete);
+        IEnumerator GetHomeworks(TimeRange period, Action<List<Homeworks.Homework>> onComplete);
+        IEnumerator GetMarks(Action<List<Marks.Period>, List<Subject>, List<Marks.Mark>> onComplete);
     }
     public static class ProviderExtension
     {

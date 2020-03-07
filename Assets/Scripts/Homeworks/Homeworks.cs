@@ -40,10 +40,10 @@ namespace Homeworks
 
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);
+            var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
             foreach (var Homeworks in homeworks.GroupBy(h => h.forThe))
             {
                 var datePanel = Instantiate(Content.GetChild(0).gameObject, Content).transform;
-                var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
                 datePanel.Find("Head").Find("Date").GetComponent<Text>().text = Homeworks.Key.ToString("D", language);
 
                 var panel = datePanel.Find("Panel");
@@ -69,8 +69,7 @@ namespace Homeworks
         {
             var start = periodStart ?? DateTime.Now;
             int delta = DayOfWeek.Monday - start.DayOfWeek;
-            if (delta > 0) delta -= 7;
-            DateTime monday = start.AddDays(delta);
+            DateTime monday = start.AddDays(delta > 0 ? delta - 7 : delta);
             var week = periodStart == null && !next ? monday : monday + new TimeSpan(next ? 7 : -7, 0, 0, 0);
             Initialise(week > DateTime.Now ? null : (DateTime?)week);
         }

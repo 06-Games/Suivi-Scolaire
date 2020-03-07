@@ -37,8 +37,8 @@ namespace Integrations
             if (Account.Value<string>("typeCompte") == "E")
             {
                 account.child = childID = Account.Value<string>("id");
-                onComplete.Invoke(account);
                 Manager.HideLoadingPanel();
+                onComplete.Invoke(account);
             }
             else if (Account.Value<string>("typeCompte") == "2")
             {
@@ -53,8 +53,8 @@ namespace Integrations
                         {
                             Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                             account.child = childID = eleve.Value<string>("id");
-                            onComplete.Invoke(account);
                             Manager.HideLoadingPanel();
+                            onComplete.Invoke(account);
                         };
                         var name = eleve.Value<string>("prenom") + "\n" + eleve.Value<string>("nom");
                         Sprite picture = null;
@@ -80,8 +80,8 @@ namespace Integrations
                     var eleve = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault().SelectToken("profile").Value<JArray>("eleves").FirstOrDefault(e => e.Value<string>("id") == account.child);
                     Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                     childID = eleve.Value<string>("id");
-                    onComplete.Invoke(account);
                     Manager.HideLoadingPanel();
+                    onComplete.Invoke(account);
                 }
             }
         }
@@ -140,8 +140,8 @@ namespace Integrations
                 notSignificant = obj.Value<bool>("nonSignificatif")
             }).ToList();
 
-            onComplete.Invoke(periods, subjects, marks);
             Manager.HideLoadingPanel();
+            onComplete.Invoke(periods, subjects, marks);
         }
         public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
         {
@@ -186,8 +186,8 @@ namespace Integrations
                 }));
             }
 
-            onComplete?.Invoke(homeworks);
             Manager.HideLoadingPanel();
+            onComplete?.Invoke(homeworks);
         }
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
         {
@@ -225,6 +225,30 @@ namespace Integrations
 
             onComplete?.Invoke(holidays);
             Manager.HideLoadingPanel();
+        }
+        public IEnumerator GetSchedule(TimeRange period, Action<List<Schedule.Event>> onComplete)
+        {
+            Manager.UpdateLoadingStatus("Getting homeworks");
+
+            var request = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{childID}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
+            yield return request.SendWebRequest();
+            var result = new FileFormat.JSON(request.downloadHandler.text);
+            if (result.Value<int>("code") != 200)
+            {
+                Logging.Log($"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"", LogType.Error);
+            }
+
+            var events = result.jToken.SelectToken("data").Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere"))).Select(v => new Schedule.Event()
+            {
+                subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                start = v.Value<DateTime>("start_date"),
+                end = v.Value<DateTime>("end_date"),
+                room = v.Value<string>("salle"),
+                canceled = v.Value<bool>("isAnnule")
+            }).ToList();
+
+            Manager.HideLoadingPanel();
+            onComplete?.Invoke(events);
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
