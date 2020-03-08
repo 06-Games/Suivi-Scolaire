@@ -116,7 +116,7 @@ public class FirstStart : MonoBehaviour
         Manager.OpenModule(gameObject);
         Initialise();
 
-
+        transform.Find("Top").Find("Return").gameObject.SetActive(false);
         var auth = transform.Find("Content").Find("Auth");
         auth.Find("ID").GetComponent<InputField>().text = "";
         auth.Find("PASSWORD").GetComponent<InputField>().text = "";
