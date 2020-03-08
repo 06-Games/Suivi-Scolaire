@@ -40,7 +40,7 @@ namespace Integrations
                 Manager.HideLoadingPanel();
                 onComplete.Invoke(account);
             }
-            else if (Account.Value<string>("typeCompte") == "2")
+            else
             {
                 if (account.child == null)
                 {
