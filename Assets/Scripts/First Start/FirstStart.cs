@@ -20,9 +20,9 @@ public class FirstStart : MonoBehaviour
                     (error) =>
                     {
                         gameObject.SetActive(true);
-                        var auth = transform.Find("Auth");
+                        var auth = transform.Find("Content").Find("Auth");
                         auth.gameObject.SetActive(true);
-                        auth.Find("Content").Find("Error").GetComponent<Text>().text = error;
+                        auth.Find("Error").GetComponent<Text>().text = error;
                     }
                 ));
             }
@@ -30,8 +30,8 @@ public class FirstStart : MonoBehaviour
         }
         else
         {
-            for (int i = 0; i < transform.childCount; i++) transform.GetChild(i).gameObject.SetActive(false);
-            transform.Find("Welcome").gameObject.SetActive(true);
+            for (int i = 0; i < transform.Find("Content").childCount; i++) transform.Find("Content").GetChild(i).gameObject.SetActive(false);
+            transform.Find("Content").Find("Welcome").gameObject.SetActive(true);
             Manager.OpenModule(gameObject);
         }
     }
@@ -41,11 +41,17 @@ public class FirstStart : MonoBehaviour
         var Provider = Account.Providers[provider];
         if (Provider.GetModule<Auth>() != null)
         {
-            var auth = transform.Find("Auth").Find("Content");
+            var auth = transform.Find("Content").Find("Auth");
+
+            var returnBtn = transform.Find("Top").Find("Return").GetComponent<Button>();
+            returnBtn.onClick.RemoveAllListeners();
+            returnBtn.onClick.AddListener(() => { auth.gameObject.SetActive(false); transform.Find("Content").Find("Welcome").gameObject.SetActive(true); returnBtn.gameObject.SetActive(false); });
+            returnBtn.gameObject.SetActive(true);
+
             auth.Find("Connexion").GetComponent<Button>().onClick.RemoveAllListeners();
             auth.Find("Connexion").GetComponent<Button>().onClick.AddListener(() =>
             {
-                auth.parent.gameObject.SetActive(false);
+                auth.gameObject.SetActive(false);
                 var account = new Account()
                 {
                     provider = provider,
@@ -61,12 +67,12 @@ public class FirstStart : MonoBehaviour
                     },
                     (error) =>
                     {
-                        auth.parent.gameObject.SetActive(true);
+                        auth.gameObject.SetActive(true);
                         auth.Find("Error").GetComponent<Text>().text = error;
                     }
                 ));
             });
-            auth.parent.gameObject.SetActive(true);
+            auth.gameObject.SetActive(true);
         }
         else onComplete?.Invoke(Provider);
     }
@@ -84,22 +90,35 @@ public class FirstStart : MonoBehaviour
 
     public static void SelectChilds(List<(System.Action, string, Sprite)> childs)
     {
-        var Childs = Manager.instance.FirstStart.transform.Find("Childs").Find("Content");
+        var instance = Manager.instance.FirstStart.transform;
+        var Childs = instance.Find("Content").Find("Childs");
         for (int i = 1; i < Childs.childCount; i++) Destroy(Childs.GetChild(i).gameObject);
+
+        var returnBtn = instance.Find("Top").Find("Return").GetComponent<Button>();
+        returnBtn.onClick.RemoveAllListeners();
+        returnBtn.onClick.AddListener(() => { Childs.gameObject.SetActive(false); instance.Find("Content").Find("Auth").gameObject.SetActive(true); });
+        returnBtn.gameObject.SetActive(true);
+
         foreach (var child in childs)
         {
             var btn = Instantiate(Childs.GetChild(0).gameObject, Childs);
-            btn.GetComponent<Button>().onClick.AddListener(() => { Childs.parent.gameObject.SetActive(false); child.Item1(); });
+            btn.GetComponent<Button>().onClick.AddListener(() => { Childs.gameObject.SetActive(false); child.Item1(); });
             btn.transform.GetChild(0).GetComponent<Text>().text = child.Item2;
             if (child.Item3 != null) btn.GetComponent<Image>().sprite = child.Item3;
             btn.SetActive(true);
         }
-        Childs.parent.gameObject.SetActive(true);
+        Childs.gameObject.SetActive(true);
     }
 
     public void Logout()
     {
         PlayerPrefs.SetString("Connection", "");
         Manager.OpenModule(gameObject);
+        Initialise();
+
+
+        var auth = transform.Find("Content").Find("Auth");
+        auth.Find("ID").GetComponent<InputField>().text = "";
+        auth.Find("PASSWORD").GetComponent<InputField>().text = "";
     }
 }
