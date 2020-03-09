@@ -254,8 +254,12 @@ namespace Integrations
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
         string HtmlToRichText(string html)
         {
-            return System.Net.WebUtility.HtmlDecode(html).Replace("<p>", "").Replace("</p>", "")
-                .Replace("<a href=", "<link=").Replace("</a>", "</link>");
+            return System.Net.WebUtility.HtmlDecode(html)
+                .Replace("<p>", "").Replace("</p>", "")
+                .Replace("<a href=", "<link=").Replace("</a>", "</link>")
+                .Replace("<ul>", "").Replace("</ul>", "")
+                .Replace("<li>", "• ").Replace("</li>", "")
+                .Replace("\t", "");
         }
         string RemoveEmptyLines(string lines) => System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
     }
