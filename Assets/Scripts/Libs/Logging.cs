@@ -28,7 +28,7 @@ public static class Logging
         string path = Application.persistentDataPath + "/logs/";
         logFile = new FileInfo(path + DT + ".log");
         if (!logFile.Directory.Exists) Directory.CreateDirectory(logFile.DirectoryName);
-        Log("The game start", LogType.Log);
+        Log("The app started", LogType.Log);
     }
 
     public static void DeleteLogs()

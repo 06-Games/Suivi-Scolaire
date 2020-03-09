@@ -1,12 +1,14 @@
 ﻿using Home;
 using Homeworks;
 using Marks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Integrations
 {
@@ -22,7 +24,7 @@ namespace Integrations
             Manager.UpdateLoadingStatus("Establishing the connection with EcoleDirecte");
 
             //Get Token
-            var accountRequest = UnityEngine.Networking.UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
+            var accountRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
             yield return accountRequest.SendWebRequest();
             var accountInfos = new FileFormat.JSON(accountRequest.downloadHandler.text);
             if (accountInfos.Value<int>("code") != 200)
@@ -60,7 +62,7 @@ namespace Integrations
                         Sprite picture = null;
 
                         //Get picture
-                        var profileRequest = UnityEngine.Networking.UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
+                        var profileRequest = UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
                         profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Eleves/{eleve.Value<string>("id")}/Notes");
                         yield return profileRequest.SendWebRequest();
                         if (!profileRequest.isHttpError)
@@ -88,7 +90,7 @@ namespace Integrations
         public IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting marks");
-            var markRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return markRequest.SendWebRequest();
             var markResult = new FileFormat.JSON(markRequest.downloadHandler.text);
             if (markResult.Value<int>("code") != 200)
@@ -150,7 +152,7 @@ namespace Integrations
             IEnumerable<string> dates = null;
             if (period == null)
             {
-                var homeworksRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return homeworksRequest.SendWebRequest();
                 var homeworksResult = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
                 if (homeworksResult.Value<int>("code") != 200)
@@ -165,7 +167,7 @@ namespace Integrations
             var homeworks = new List<Homework>();
             foreach (var date in dates)
             {
-                var request = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return request.SendWebRequest();
                 var result = new FileFormat.JSON(request.downloadHandler.text);
                 if (result.Value<int>("code") != 200)
@@ -182,7 +184,14 @@ namespace Integrations
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
                     content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
                     done = v.SelectToken("aFaire").Value<bool>("effectue"),
-                    exam = v.Value<bool>("interrogation")
+                    exam = v.Value<bool>("interrogation"),
+                    documents = v.SelectToken("aFaire.documents").Select(doc => {
+                        WWWForm form = new WWWForm();
+                        form.AddField("token", token);
+                        form.AddField("leTypeDeFichier", doc.Value<string>("type"));
+                        form.AddField("fichierId", doc.Value<string>("id"));
+                        return (doc.Value<string>("libelle"), "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", form);
+                    })
                 }));
             }
 
@@ -192,7 +201,7 @@ namespace Integrations
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
         {
             Manager.UpdateLoadingStatus("Getting holidays");
-            var establishmentRequest = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            var establishmentRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return establishmentRequest.SendWebRequest();
             var establishmentResult = new FileFormat.JSON(establishmentRequest.downloadHandler.text);
             if (establishmentResult.Value<int>("code") != 200)
@@ -203,13 +212,13 @@ namespace Integrations
             var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
             Logging.Log("The address of the establishment is " + adress);
 
-            var gouvRequest = UnityEngine.Networking.UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education&q={adress}&rows=1");
+            var gouvRequest = UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education&q={adress}&rows=1");
             yield return gouvRequest.SendWebRequest();
             var gouvResult = new FileFormat.JSON(gouvRequest.downloadHandler.text);
             var academy = gouvResult.jToken.SelectToken("records[0].fields")?.Value<string>("libelle_academie");
             Logging.Log("It depends on the academy of " + academy);
 
-            var holidaysRequest = UnityEngine.Networking.UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-calendrier-scolaire&q={academy}&sort=end_date");
+            var holidaysRequest = UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-calendrier-scolaire&q={academy}&sort=end_date");
             yield return holidaysRequest.SendWebRequest();
             var holidaysResult = new FileFormat.JSON(holidaysRequest.downloadHandler.text);
             var holidays = holidaysResult.jToken.SelectToken("records").Select(v =>
@@ -230,7 +239,7 @@ namespace Integrations
         {
             Manager.UpdateLoadingStatus("Getting homeworks");
 
-            var request = UnityEngine.Networking.UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{childID}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{childID}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)

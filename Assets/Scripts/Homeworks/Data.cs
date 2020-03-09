@@ -1,4 +1,5 @@
-﻿using DateTime = System.DateTime;
+﻿using System.Collections.Generic;
+using DateTime = System.DateTime;
 
 namespace Homeworks
 {
@@ -11,5 +12,6 @@ namespace Homeworks
         public string content;
         public bool done;
         public bool exam;
+        public IEnumerable<(string, string, UnityEngine.WWWForm)> documents;
     }
 }

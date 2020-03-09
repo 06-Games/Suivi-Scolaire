@@ -56,6 +56,30 @@ namespace Homeworks
                     var infos = go.Find("Infos");
                     infos.Find("Subject").GetComponent<Text>().text = homework.subject?.name;
                     infos.Find("Extra").GetComponent<Text>().text = $"Ajouté le {homework.addedThe.ToString("dd/MM")} par {homework.addedBy}";
+                    var docs = infos.Find("Docs");
+                    foreach (var doc in homework.documents)
+                    {
+                        var docGo = Instantiate(docs.GetChild(0).gameObject, docs).transform;
+                        docGo.GetComponent<Text>().text = $"• {doc.Item1}";
+                        docGo.GetComponent<Button>().onClick.AddListener(() => {
+                            UnityThread.executeCoroutine(GetDoc());
+                            IEnumerator GetDoc()
+                            {
+                                var request = UnityEngine.Networking.UnityWebRequest.Post(doc.Item2, doc.Item3);
+                                request.SendWebRequest();
+                                while (!request.isDone)
+                                {
+                                    Manager.UpdateLoadingStatus($"Downloading: {(request.downloadProgress * 100).ToString("0")}%");
+                                    yield return new WaitForEndOfFrame();
+                                }
+                                Manager.HideLoadingPanel();
+                                var path = Application.temporaryCachePath + "/Homeworks___" + doc.Item1;
+                                System.IO.File.WriteAllBytes(path, request.downloadHandler.data);
+                                NativeShare.SharePC(path, fileName: doc.Item1);
+                            }
+                        });
+                        docGo.gameObject.SetActive(true);
+                    }
 
                     go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().text = homework.content;
                     go.gameObject.SetActive(true);
