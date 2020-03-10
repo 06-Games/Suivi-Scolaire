@@ -13,6 +13,9 @@ public class Menu : MonoBehaviour
         InitialPos = Panel.anchoredPosition;
         Panel.anchoredPosition = new Vector2(-InitialPos.x, InitialPos.y);
         SecondsPerPixel = 0.25F / (InitialPos.x * 2);
+
+        if (TryGetComponent<UnityEngine.EventSystems.EventTrigger>(out var eT)) Destroy(eT);
+        if (Panel.TryGetComponent(out eT)) Destroy(eT);
     }
 
     IEnumerator Mvt(Vector2 objective, System.Action onComplete = null)
