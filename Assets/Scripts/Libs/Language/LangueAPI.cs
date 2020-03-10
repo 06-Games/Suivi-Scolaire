@@ -25,7 +25,9 @@ public class LangueAPI
     /// <param name="arg">Text parsing arguments</param>
     public static string Get(string id, string dontExists, params string[] arg)
     {
-        if (!Load().TryGetValue(id, out string c)) c = dontExists; //If nothing is found, return the text of the variable "dontExists"
+        string c = "";
+        if (string.IsNullOrEmpty(id)) c = dontExists;
+        else if (!Load().TryGetValue(id, out c)) c = dontExists; //If nothing is found, return the text of the variable "dontExists"
         for (int i = 0; i < arg.Length; i++) c = c?.Replace("[" + i + "]", arg[i]); //Insert the arguments in the text
         return Format(c); //Returns the text after formatting (line breaks, tabs, ...)
     }
@@ -44,28 +46,24 @@ public class LangueAPI
     }
 
     static Dictionary<string, string> data;
-    public static Dictionary<string, string> Load(string persistentPath = null)
+    public static Dictionary<string, string> Load()
     {
         if (data != null) return data;
 
         var dic = new Dictionary<string, string>();
+        Logging.Log($"User language is {UnityEngine.Application.systemLanguage.ToString()}");
         for (int i = 0; i < 2; i++)
         {
-            string path = (persistentPath ?? UnityEngine.Application.streamingAssetsPath) + "/Languages/" + "/" + (i == 0 ? UnityEngine.Application.systemLanguage.ToString() : "English") + ".lang";
-            if (File.Exists(path))
+            var doc = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Languages/" + (i == 0 ? UnityEngine.Application.systemLanguage.ToString() : "English"));
+            if (doc == null) continue;
+            foreach (var line in doc.text.Split('\n'))
             {
-                StreamReader file = new StreamReader(@path);
-                string line;
-                while ((line = file.ReadLine()) != null)
-                {
-                    int equalIndex = line.IndexOf(" = ");
-                    if (equalIndex < 0) continue;
+                int equalIndex = line.IndexOf(" = ");
+                if (equalIndex < 0) continue;
 
-                    string key = line.Substring(0, equalIndex);
-                    string value = line.Substring(equalIndex + 3);
-                    if (!dic.ContainsKey(key)) dic.Add(key, value);
-                }
-                file.Close();
+                string key = line.Substring(0, equalIndex);
+                string value = line.Substring(equalIndex + 3);
+                if (!dic.ContainsKey(key)) dic.Add(key, value);
             }
         }
         data = dic;

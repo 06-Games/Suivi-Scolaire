@@ -69,13 +69,16 @@ namespace Homeworks
                                 request.SendWebRequest();
                                 while (!request.isDone)
                                 {
-                                    Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", (request.downloadProgress * 100).ToString("0"));
+                                    Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", false, (request.downloadProgress * 100).ToString("0"));
                                     yield return new WaitForEndOfFrame();
                                 }
                                 Manager.HideLoadingPanel();
                                 var path = Application.temporaryCachePath + "/Homeworks___" + doc.Item1;
                                 System.IO.File.WriteAllBytes(path, request.downloadHandler.data);
+
+#if UNITY_STANDALONE
                                 NativeShare.SharePC(path, fileName: doc.Item1);
+#endif
                             }
                         });
                         docGo.gameObject.SetActive(true);
