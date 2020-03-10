@@ -9,7 +9,6 @@ public class Manager : MonoBehaviour
     [Header("Modules")]
     public FirstStart FirstStart;
     public Home.Home Home;
-    public Transform[] notModules;
 
     public static Integrations.Provider provider;
     void Start()
@@ -35,8 +34,7 @@ public class Manager : MonoBehaviour
     public void OpenModuleEditor(GameObject module) => OpenModule(module);
     public static void OpenModule(GameObject module)
     {
-        foreach (Transform obj in instance.transform)
-            if (!instance.notModules.Contains(obj)) obj.gameObject.SetActive(obj.gameObject == module);
+        foreach (Transform obj in instance.transform) obj.gameObject.SetActive(obj.gameObject == module);
     }
 
     public static void UpdateLoadingStatus(string txt)
