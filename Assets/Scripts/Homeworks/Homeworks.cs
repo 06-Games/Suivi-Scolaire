@@ -35,7 +35,7 @@ namespace Homeworks
         void Refresh(IEnumerable<Homework> homeworks, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
-            WeekSwitcher.Find("Text").GetComponent<Text>().text = period == null ? "A Venir" : $"du {period.Start.ToString("dd/MM")} au {period.End.ToString("dd/MM")}";
+            WeekSwitcher.Find("Text").GetComponent<Text>().text = period == null ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", period.Start.ToString("dd/MM"), period.End.ToString("dd/MM"));
             WeekSwitcher.Find("Next").GetComponent<Button>().interactable = period != null;
 
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
@@ -55,7 +55,7 @@ namespace Homeworks
 
                     var infos = go.Find("Infos");
                     infos.Find("Subject").GetComponent<Text>().text = homework.subject?.name;
-                    infos.Find("Extra").GetComponent<Text>().text = $"Ajouté le {homework.addedThe.ToString("dd/MM")} par {homework.addedBy}";
+                    infos.Find("Extra").GetComponent<Text>().text = LangueAPI.Get("homeworks.added", "Added on [0] by [1]", homework.addedThe.ToString("dd/MM"), homework.addedBy);
                     var docs = infos.Find("Docs");
                     foreach (var doc in homework.documents)
                     {
@@ -69,7 +69,7 @@ namespace Homeworks
                                 request.SendWebRequest();
                                 while (!request.isDone)
                                 {
-                                    Manager.UpdateLoadingStatus($"Downloading: {(request.downloadProgress * 100).ToString("0")}%");
+                                    Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", (request.downloadProgress * 100).ToString("0"));
                                     yield return new WaitForEndOfFrame();
                                 }
                                 Manager.HideLoadingPanel();

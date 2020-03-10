@@ -1,0 +1,49 @@
+﻿welcome = Bienvenue
+welcome.import = Vous pouvez importer vos notes depuis
+welcome.import.ecoleDirecte = EcoleDirecte
+welcome.import.or = Ou
+welcome.import.manually = Les entrer manuellement
+welcome.connection = Connexion
+welcome.connection.id = Identifiant
+welcome.connection.password = Mot de passe
+welcome.connection.rememberMe = Se souvenir de moi
+
+menu.credits = Réalisé par Evan Galli\nAvec l'aide de MazeWave
+menu.home = Accueil
+menu.schedule = Emploi du temps
+menu.marks = Notes
+menu.homeworks = Cahier de texte
+menu.logout = Se déconnecter
+
+home = Accueil
+home.holidays = Vos prochaines vacances sont les <i>[0]</i>, elles commenceront dans <b>[1]</b> jours
+
+schedule = Mon emploi du temps
+schedule.empty = Aucun évènement
+schedule.period = du [0] au [1]
+schedule.canceled = Annulé
+
+marks = Mes notes
+marks.groupBy = Regrouper par
+marks.groupBy.nothing = Rien
+marks.groupBy.subject = Matière
+marks.displayedPeriod = Afficher
+marks.displayedPeriod.all = Tout
+marks.noName = Nom non précisé
+marks.absent = Abs
+marks.coef = coef [0]
+marks.average = Ma moyenne: [0]
+marks.overallAverage = Ma moyenne générale: [0]
+
+homeworks = Mon cahier de texte
+homeworks.upcomming = A Venir
+homeworks.period = du [0] au [1]
+homeworks.added = Ajouté le [0] par [1]
+homeworks.downloading = Téléchargement: [0]%
+
+//Providers
+ecoleDirecte.connecting = Établissement de la connexion avec EcoleDirecte
+ecoleDirecte.homeworks = Obtention des devoirs
+ecoleDirecte.marks = Obtention des notes
+ecoleDirecte.holidays = Obtention des vacances
+ecoleDirecte.schedule = Obtention de l'emploi du temps

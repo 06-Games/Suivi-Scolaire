@@ -37,14 +37,14 @@ public class Manager : MonoBehaviour
         foreach (Transform obj in instance.transform) obj.gameObject.SetActive(obj.gameObject == module);
     }
 
-    public static void UpdateLoadingStatus(string txt)
+    public static void UpdateLoadingStatus(string id, string log, params string[] args)
     {
-        Logging.Log(txt);
+        Logging.Log(log);
         instance.Loading.SetActive(true);
         var img = instance.Loading.transform.GetChild(0);
         img.GetComponent<UnityEngine.UI.Image>().color = Color.white;
         img.GetComponent<SpriteAnimator>().Play();
-        instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = txt;
+        instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = LangueAPI.Get(id, log, args);
     }
     public static void FatalErrorDuringLoading(string txt, string log)
     {

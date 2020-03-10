@@ -1,7 +1,6 @@
 ﻿using Home;
 using Homeworks;
 using Marks;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -21,7 +20,7 @@ namespace Integrations
 
         public IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError)
         {
-            Manager.UpdateLoadingStatus("Establishing the connection with EcoleDirecte");
+            Manager.UpdateLoadingStatus("ecoleDirecte.connecting", "Establishing the connection with EcoleDirecte");
 
             //Get Token
             var accountRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
@@ -67,7 +66,7 @@ namespace Integrations
                         yield return profileRequest.SendWebRequest();
                         if (!profileRequest.isHttpError)
                         {
-                            var tex = UnityEngine.Networking.DownloadHandlerTexture.GetContent(profileRequest);
+                            var tex = DownloadHandlerTexture.GetContent(profileRequest);
                             picture = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
                         }
                         else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
@@ -89,7 +88,7 @@ namespace Integrations
         }
         public IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete)
         {
-            Manager.UpdateLoadingStatus("Getting marks");
+            Manager.UpdateLoadingStatus("ecoleDirecte.marks", "Getting marks");
             var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return markRequest.SendWebRequest();
             var markResult = new FileFormat.JSON(markRequest.downloadHandler.text);
@@ -147,7 +146,7 @@ namespace Integrations
         }
         public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
         {
-            Manager.UpdateLoadingStatus("Getting homeworks");
+            Manager.UpdateLoadingStatus("ecoleDirecte.homeworks", "Getting homeworks");
 
             IEnumerable<string> dates = null;
             if (period == null)
@@ -200,7 +199,7 @@ namespace Integrations
         }
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
         {
-            Manager.UpdateLoadingStatus("Getting holidays");
+            Manager.UpdateLoadingStatus("ecoleDirecte.holidays", "Getting holidays");
             var establishmentRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return establishmentRequest.SendWebRequest();
             var establishmentResult = new FileFormat.JSON(establishmentRequest.downloadHandler.text);
@@ -237,7 +236,7 @@ namespace Integrations
         }
         public IEnumerator GetSchedule(TimeRange period, Action<List<Schedule.Event>> onComplete)
         {
-            Manager.UpdateLoadingStatus("Getting homeworks");
+            Manager.UpdateLoadingStatus("ecoleDirecte.schedule", "Getting schedule");
 
             var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{childID}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return request.SendWebRequest();

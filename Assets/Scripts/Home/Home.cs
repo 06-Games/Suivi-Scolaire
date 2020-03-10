@@ -20,17 +20,14 @@ namespace Home
             Refresh();
         }
 
-        private void Awake()
-        {
-            transform.Find("Content").gameObject.SetActive(false);
-        }
+        private void Awake() { transform.Find("Content").gameObject.SetActive(false); }
 
         public void Refresh()
         {
             var Content = transform.Find("Content");
 
             var nextHoliday = holidays.LastOrDefault(h => h.start >= System.DateTime.Now);
-            Content.Find("Holidays").GetComponent<Text>().text = $"Vos prochaines vacances sont les <i>{nextHoliday.name}</i>, elles commenceront dans <b>{(nextHoliday.start - System.DateTime.Now).ToString("dd")}</b> jours";
+            Content.Find("Holidays").GetComponent<Text>().text = LangueAPI.Get("home.holidays", "Your next vacation is <i>[0]</i>, it will start in <b>[1]</b> days", nextHoliday.name, (nextHoliday.start - System.DateTime.Now).ToString("dd"));
 
             Content.gameObject.SetActive(true);
         }

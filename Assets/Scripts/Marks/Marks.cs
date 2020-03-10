@@ -28,7 +28,7 @@ namespace Marks
             marks = _marks.OrderByDescending(m => m.date).ToList();
 
             period.ClearOptions();
-            period.AddOptions(new List<string>() { "Tout" });
+            period.AddOptions(new List<string>() { LangueAPI.Get("marks.displayedPeriod.all", "All") });
             period.AddOptions(periods.Select(p => p.name).ToList());
             period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
 
@@ -71,11 +71,11 @@ namespace Marks
             foreach (var m in marks)
             {
                 var btn = Instantiate(subjectsPanel.GetChild(0).gameObject, subjectsPanel).transform;
-                btn.Find("Name").GetComponent<Text>().text = string.IsNullOrWhiteSpace(m.name) ? "<i>Nom non précisé</i>" : m.name;
-                btn.Find("Value").GetComponent<Text>().text = m.mark == null ? "<color=#aaa>Abs</color>" : (m.notSignificant ? $"<color=#aaa>({m.mark}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=12>/{m.markOutOf}</size>");
+                btn.Find("Name").GetComponent<Text>().text = string.IsNullOrWhiteSpace(m.name) ? $"<i>{LangueAPI.Get("marks.noName", "Name not specified")}</i>" : m.name;
+                btn.Find("Value").GetComponent<Text>().text = m.mark == null ? $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>" : (m.notSignificant ? $"<color=#aaa>({m.mark}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=12>/{m.markOutOf}</size>");
                 btn.Find("Subject").GetComponent<Text>().text = selectedSubject == null ? m.subject.name : "";
                 btn.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM/yyyy");
-                btn.Find("Coef").GetComponent<Text>().text = "coef " + m.coef;
+                btn.Find("Coef").GetComponent<Text>().text = LangueAPI.Get("marks.coef", "coef [0]", m.coef);
                 btn.gameObject.SetActive(true);
 
                 if (m.mark != null && !m.notSignificant)
@@ -91,7 +91,7 @@ namespace Marks
                 return float.IsNaN(subAv) ? 0 : subAv;
             });
             var generalCoef = subCoef.Sum(s => coef[s.Key] == 0 ? 0 : s.Value);
-            transform.Find("Bottom").Find("Average").GetComponent<Text>().text = generalCoef > 0 ? $"Ma moyenne{(selectedSubject == null ? " générale" : "")}: {(generalAverage / generalCoef).ToString("0.##")}<size=12>/20</size>" : "";
+            transform.Find("Bottom").Find("Average").GetComponent<Text>().text = generalCoef > 0 ? LangueAPI.Get(selectedSubject == null ? "marks.overallAverage" : "marks.average", selectedSubject == null ? "My overall average: [0]" : "My average: [0]", $"{(generalAverage / generalCoef).ToString("0.##")}<size=12>/20</size>") : "";
         }
         public void DisplaySubjects()
         {
@@ -125,7 +125,7 @@ namespace Marks
                 btn.gameObject.SetActive(true);
             }
 
-            transform.Find("Bottom").Find("Average").GetComponent<Text>().text = generalCoef > 0 ? $"Ma moyenne générale: {(generalAverage / generalCoef).ToString("0.##")}<size=12>/20</size>" : "";
+            transform.Find("Bottom").Find("Average").GetComponent<Text>().text = generalCoef > 0 ? LangueAPI.Get("marks.overallAverage", "My overall average: [0]", $"{(generalAverage / generalCoef).ToString("0.##")}<size=12>/20</size>") : "";
         }
     }
 }

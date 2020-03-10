@@ -1,0 +1,49 @@
+﻿welcome = Welcome
+welcome.import = You can import your notes from
+welcome.import.ecoleDirecte = EcoleDirecte
+welcome.import.or = Or
+welcome.import.manually = Enter them manually
+welcome.connection = Log in
+welcome.connection.id = Username
+welcome.connection.password = Password
+welcome.connection.rememberMe = Remember me
+
+menu.credits = Made by Evan Galli\nWith the help of MazeWave
+menu.home = Home
+menu.schedule = Schedule
+menu.marks = Marks
+menu.homeworks = Text book
+menu.logout = Logout
+
+home = Home
+home.holidays = Your next vacation is <i>[0]</i>, it will start in <b>[1]</b> days
+
+schedule = My schedule
+schedule.empty = No events
+schedule.period = from [0] to [1]
+schedule.canceled = Canceled
+
+marks = My marks
+marks.groupBy = Group by
+marks.groupBy.nothing = Nothing
+marks.groupBy.subject = Subject
+marks.displayedPeriod = View
+marks.displayedPeriod.all = All
+marks.noName = Name not specified
+marks.absent = Abs
+marks.coef = coef [0]
+marks.average = My average: [0]
+marks.overallAverage = My overall average: [0]
+
+homeworks = My text book
+homeworks.upcomming = Upcomming
+homeworks.period = from [0] to [1]
+homeworks.added = Added on [0] by [1]
+homeworks.downloading = Downloading: [0]%
+
+//Providers
+ecoleDirecte.connecting = Establishing the connection with EcoleDirecte
+ecoleDirecte.homeworks = Getting homeworks
+ecoleDirecte.marks = Getting marks
+ecoleDirecte.holidays = Getting holidays
+ecoleDirecte.schedule = Getting schedule

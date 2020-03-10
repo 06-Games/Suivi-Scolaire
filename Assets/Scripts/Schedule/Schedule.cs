@@ -43,7 +43,7 @@ namespace Schedule
         void Refresh(IEnumerable<Event> schedule, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
-            WeekSwitcher.Find("Text").GetComponent<Text>().text = Screen.width > Screen.height ? $"du {period.Start.ToString("dd/MM")} au {period.End.ToString("dd/MM")}" : period.Start.ToString("dd/MM");
+            WeekSwitcher.Find("Text").GetComponent<Text>().text = Screen.width > Screen.height ? LangueAPI.Get("schedule.period", "from [0] to [1]", period.Start.ToString("dd/MM"),period.End.ToString("dd/MM")) : period.Start.ToString("dd/MM");
 
             var rnd = new System.Random();
             var colorPalette = new List<Color32> {
@@ -99,7 +99,7 @@ namespace Schedule
                     goColor.a = Event.canceled ? 0.4F : 1;
                     go.GetComponent<Image>().color = goColor;
                     go.Find("Subject").GetComponent<Text>().text = Event.subject?.name;
-                    go.Find("Room").GetComponent<Text>().text = Event.canceled ? "<color=#F56E6E>Annulé</color>" : Event.room;
+                    go.Find("Room").GetComponent<Text>().text = Event.canceled ? $"<color=#F56E6E>{LangueAPI.Get("schedule.canceled", "Canceled")}</color>" : Event.room;
                     go.Find("Hours").GetComponent<Text>().text = $"{Event.start.ToString("HH:mm")} - {Event.end.ToString("HH:mm")}";
                     ((RectTransform)go).sizeDelta = new Vector2(1, sizePerHour * (float)(Event.end - Event.start).TotalHours);
                     go.gameObject.SetActive(true);
