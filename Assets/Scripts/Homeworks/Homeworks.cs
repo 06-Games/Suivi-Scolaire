@@ -82,6 +82,7 @@ namespace Homeworks
                     }
 
                     go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().text = homework.content;
+                    if(homework.exam) go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().color = new Color32(245, 110, 110, 255);
                     go.gameObject.SetActive(true);
                 }
                 panel.gameObject.SetActive(false);

@@ -99,7 +99,7 @@ namespace Schedule
                     goColor.a = Event.canceled ? 0.4F : 1;
                     go.GetComponent<Image>().color = goColor;
                     go.Find("Subject").GetComponent<Text>().text = Event.subject?.name;
-                    go.Find("Room").GetComponent<Text>().text = Event.canceled ? "<color=#F78181>Annulé</color>" : Event.room;
+                    go.Find("Room").GetComponent<Text>().text = Event.canceled ? "<color=#F56E6E>Annulé</color>" : Event.room;
                     go.Find("Hours").GetComponent<Text>().text = $"{Event.start.ToString("HH:mm")} - {Event.end.ToString("HH:mm")}";
                     ((RectTransform)go).sizeDelta = new Vector2(1, sizePerHour * (float)(Event.end - Event.start).TotalHours);
                     go.gameObject.SetActive(true);
