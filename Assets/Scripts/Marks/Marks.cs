@@ -42,6 +42,8 @@ namespace Marks
         {
             topLayoutSwitcher.Switch(Screen.width > Screen.height ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
             subjectBtns.childAlignment = topLayoutSwitcher.mode == LayoutSwitcher.Mode.Horizontal ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
+
+            if (groupBy.value == 1 && Input.GetKeyDown(KeyCode.Escape) && transform.Find("Content").Find("Marks").gameObject.activeInHierarchy) DisplaySubjects();
         }
 
         public Dropdown groupBy;

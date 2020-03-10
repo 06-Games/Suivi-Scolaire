@@ -121,4 +121,13 @@ public class FirstStart : MonoBehaviour
         auth.Find("ID").GetComponent<InputField>().text = "";
         auth.Find("PASSWORD").GetComponent<InputField>().text = "";
     }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            var returnBtn = transform.Find("Top").Find("Return").GetComponent<Button>();
+            if(returnBtn.gameObject.activeInHierarchy) returnBtn.onClick.Invoke();
+        }
+    }
 }
