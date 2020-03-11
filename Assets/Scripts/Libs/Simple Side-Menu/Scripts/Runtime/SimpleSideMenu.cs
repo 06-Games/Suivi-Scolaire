@@ -210,6 +210,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 overlay = new GameObject(gameObject.name + " (Overlay)");
                 overlay.transform.parent = transform.parent;
                 overlay.transform.SetSiblingIndex(transform.GetSiblingIndex());
+                UnityThread.executeInUpdate(() => { if (overlay.TryGetComponent<EventTrigger>(out var eT)) Destroy(eT); });
 
                 if (useBlur)
                 {
