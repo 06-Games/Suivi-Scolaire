@@ -47,6 +47,7 @@ namespace Marks
         }
 
         public Dropdown groupBy;
+        public Dropdown sortBy;
         public Dropdown period;
 
         public void Refresh()
@@ -56,6 +57,10 @@ namespace Marks
         }
         void DisplayMarks(IEnumerable<Mark> marks, Subject selectedSubject = null)
         {
+            if (sortBy.value == 0) marks = marks.OrderBy(m => m.name);
+            else if (sortBy.value == 1) marks = marks.OrderBy(m => m.mark / m.markOutOf);
+            else if (sortBy.value == 2) marks = marks.OrderBy(m => m.date);
+
             var top = topLayoutSwitcher.transform;
             if (selectedSubject != null) top.Find("Subject Btns").Find("Subject").GetComponent<Text>().text = selectedSubject.name;
             for (int i = 1; i < top.childCount; i++) top.GetChild(i).gameObject.SetActive(selectedSubject == null ? i == 1 : i == 2);
@@ -104,6 +109,7 @@ namespace Marks
 
             var generalAverage = 0F;
             var generalCoef = 0F;
+            var averagePerSubject = new List<KeyValuePair<Subject, float>>();
             foreach (var subject in subjects)
             {
                 var marks = Marks.marks.Where(m => m.subject == subject && (period.value == 0 || m.period == periods[period.value - 1]));
@@ -122,6 +128,20 @@ namespace Marks
                 }
                 btn.Find("Average").GetComponent<Text>().text = average == null ? "" : ((float)average).ToString("0.##") + "<size=12>/20</size>";
 
+                if (sortBy.value == 1)
+                {
+                    var keyValue = new KeyValuePair<Subject, float>(subject, average ?? 0);
+                    averagePerSubject.Add(keyValue);
+                    averagePerSubject = averagePerSubject.OrderBy(a => a.Value).ToList();
+                    btn.SetSiblingIndex(averagePerSubject.IndexOf(keyValue) + 1);
+                }
+                else if(sortBy.value == 2)
+                {
+                    var keyValue = new KeyValuePair<Subject, float>(subject, Marks.marks.IndexOf(Marks.marks.FirstOrDefault(m => m.subject == subject)));
+                    averagePerSubject.Add(keyValue);
+                    averagePerSubject = averagePerSubject.OrderByDescending(a => a.Value).ToList();
+                    btn.SetSiblingIndex(averagePerSubject.IndexOf(keyValue) + 1);
+                }
                 btn.gameObject.SetActive(true);
             }
 
