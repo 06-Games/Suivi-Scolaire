@@ -127,7 +127,7 @@ public class FirstStart : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             var returnBtn = transform.Find("Top").Find("Return").GetComponent<Button>();
-            if(returnBtn.gameObject.activeInHierarchy) returnBtn.onClick.Invoke();
+            if (returnBtn.gameObject.activeInHierarchy) returnBtn.onClick.Invoke();
         }
     }
 }

@@ -1,4 +1,4 @@
-void VertShader(inout appdata_full v, out Input data)
+﻿void VertShader(inout appdata_full v, out Input data)
 {
 	v.vertex.x += _VertexOffsetX;
 	v.vertex.y += _VertexOffsetY;
@@ -49,8 +49,8 @@ void PixShader(Input input, inout SurfaceOutput o)
 	// Screen space scaling reciprocal with anisotropic correction
 	float2 edgeNormal = Normalize(float2(smp4x.x - smp4x.y, smp4x.z - smp4x.w));
 	float2 res = float2(_TextureWidth * input.param.y, _TextureHeight);
-	float2 tdx = ddx(input.uv_MainTex)*res;
-	float2 tdy = ddy(input.uv_MainTex)*res;
+	float2 tdx = ddx(input.uv_MainTex) * res;
+	float2 tdy = ddy(input.uv_MainTex) * res;
 	float lx = length(tdx);
 	float ly = length(tdy);
 	float s = sqrt(min(lx, ly) / max(lx, ly));
@@ -63,8 +63,8 @@ void PixShader(Input input, inout SurfaceOutput o)
 	// Signed distance
 	float c = tex2D(_MainTex, input.uv_MainTex).a;
 	float sd = (.5 - c - input.param.x) * scale + .5;
-	float outline = _OutlineWidth*_ScaleRatioA * scale;
-	float softness = _OutlineSoftness*_ScaleRatioA * scale;
+	float outline = _OutlineWidth * _ScaleRatioA * scale;
+	float softness = _OutlineSoftness * _ScaleRatioA * scale;
 
 	// Color & Alpha
 	float4 faceColor = _FaceColor;
@@ -100,7 +100,7 @@ void PixShader(Input input, inout SurfaceOutput o)
 #if GLOW_ON
 	float4 glowColor = GetGlowColor(sd, scale);
 	glowColor.a *= input.color.a;
-	emission += glowColor.rgb*glowColor.a;
+	emission += glowColor.rgb * glowColor.a;
 	faceColor = BlendARGB(glowColor, faceColor);
 	faceColor.rgb /= max(faceColor.a, 0.0001);
 #endif

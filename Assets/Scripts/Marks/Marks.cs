@@ -135,7 +135,7 @@ namespace Marks
                     averagePerSubject = averagePerSubject.OrderBy(a => a.Value).ToList();
                     btn.SetSiblingIndex(averagePerSubject.IndexOf(keyValue) + 1);
                 }
-                else if(sortBy.value == 2)
+                else if (sortBy.value == 2)
                 {
                     var keyValue = new KeyValuePair<Subject, float>(subject, Marks.marks.IndexOf(Marks.marks.FirstOrDefault(m => m.subject == subject)));
                     averagePerSubject.Add(keyValue);

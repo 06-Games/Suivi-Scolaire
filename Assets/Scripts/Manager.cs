@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
@@ -39,7 +38,7 @@ public class Manager : MonoBehaviour
 
     public static void UpdateLoadingStatus(string id, string fallback, bool log = true, params string[] args)
     {
-        if(log) Logging.Log(LangueAPI.Get(null, fallback, args));
+        if (log) Logging.Log(LangueAPI.Get(null, fallback, args));
         instance.Loading.SetActive(true);
         var img = instance.Loading.transform.GetChild(0);
         img.GetComponent<UnityEngine.UI.Image>().color = Color.white;

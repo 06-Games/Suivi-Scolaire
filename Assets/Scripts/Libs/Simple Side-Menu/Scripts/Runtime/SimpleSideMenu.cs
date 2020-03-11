@@ -301,7 +301,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 {
                     ToggleState();
                 }
-            }   
+            }
         }
         private void OnStateUpdate()
         {
@@ -349,7 +349,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
         public void Close()
         {
             targetState = State.Closed;
-        }     
+        }
         #endregion
     }
 }

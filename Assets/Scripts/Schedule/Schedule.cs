@@ -43,7 +43,7 @@ namespace Schedule
         void Refresh(IEnumerable<Event> schedule, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
-            WeekSwitcher.Find("Text").GetComponent<Text>().text = Screen.width > Screen.height ? LangueAPI.Get("schedule.period", "from [0] to [1]", period.Start.ToString("dd/MM"),period.End.ToString("dd/MM")) : period.Start.ToString("dd/MM");
+            WeekSwitcher.Find("Text").GetComponent<Text>().text = Screen.width > Screen.height ? LangueAPI.Get("schedule.period", "from [0] to [1]", period.Start.ToString("dd/MM"), period.End.ToString("dd/MM")) : period.Start.ToString("dd/MM");
 
             var rnd = new System.Random();
             var colorPalette = new List<Color32> {

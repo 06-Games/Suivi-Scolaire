@@ -184,7 +184,8 @@ namespace Integrations
                     content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
                     done = v.SelectToken("aFaire").Value<bool>("effectue"),
                     exam = v.Value<bool>("interrogation"),
-                    documents = v.SelectToken("aFaire.documents").Select(doc => {
+                    documents = v.SelectToken("aFaire.documents").Select(doc =>
+                    {
                         WWWForm form = new WWWForm();
                         form.AddField("token", token);
                         form.AddField("leTypeDeFichier", doc.Value<string>("type"));
