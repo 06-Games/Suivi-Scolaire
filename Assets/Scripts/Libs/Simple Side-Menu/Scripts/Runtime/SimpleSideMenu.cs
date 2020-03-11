@@ -14,7 +14,8 @@ namespace DanielLochner.Assets.SimpleSideMenu
     {
         #region Fields
         private Vector2 closedPosition, openPosition, startPosition, previousPosition, releaseVelocity, dragVelocity;
-        private GameObject overlay, blur;
+        public GameObject overlay { get; private set; }
+        public GameObject blur { get; private set; }
         private RectTransform rectTransform;
         private State currentState, targetState;
         private float thresholdStateChangeDistance = 10f, previousTime;
@@ -35,6 +36,8 @@ namespace DanielLochner.Assets.SimpleSideMenu
         public bool useBlur = false;
         public int blurRadius = 10;
         public bool overlayCloseOnPressed = true;
+
+        public event Action<State> onStateUpdate;
         #endregion
 
         #region Properties
@@ -210,7 +213,6 @@ namespace DanielLochner.Assets.SimpleSideMenu
                 overlay = new GameObject(gameObject.name + " (Overlay)");
                 overlay.transform.parent = transform.parent;
                 overlay.transform.SetSiblingIndex(transform.GetSiblingIndex());
-                UnityThread.executeInUpdate(() => { if (overlay.TryGetComponent<EventTrigger>(out var eT)) Destroy(eT); });
 
                 if (useBlur)
                 {
@@ -345,10 +347,12 @@ namespace DanielLochner.Assets.SimpleSideMenu
         public void Open()
         {
             targetState = State.Open;
+            onStateUpdate?.Invoke(targetState);
         }
         public void Close()
         {
             targetState = State.Closed;
+            onStateUpdate?.Invoke(targetState);
         }
         #endregion
     }

@@ -1,4 +1,5 @@
 ﻿using FileFormat.XML;
+using Integrations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -36,8 +37,9 @@ namespace Schedule
                 Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
                 Manager.OpenModule(gameObject);
             };
+            if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { gameObject.SetActive(false); return; }
             if (periodSchedule.TryGetValue(period.ToString("yyyy-MM-dd"), out var _schedule)) action(_schedule);
-            else StartCoroutine(Manager.provider.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(s); }));
+            else StartCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(s); }));
         }
         Dictionary<string, Color> subjectColor;
         void Refresh(IEnumerable<Event> schedule, TimeRange period)

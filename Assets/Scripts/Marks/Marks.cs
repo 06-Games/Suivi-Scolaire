@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Integrations;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,8 +14,8 @@ namespace Marks
 
         public void OnEnable()
         {
-            if (!Manager.isReady) { gameObject.SetActive(false); return; }
-            if (marks == null) StartCoroutine(Manager.provider.GetMarks(Initialise));
+            if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
+            if (marks == null) StartCoroutine(module.GetMarks(Initialise));
             else
             {
                 Refresh();

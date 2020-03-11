@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Integrations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -29,8 +30,9 @@ namespace Homeworks
                 Refresh(homeworks.OrderBy(h => h.forThe), period);
                 Manager.OpenModule(gameObject);
             };
+            if (!Manager.provider.TryGetModule(out Integrations.Homeworks module)) { gameObject.SetActive(false); return; }
             if (periodHomeworks.TryGetValue(period?.ToString("yyyy-MM-dd") ?? "Upcomming", out var _homeworks)) action(_homeworks);
-            else StartCoroutine(Manager.provider.GetHomeworks(period, (h) => { periodHomeworks.Add(period?.ToString("yyyy-MM-dd") ?? "Upcomming", h); action(h); }));
+            else StartCoroutine(module.GetHomeworks(period, (h) => { periodHomeworks.Add(period?.ToString("yyyy-MM-dd") ?? "Upcomming", h); action(h); }));
         }
         void Refresh(IEnumerable<Homework> homeworks, TimeRange period)
         {

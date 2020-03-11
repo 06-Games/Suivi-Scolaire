@@ -11,7 +11,7 @@ using UnityEngine.Networking;
 
 namespace Integrations
 {
-    public class EcoleDirecte : Provider, Auth
+    public class EcoleDirecte : Provider, Auth, Home, Homeworks, Marks, Schedule
     {
         public string Name => "EcoleDirecte";
 
@@ -235,7 +235,7 @@ namespace Integrations
             onComplete?.Invoke(holidays);
             Manager.HideLoadingPanel();
         }
-        public IEnumerator GetSchedule(TimeRange period, Action<List<Schedule.Event>> onComplete)
+        public IEnumerator GetSchedule(TimeRange period, Action<List<global::Schedule.Event>> onComplete)
         {
             Manager.UpdateLoadingStatus("ecoleDirecte.schedule", "Getting schedule");
 
@@ -247,7 +247,7 @@ namespace Integrations
                 Logging.Log($"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"", LogType.Error);
             }
 
-            var events = result.jToken.SelectToken("data").Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere"))).Select(v => new Schedule.Event()
+            var events = result.jToken.SelectToken("data").Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere"))).Select(v => new global::Schedule.Event()
             {
                 subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
                 start = v.Value<DateTime>("start_date"),
