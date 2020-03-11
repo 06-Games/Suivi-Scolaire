@@ -2,7 +2,7 @@
 welcome.import = You can import your notes from
 welcome.import.ecoleDirecte = EcoleDirecte
 welcome.import.or = Or
-welcome.import.manually = Enter them manually
+welcome.import.manually = Enter them manually\n<size=12>(Currently unavailable)</size>
 welcome.connection = Log in
 welcome.connection.id = Username
 welcome.connection.password = Password

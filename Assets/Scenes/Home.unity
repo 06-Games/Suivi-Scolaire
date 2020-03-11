@@ -338,7 +338,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Les entrer manuellement
+  m_Text: 'Les entrer manuellement
+
+    <size=12>(Actuellement indisponible)</size>'
 --- !u!222 &13722329
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3986,6 +3988,7 @@ GameObject:
   - component: {fileID: 338733331}
   - component: {fileID: 338733330}
   - component: {fileID: 338733333}
+  - component: {fileID: 338733328}
   m_Layer: 5
   m_Name: Menu
   m_TagString: Untagged
@@ -3993,6 +3996,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &338733328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 338733327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b66b9572dd3fe4bb47a573663f3b47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!222 &338733330
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5790,8 +5805,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 305.10114, y: -594.90204}
-  m_SizeDelta: {x: 300, y: 50}
+  m_AnchoredPosition: {x: 682.7666, y: -436.5562}
+  m_SizeDelta: {x: 300, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &625373832
 MonoBehaviour:
@@ -5831,7 +5846,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 625373833}
   m_OnClick:
     m_PersistentCalls:
@@ -6196,7 +6211,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 305.10114, y: -529.90204}
+  m_AnchoredPosition: {x: 682.7666, y: -359.0562}
   m_SizeDelta: {x: 500, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &676409624
@@ -11619,7 +11634,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 305.10114, y: -399.90204}
+  m_AnchoredPosition: {x: 682.7666, y: -229.05621}
   m_SizeDelta: {x: 500, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1207823150
@@ -12827,7 +12842,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 305.10114, y: -464.90204}
+  m_AnchoredPosition: {x: 682.7666, y: -294.0562}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1366297472
