@@ -61,7 +61,8 @@ namespace Homeworks
                     {
                         var docGo = Instantiate(docs.GetChild(0).gameObject, docs).transform;
                         docGo.GetComponent<Text>().text = $"• {doc.Item1}";
-                        docGo.GetComponent<Button>().onClick.AddListener(() => {
+                        docGo.GetComponent<Button>().onClick.AddListener(() =>
+                        {
                             UnityThread.executeCoroutine(GetDoc());
                             IEnumerator GetDoc()
                             {
@@ -76,16 +77,14 @@ namespace Homeworks
                                 var path = Application.temporaryCachePath + "/Homeworks___" + doc.Item1;
                                 System.IO.File.WriteAllBytes(path, request.downloadHandler.data);
 
-#if UNITY_STANDALONE
-                                NativeShare.SharePC(path, fileName: doc.Item1);
-#endif
+                                Application.OpenURL(path);
                             }
                         });
                         docGo.gameObject.SetActive(true);
                     }
 
                     go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().text = homework.content;
-                    if(homework.exam) go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().color = new Color32(245, 110, 110, 255);
+                    if (homework.exam) go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().color = new Color32(245, 110, 110, 255);
                     go.gameObject.SetActive(true);
                 }
                 panel.gameObject.SetActive(false);
