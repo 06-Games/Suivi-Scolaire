@@ -2,12 +2,14 @@
 
 public class Manager : MonoBehaviour
 {
-    public GameObject Loading;
-    public Sprite LoadingError;
-
     [Header("Modules")]
     public FirstStart FirstStart;
     public Home.Home Home;
+
+    [Header("Others")]
+    public Menu Menu;
+    public GameObject Loading;
+    public Sprite LoadingError;
 
     public static Integrations.Provider provider;
     void Start()
@@ -16,7 +18,9 @@ public class Manager : MonoBehaviour
         {
             provider = Provider;
             OpenModule(Home.gameObject);
+            Menu.sideMenu.handle.SetActive(true);
         };
+        Menu.sideMenu.handle.SetActive(false);
         FirstStart.Initialise();
     }
 

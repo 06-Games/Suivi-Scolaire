@@ -6,14 +6,16 @@ using UnityEngine;
 [RequireComponent(typeof(SimpleSideMenu))]
 public class Menu : MonoBehaviour
 {
+    public SimpleSideMenu sideMenu { get; private set; }
+    private void Awake() { sideMenu = GetComponent<SimpleSideMenu>(); }
     void Start()
     {
         UnityThread.executeInUpdate(() =>
         {
-            var overlay = GetComponent<SimpleSideMenu>().overlay;
+            var overlay = sideMenu.overlay;
             if (overlay.TryGetComponent<UnityEngine.EventSystems.EventTrigger>(out var eT)) Destroy(eT);
         });
-        GetComponent<SimpleSideMenu>().onStateUpdate += (state) =>
+        sideMenu.onStateUpdate += (state) =>
         {
             if (state == SimpleSideMenu.State.Closed) return;
             if (!Manager.isReady) return;
@@ -23,5 +25,10 @@ public class Menu : MonoBehaviour
             var modules = provider.Modules().ToList();
             foreach (Transform module in modulePanel) module.gameObject.SetActive(modules.Contains(module.name));
         };
+    }
+
+    private void Update()
+    {
+        if (sideMenu.CurrentState == SimpleSideMenu.State.Open && Input.GetKeyDown(KeyCode.Escape)) sideMenu.Close();
     }
 }

@@ -75,7 +75,7 @@ namespace DanielLochner.Assets.SimpleSideMenu
         }
         private void Update()
         {
-            rectTransform.sizeDelta = new Vector2(400, Screen.height / rectTransform.parent.localScale.y);
+            rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, Screen.height / rectTransform.parent.localScale.y);
             OnStateUpdate();
             OnOverlayUpdate();
         }
