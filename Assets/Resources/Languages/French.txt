@@ -1,8 +1,5 @@
 ﻿welcome = Bienvenue
-welcome.import = Vous pouvez importer vos notes depuis
-welcome.import.ecoleDirecte = EcoleDirecte
-welcome.import.or = Ou
-welcome.import.manually = Les entrer manuellement\n<size=12>(Actuellement indisponible)</size>
+welcome.accounts.add = Ajouter un compte
 welcome.connection = Connexion
 welcome.connection.id = Identifiant
 welcome.connection.password = Mot de passe
@@ -13,6 +10,7 @@ menu.home = Accueil
 menu.schedule = Emploi du temps
 menu.marks = Notes
 menu.homeworks = Cahier de texte
+menu.changeAccount = Changer de compte
 menu.logout = Se déconnecter
 
 home = Accueil

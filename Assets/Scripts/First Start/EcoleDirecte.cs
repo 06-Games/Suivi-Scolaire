@@ -26,15 +26,16 @@ namespace Integrations
             var accountRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
             yield return accountRequest.SendWebRequest();
             var accountInfos = new FileFormat.JSON(accountRequest.downloadHandler.text);
-            if (accountInfos.Value<int>("code") != 200)
+            if (accountRequest.isNetworkError || accountInfos.Value<int>("code") != 200)
             {
-                onError?.Invoke(accountInfos.Value<string>("message"));
+                onError?.Invoke(accountRequest.isNetworkError ? accountRequest.error : accountInfos.Value<string>("message"));
                 Manager.HideLoadingPanel();
                 yield break;
             }
             token = accountInfos.Value<string>("token");
 
             var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
+            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower());
             if (Account.Value<string>("typeCompte") == "E")
             {
                 account.child = childID = Account.Value<string>("id");

@@ -1,5 +1,4 @@
-﻿using DanielLochner.Assets.SimpleSideMenu;
-using Integrations;
+﻿using Integrations;
 using System.Linq;
 using UnityEngine;
 
