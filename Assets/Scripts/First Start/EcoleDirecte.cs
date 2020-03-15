@@ -35,10 +35,10 @@ namespace Integrations
             token = accountInfos.Value<string>("token");
 
             var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
-            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower());
             if (Account.Value<string>("typeCompte") == "E")
             {
                 account.child = childID = Account.Value<string>("id");
+                account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower());
                 Manager.HideLoadingPanel();
                 onComplete?.Invoke(account);
             }
@@ -55,6 +55,7 @@ namespace Integrations
                         {
                             Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                             account.child = childID = eleve.Value<string>("id");
+                            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{eleve.Value<string>("prenom")} {eleve.Value<string>("nom")}".ToLower());
                             Manager.HideLoadingPanel();
                             onComplete?.Invoke(account);
                         };

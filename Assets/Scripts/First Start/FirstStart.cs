@@ -14,11 +14,10 @@ public class FirstStart : MonoBehaviour
         try
         {
             accounts = FileFormat.XML.Utils.XMLtoClass<List<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new List<Account>();
-            if (accounts?.Count == 1) selectedAccount = accounts[0];
+            if (accounts?.Count == 1) ConnectTo(accounts[0]);
         }
         catch { accounts = new List<Account>(); }
-        if (selectedAccount != null) ConnectTo(selectedAccount);
-        else Refresh();
+        Refresh();
     }
     public void Refresh()
     {
@@ -49,14 +48,18 @@ public class FirstStart : MonoBehaviour
         }
         Manager.OpenModule(gameObject);
     }
-    void ConnectTo(Account account)
+    void ConnectTo(Account account, bool add = false)
     {
-        selectedAccount = account;
-        var Provider = Account.Providers[selectedAccount.provider];
+        var Provider = Account.Providers[account.provider];
         if (Provider.TryGetModule<Auth>(out var authModule))
         {
-            UnityThread.executeCoroutine(authModule.Connect(selectedAccount,
-                (a) => { onComplete?.Invoke(Provider); },
+            UnityThread.executeCoroutine(authModule.Connect(account,
+                (a) =>
+                {
+                    selectedAccount = a;
+                    if (add) { accounts.Add(a); Save(); }
+                    onComplete?.Invoke(Provider);
+                },
                 (error) =>
                 {
                     gameObject.SetActive(true);
@@ -66,7 +69,11 @@ public class FirstStart : MonoBehaviour
                 }
             ));
         }
-        else onComplete?.Invoke(Provider);
+        else
+        {
+            selectedAccount = account;
+            onComplete?.Invoke(Provider);
+        }
     }
 
     public void ConnectWith(string provider)
@@ -92,26 +99,17 @@ public class FirstStart : MonoBehaviour
                     id = auth.Find("ID").GetComponent<InputField>().text,
                     password = auth.Find("PASSWORD").GetComponent<InputField>().text
                 };
-
-                StartCoroutine(authModule.Connect(account, (acc) =>
-                    {
-                        if (auth.Find("RememberMe").GetComponent<Toggle>().isOn)
-                        {
-                            accounts.Add(acc);
-                            Save();
-                        }
-                        onComplete?.Invoke(Provider);
-                    },
-                    (error) =>
-                    {
-                        auth.gameObject.SetActive(true);
-                        auth.Find("Error").GetComponent<Text>().text = error;
-                    }
-                ));
+                ConnectTo(account, true);
             });
             auth.gameObject.SetActive(true);
         }
-        else onComplete?.Invoke(Provider);
+        else
+        {
+            selectedAccount = new Account() { provider = provider };
+            accounts.Add(selectedAccount);
+            Save();
+            onComplete?.Invoke(Provider);
+        }
     }
     void Save() => PlayerPrefs.SetString("Accounts", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(accounts), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
     public void ShowPassword(InputField pass)
@@ -150,7 +148,9 @@ public class FirstStart : MonoBehaviour
 
     public void Logout()
     {
-        PlayerPrefs.SetString("Connection", "");
+        accounts.Remove(selectedAccount);
+        selectedAccount = null;
+        Save();
         Manager.OpenModule(gameObject);
         Initialise();
 
