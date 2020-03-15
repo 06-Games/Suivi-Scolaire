@@ -443,9 +443,9 @@ RectTransform:
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 12.5, y: 0}
-  m_SizeDelta: {x: 25, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 12.5, y: 384}
+  m_SizeDelta: {x: 25, y: 768}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &52466907
 MonoBehaviour:
@@ -4152,6 +4152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40b66b9572dd3fe4bb47a573663f3b47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  manager: {fileID: 0}
 --- !u!222 &338733330
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4627,7 +4628,7 @@ MonoBehaviour:
     m_MinSize: 10
     m_MaxSize: 40
     m_Alignment: 3
-    m_AlignByGeometry: 0
+    m_AlignByGeometry: 1
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
@@ -7130,7 +7131,7 @@ MonoBehaviour:
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1843972381}
         m_MethodName: Select
         m_Mode: 1
         m_Arguments:
