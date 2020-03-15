@@ -13,7 +13,7 @@ public class CursorChanger : MonoBehaviour
 
             EventTrigger.Entry entryEnter = new EventTrigger.Entry();
             entryEnter.eventID = EventTriggerType.PointerEnter;
-            entryEnter.callback.AddListener((data) => { Cursor.SetCursor(hoverCursor, Vector2.zero, CursorMode.Auto); });
+            entryEnter.callback.AddListener((data) => { Cursor.SetCursor(hoverCursor, new Vector2(hoverCursor.width / 2F, 0), CursorMode.Auto); });
             trigger.triggers.Add(entryEnter);
 
             EventTrigger.Entry entryExit = new EventTrigger.Entry();
