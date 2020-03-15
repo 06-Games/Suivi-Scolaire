@@ -40,7 +40,7 @@ namespace Integrations
             {
                 account.child = childID = Account.Value<string>("id");
                 Manager.HideLoadingPanel();
-                onComplete.Invoke(account);
+                onComplete?.Invoke(account);
             }
             else
             {
@@ -56,7 +56,7 @@ namespace Integrations
                             Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                             account.child = childID = eleve.Value<string>("id");
                             Manager.HideLoadingPanel();
-                            onComplete.Invoke(account);
+                            onComplete?.Invoke(account);
                         };
                         var name = eleve.Value<string>("prenom") + "\n" + eleve.Value<string>("nom");
                         Sprite picture = null;
@@ -83,7 +83,7 @@ namespace Integrations
                     Logging.Log(eleve.Value<string>("prenom") + " has been selected");
                     childID = eleve.Value<string>("id");
                     Manager.HideLoadingPanel();
-                    onComplete.Invoke(account);
+                    onComplete?.Invoke(account);
                 }
             }
         }
@@ -92,14 +92,19 @@ namespace Integrations
             Manager.UpdateLoadingStatus("ecoleDirecte.marks", "Getting marks");
             var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return markRequest.SendWebRequest();
-            var markResult = new FileFormat.JSON(markRequest.downloadHandler.text);
-            if (markResult.Value<int>("code") != 200)
+            var result = new FileFormat.JSON(markRequest.downloadHandler.text);
+            if (result.Value<int>("code") != 200)
             {
-                Manager.FatalErrorDuringLoading(markResult.Value<string>("message"), "Error getting marks, server returned \"" + markResult.Value<string>("message") + "\"");
+                if (result.Value<string>("message") == "Session expirée !")
+                {
+                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return GetMarks(onComplete);
+                }
+                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting marks, server returned \"" + result.Value<string>("message") + "\"");
                 yield break;
             }
 
-            var periods = markResult.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Period()
+            var periods = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Period()
             {
                 id = obj.Value<string>("idPeriode"),
                 name = obj.Value<string>("periode"),
@@ -107,7 +112,7 @@ namespace Integrations
                 end = obj.Value<DateTime>("dateFin")
             }).ToList();
 
-            var subjects = markResult.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
+            var subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
                 .Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>())
                 .Select(obj => new Subject()
                 {
@@ -117,7 +122,7 @@ namespace Integrations
                     teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
                 }).ToList();
 
-            var marks = markResult.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark()
+            var marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark()
             {
                 //Date
                 period = periods.FirstOrDefault(p => p.id == obj.Value<string>("codePeriode")),
@@ -143,7 +148,7 @@ namespace Integrations
             }).ToList();
 
             Manager.HideLoadingPanel();
-            onComplete.Invoke(periods, subjects, marks);
+            onComplete?.Invoke(periods, subjects, marks);
         }
         public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
         {
@@ -154,13 +159,18 @@ namespace Integrations
             {
                 var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return homeworksRequest.SendWebRequest();
-                var homeworksResult = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
-                if (homeworksResult.Value<int>("code") != 200)
+                var result = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
+                if (result.Value<int>("code") != 200)
                 {
-                    Manager.FatalErrorDuringLoading(homeworksResult.Value<string>("message"), "Error getting homeworks, server returned \"" + homeworksResult.Value<string>("message") + "\"");
+                    if (result.Value<string>("message") == "Session expirée !")
+                    {
+                        yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                        yield return GetHomeworks(period, onComplete);
+                    }
+                    else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting homeworks, server returned \"" + result.Value<string>("message") + "\"");
                     yield break;
                 }
-                dates = homeworksResult.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
+                dates = result.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
             else dates = period.DayList().Select(d => d.ToString("yyyy-MM-dd"));
 
@@ -207,7 +217,12 @@ namespace Integrations
             var establishmentResult = new FileFormat.JSON(establishmentRequest.downloadHandler.text);
             if (establishmentResult.Value<int>("code") != 200)
             {
-                Manager.FatalErrorDuringLoading(establishmentResult.Value<string>("message"), "Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"");
+                if (establishmentResult.Value<string>("message") == "Session expirée !")
+                {
+                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return GetHolidays(onComplete);
+                }
+                else Manager.FatalErrorDuringLoading(establishmentResult.Value<string>("message"), "Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"");
                 yield break;
             }
             var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
@@ -245,7 +260,12 @@ namespace Integrations
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
-                Logging.Log($"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"", LogType.Error);
+                if (result.Value<string>("message") == "Session expirée !")
+                {
+                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return GetSchedule(period, onComplete);
+                }
+                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"");
             }
 
             var events = result.jToken.SelectToken("data").Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere"))).Select(v => new global::Schedule.Event()

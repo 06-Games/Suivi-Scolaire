@@ -8,7 +8,7 @@ public class FirstStart : MonoBehaviour
     public System.Action<Provider> onComplete;
 
     List<Account> accounts = null;
-    Account selectedAccount = null;
+    public Account selectedAccount { get; private set; } = null;
     public void Initialise()
     {
         try
