@@ -1,5 +1,6 @@
 ﻿using Integrations;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,16 +8,16 @@ public class FirstStart : MonoBehaviour
 {
     public System.Action<Provider> onComplete;
 
-    List<Account> accounts = null;
+    HashSet<Account> accounts = null;
     public Account selectedAccount { get; private set; } = null;
     public void Initialise()
     {
         try
         {
-            accounts = FileFormat.XML.Utils.XMLtoClass<List<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new List<Account>();
-            if (accounts?.Count == 1) ConnectTo(accounts[0]);
+            accounts = FileFormat.XML.Utils.XMLtoClass<HashSet<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new HashSet<Account>();
+            if (accounts?.Count == 1) ConnectTo(accounts.FirstOrDefault());
         }
-        catch { accounts = new List<Account>(); }
+        catch { accounts = new HashSet<Account>(); }
         Refresh();
     }
     public void Refresh()

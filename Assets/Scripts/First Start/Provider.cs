@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Integrations
 {
-    public class Account
+    public class Account : IEquatable<Account>
     {
         public static Dictionary<string, Provider> Providers = new Dictionary<string, Provider>() {
             //{ "Local", new Local() },
@@ -17,6 +17,10 @@ namespace Integrations
         public string id;
         public string password;
         public string child;
+
+        public bool Equals(Account other) => provider == other.provider && username == other.username && id == other.id && child == other.child;
+        public override bool Equals(object obj) => Equals(obj as Account);
+        public override int GetHashCode() => string.Format("{0}-{1}-{2}-{3}", provider, username, id, child).GetHashCode();
     }
 
     public static class ProviderExtension
