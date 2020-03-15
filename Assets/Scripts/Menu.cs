@@ -1,11 +1,13 @@
 ﻿using Integrations;
 using System.Linq;
 using UnityEngine;
+using Tools;
 
 [RequireComponent(typeof(SimpleSideMenu))]
 public class Menu : MonoBehaviour
 {
     public SimpleSideMenu sideMenu { get; private set; }
+    public Transform manager;
     private void Awake() { sideMenu = GetComponent<SimpleSideMenu>(); }
     void Start()
     {
@@ -24,10 +26,14 @@ public class Menu : MonoBehaviour
             var modules = provider.Modules().ToList();
             foreach (Transform module in modulePanel) module.gameObject.SetActive(modules.Contains(module.name));
         };
+        manager = Manager.instance.transform;
     }
 
     private void Update()
     {
         if (sideMenu.CurrentState == SimpleSideMenu.State.Open && Input.GetKeyDown(KeyCode.Escape)) sideMenu.Close();
+
+        var openModule = manager.GetEnumerator().ToIEnumerable().OfType<Transform>().FirstOrDefault(c => c.gameObject.activeInHierarchy)?.Find("Top");
+        if (openModule != null) sideMenu.handle.GetComponent<RectTransform>().offsetMax = new Vector2(25, -openModule.GetComponent<RectTransform>().sizeDelta.y);
     }
 }
