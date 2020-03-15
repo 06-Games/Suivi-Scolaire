@@ -22,6 +22,7 @@ public class FirstStart : MonoBehaviour
     }
     public void Refresh()
     {
+        transform.Find("Top").Find("Return").gameObject.SetActive(false);
         var welcome = transform.Find("Content").Find("Welcome");
         foreach (Transform gO in welcome.parent) gO.gameObject.SetActive(false);
         welcome.gameObject.SetActive(true);
