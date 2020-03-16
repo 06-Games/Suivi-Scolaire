@@ -267,9 +267,10 @@ namespace Integrations
                     yield return GetSchedule(period, onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"");
+                yield break;
             }
 
-            var events = result.jToken.SelectToken("data").Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere"))).Select(v => new global::Schedule.Event()
+            var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v => new global::Schedule.Event()
             {
                 subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
                 start = v.Value<DateTime>("start_date"),
@@ -279,7 +280,7 @@ namespace Integrations
             }).ToList();
 
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(events);
+            onComplete?.Invoke(events ?? new List<global::Schedule.Event>());
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
