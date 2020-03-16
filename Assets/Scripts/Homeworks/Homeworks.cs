@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -76,10 +77,16 @@ namespace Homeworks
                                     yield return new WaitForEndOfFrame();
                                 }
                                 Manager.HideLoadingPanel();
+#if UNITY_STANDALONE
                                 var path = Application.temporaryCachePath + "/Homeworks___" + doc.Item1;
-                                System.IO.File.WriteAllBytes(path, request.downloadHandler.data);
-
+                                File.WriteAllBytes(path, request.downloadHandler.data);
                                 Application.OpenURL(path);
+#else
+                                var path = "/storage/emulated/0/Download/Suivi-Scolaire/" + doc.Item1;
+                                if (!Directory.Exists(Path.GetDirectoryName(path))) Directory.CreateDirectory(Path.GetDirectoryName(path));
+                                File.WriteAllBytes(path, request.downloadHandler.data);
+                                UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path);
+#endif
                             }
                         });
                         docGo.gameObject.SetActive(true);
