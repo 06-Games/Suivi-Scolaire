@@ -10,36 +10,72 @@ using UnityEngine.UI;
 
 namespace Homeworks
 {
-    public class Homeworks : MonoBehaviour
+    public class Homeworks : MonoBehaviour, Module
     {
         internal static Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
-        DateTime? periodStart = null;
+        List<Period> periods = new List<Period>();
+        IEnumerator<global::Homeworks.Period> periodsMethod;
+        int periodIndex = 0;
+        public void Reset()
+        {
+            periodHomeworks = new Dictionary<string, List<Homework>>();
+            periods = new List<Period>();
+            periodsMethod = null;
+            periodIndex = 0;
+        }
 
         public void OnEnable()
         {
             StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
-            if (periodStart == null) Initialise(null);
+            if (periodIndex == 0) Initialise();
             else Manager.OpenModule(gameObject);
         }
-        public void Initialise(DateTime? start)
+        public void Initialise()
         {
-            periodStart = start;
-            var period = !start.HasValue ? null : new TimeRange(start.Value, start.Value + new TimeSpan(6, 0, 0, 0));
-            Action<List<Homework>> action = (homeworks) =>
-            {
-                Refresh(homeworks.OrderBy(h => h.forThe), period);
-                Manager.OpenModule(gameObject);
-            };
             if (!Manager.provider.TryGetModule(out Integrations.Homeworks module)) { gameObject.SetActive(false); return; }
-            if (periodHomeworks.TryGetValue(period?.ToString("yyyy-MM-dd") ?? "Upcomming", out var _homeworks)) action(_homeworks);
-            else StartCoroutine(module.GetHomeworks(period, (h) => { periodHomeworks.Add(period?.ToString("yyyy-MM-dd") ?? "Upcomming", h); action(h); }));
+
+            if (periodsMethod == null) { periodsMethod = module.DiaryPeriods(); periodsMethod.MoveNext(); }
+            var period = periods.ElementAtOrDefault(periodIndex);
+            if (period != null) Void();
+            else if (periodIndex >= 0) LoadNext((p) => { period = p; Void(); });
+
+
+            void Void()
+            {
+                Action<List<Homework>> action = (homeworks) =>
+                {
+                    Refresh(homeworks.OrderBy(h => h.forThe), period);
+                    Manager.OpenModule(gameObject);
+                };
+                if (periodHomeworks.TryGetValue(period.id, out var _homeworks)) action(_homeworks);
+                else StartCoroutine(module.GetHomeworks(period, (h) => { periodHomeworks.Add(period.id, h); action(h); }));
+            }
         }
-        void Refresh(IEnumerable<Homework> homeworks, TimeRange period)
+        bool LoadNext(Action<Period> onComplete = null)
+        {
+            if (!periodsMethod.MoveNext()) return false;
+            UnityThread.executeCoroutine(enumerator());
+            return true;
+            IEnumerator enumerator()
+            {
+                var value = periodsMethod.Current;
+                while (value == null)
+                {
+                    yield return new WaitForEndOfFrame();
+                    if (!periodsMethod.MoveNext()) break;
+                    value = periodsMethod.Current;
+                }
+                periods.Add(value);
+                onComplete?.Invoke(value);
+            }
+        }
+        void Refresh(IEnumerable<Homework> homeworks, Period period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
-            WeekSwitcher.Find("Text").GetComponent<Text>().text = period == null ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", period.Start.ToString("dd/MM"), period.End.ToString("dd/MM"));
-            WeekSwitcher.Find("Next").GetComponent<Button>().interactable = period != null;
+            WeekSwitcher.Find("Text").GetComponent<Text>().text = period.name;
+            WeekSwitcher.Find("Previous").GetComponent<Button>().interactable = periods.Count > periodIndex + 1 || LoadNext();
+            WeekSwitcher.Find("Next").GetComponent<Button>().interactable = periodIndex > 0;
 
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);
@@ -69,7 +105,8 @@ namespace Homeworks
                             UnityThread.executeCoroutine(GetDoc());
                             IEnumerator GetDoc()
                             {
-                                var request = UnityEngine.Networking.UnityWebRequest.Post(doc.Item2, doc.Item3);
+                                var request = doc.Item5 ? UnityEngine.Networking.UnityWebRequest.Post(doc.Item2, doc.Item3) : UnityEngine.Networking.UnityWebRequest.Get(doc.Item2);
+                                foreach (var header in doc.Item4) request.SetRequestHeader(header.Item1, header.Item2);
                                 request.SendWebRequest();
                                 while (!request.isDone)
                                 {
@@ -103,11 +140,8 @@ namespace Homeworks
 
         public void ChangePeriod(bool next)
         {
-            var start = periodStart ?? DateTime.Now;
-            int delta = DayOfWeek.Monday - start.DayOfWeek;
-            DateTime monday = start.AddDays(delta > 0 ? delta - 7 : delta);
-            var week = periodStart == null && !next ? monday : monday + new TimeSpan(next ? 7 : -7, 0, 0, 0);
-            Initialise(week > DateTime.Now ? null : (DateTime?)week);
+            periodIndex += next ? -1 : 1;
+            Initialise();
         }
 
 

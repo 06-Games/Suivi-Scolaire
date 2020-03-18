@@ -6,11 +6,12 @@ using UnityEngine.UI;
 
 namespace Marks
 {
-    public class Marks : MonoBehaviour
+    public class Marks : MonoBehaviour, Module
     {
         internal static List<Period> periods;
         internal static List<Subject> subjects;
         internal static List<Mark> marks;
+        public void Reset() { periods = null; subjects = null; marks = null; }
 
         public void OnEnable()
         {

@@ -20,7 +20,7 @@ namespace Integrations
 
         public IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError)
         {
-            Manager.UpdateLoadingStatus("ecoleDirecte.connecting", "Establishing the connection with EcoleDirecte");
+            Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
 
             //Get Token
             var accountRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
@@ -88,9 +88,9 @@ namespace Integrations
                 }
             }
         }
-        public IEnumerator GetMarks(Action<List<Period>, List<Subject>, List<Mark>> onComplete)
+        public IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<Mark>> onComplete)
         {
-            Manager.UpdateLoadingStatus("ecoleDirecte.marks", "Getting marks");
+            Manager.UpdateLoadingStatus("provider.marks", "Getting marks");
             var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return markRequest.SendWebRequest();
             var result = new FileFormat.JSON(markRequest.downloadHandler.text);
@@ -105,7 +105,7 @@ namespace Integrations
                 yield break;
             }
 
-            var periods = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Period()
+            var periods = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new global::Marks.Period()
             {
                 id = obj.Value<string>("idPeriode"),
                 name = obj.Value<string>("periode"),
@@ -151,12 +151,12 @@ namespace Integrations
             Manager.HideLoadingPanel();
             onComplete?.Invoke(periods, subjects, marks);
         }
-        public IEnumerator GetHomeworks(TimeRange period, Action<List<Homework>> onComplete)
+        public IEnumerator GetHomeworks(global::Homeworks.Period period, Action<List<Homework>> onComplete)
         {
-            Manager.UpdateLoadingStatus("ecoleDirecte.homeworks", "Getting homeworks");
+            Manager.UpdateLoadingStatus("provider.homeworks", "Getting homeworks");
 
             IEnumerable<string> dates = null;
-            if (period == null)
+            if (period.timeRange.End == DateTime.MaxValue)
             {
                 var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return homeworksRequest.SendWebRequest();
@@ -173,7 +173,7 @@ namespace Integrations
                 }
                 dates = result.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
-            else dates = period.DayList().Select(d => d.ToString("yyyy-MM-dd"));
+            else dates = period.timeRange.DayList().Select(d => d.ToString("yyyy-MM-dd"));
 
             var homeworks = new List<Homework>();
             foreach (var date in dates)
@@ -193,7 +193,7 @@ namespace Integrations
                     forThe = DateTime.Parse(date),
                     addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
-                    content = RemoveEmptyLines(HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
+                    content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
                     done = v.SelectToken("aFaire").Value<bool>("effectue"),
                     exam = v.Value<bool>("interrogation"),
                     documents = v.SelectToken("aFaire.documents").Select(doc =>
@@ -202,7 +202,7 @@ namespace Integrations
                         form.AddField("token", token);
                         form.AddField("leTypeDeFichier", doc.Value<string>("type"));
                         form.AddField("fichierId", doc.Value<string>("id"));
-                        return (doc.Value<string>("libelle"), "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", form);
+                        return (doc.Value<string>("libelle"), "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", form, new (string, string)[0], true);
                     })
                 }));
             }
@@ -210,9 +210,30 @@ namespace Integrations
             Manager.HideLoadingPanel();
             onComplete?.Invoke(homeworks);
         }
+        public IEnumerator<global::Homeworks.Period> DiaryPeriods()
+        {
+            DateTime start = DateTime.Now;
+            yield return ToPeriod(start, DateTime.MaxValue);
+
+            int delta = DayOfWeek.Monday - start.DayOfWeek;
+            start = start.AddDays(delta > 0 ? delta - 7 : delta);
+            while (true)
+            {
+                var end = start + new TimeSpan(6, 0, 0, 0);
+                yield return ToPeriod(start, end);
+                start += new TimeSpan(-7, 0, 0, 0);
+            }
+
+            global::Homeworks.Period ToPeriod(DateTime pStart, DateTime pEnd) => new global::Homeworks.Period()
+            {
+                timeRange = new TimeRange(pStart, pEnd),
+                id = new TimeRange(pStart, pEnd).ToString("yyyy-MM-dd") ?? "Upcomming",
+                name = pEnd == DateTime.MaxValue ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", pStart.ToString("dd/MM"), pEnd.ToString("dd/MM"))
+            };
+        }
         public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
         {
-            Manager.UpdateLoadingStatus("ecoleDirecte.holidays", "Getting holidays");
+            Manager.UpdateLoadingStatus("provider.holidays", "Getting holidays");
             var establishmentRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return establishmentRequest.SendWebRequest();
             var establishmentResult = new FileFormat.JSON(establishmentRequest.downloadHandler.text);
@@ -254,7 +275,7 @@ namespace Integrations
         }
         public IEnumerator GetSchedule(TimeRange period, Action<List<global::Schedule.Event>> onComplete)
         {
-            Manager.UpdateLoadingStatus("ecoleDirecte.schedule", "Getting schedule");
+            Manager.UpdateLoadingStatus("provider.schedule", "Getting schedule");
 
             var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{childID}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return request.SendWebRequest();
@@ -284,15 +305,5 @@ namespace Integrations
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
-        string HtmlToRichText(string html)
-        {
-            return System.Net.WebUtility.HtmlDecode(html)
-                .Replace("<p>", "").Replace("</p>", "")
-                .Replace("<a href=", "<link=").Replace("</a>", "</link>")
-                .Replace("<ul>", "").Replace("</ul>", "")
-                .Replace("<li>", "• ").Replace("</li>", "")
-                .Replace("\t", "");
-        }
-        string RemoveEmptyLines(string lines) => System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
     }
 }

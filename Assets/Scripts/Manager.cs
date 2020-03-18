@@ -5,6 +5,7 @@ public class Manager : MonoBehaviour
     [Header("Modules")]
     public FirstStart FirstStart;
     public Home.Home Home;
+    public System.Collections.Generic.List<Module> modules = new System.Collections.Generic.List<Module>();
 
     [Header("Others")]
     public Menu Menu;
@@ -22,6 +23,7 @@ public class Manager : MonoBehaviour
         };
         Menu.sideMenu.handle.SetActive(false);
         FirstStart.Initialise();
+        foreach (Transform obj in transform) modules.Add(obj.GetComponent<Module>());
     }
 
     internal static Manager instance;
@@ -70,3 +72,5 @@ public class Manager : MonoBehaviour
 
     public static bool isReady => provider != null;
 }
+
+public interface Module { void Reset(); }

@@ -44,8 +44,8 @@ homeworks.added = Ajouté le [0] par [1]
 homeworks.downloading = Téléchargement: [0]%
 
 //Providers
-ecoleDirecte.connecting = Établissement de la connexion avec EcoleDirecte
-ecoleDirecte.homeworks = Obtention des devoirs
-ecoleDirecte.marks = Obtention des notes
-ecoleDirecte.holidays = Obtention des vacances
-ecoleDirecte.schedule = Obtention de l'emploi du temps
+provider.connecting = Établissement de la connexion avec [0]
+provider.homeworks = Obtention des devoirs
+provider.marks = Obtention des notes
+provider.holidays = Obtention des vacances
+provider.schedule = Obtention de l'emploi du temps

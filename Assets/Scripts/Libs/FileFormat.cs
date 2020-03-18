@@ -1,7 +1,10 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Tools;
+using System.Collections;
 
 namespace FileFormat
 {
@@ -26,6 +29,7 @@ namespace FileFormat
         public void Delete() { if (jToken != null) jToken.Remove(); }
         public bool ContainsValues { get { if (jToken == null) return false; else return jToken.HasValues; } }
 
+        public System.Collections.Generic.IEnumerable<T> Values<T>() { if (jToken == null) return default; else return jToken.Values<T>(); }
         public T Value<T>(string value) { if (jToken == null) return default; else return jToken.Value<T>(value); }
         public bool ValueExist(string value) { if (jToken == null) return false; else return jToken.Value<string>(value) != null; }
 
@@ -122,6 +126,7 @@ namespace FileFormat
         public class RootElement : Base_Collection
         {
             public RootElement(System.Xml.XmlNode xmlNode) { node = xmlNode; }
+            public Item item => new Item(node);
 
             public XML xmlFile { get { return new XML(node == null ? null : node.OwnerDocument); } }
         }
@@ -129,6 +134,8 @@ namespace FileFormat
         public class Item : Base_Collection
         {
             public Item(System.Xml.XmlNode xmlNode) { node = xmlNode; }
+            public static implicit operator Item(System.Xml.XmlNode n) => new Item(n);
+            public static explicit operator System.Xml.XmlNode(Item b) => b.node;
             public RootElement rootElement { get { return new RootElement(node.OwnerDocument.DocumentElement); } }
 
             public string Attribute(string key) { return node.Attributes[key].Value; }
@@ -137,7 +144,8 @@ namespace FileFormat
                 if (node.Attributes != null && node.Attributes[key] != null) //Set value
                     node.Attributes[key].Value = value;
                 else
-                { //Create attribute
+                {
+                    //Create attribute
                     System.Xml.XmlAttribute xmlAttribute = node.OwnerDocument.CreateAttribute(key);
                     node.Attributes.Append(xmlAttribute);
                     xmlAttribute.Value = value;
@@ -165,12 +173,23 @@ namespace FileFormat
         public abstract class Base_Collection
         {
             public System.Xml.XmlNode node;
+            public string Name => node.Name;
+
             public Item GetItem(string key)
             {
                 if (node == null) return new Item(null);
                 System.Xml.XmlNode xmlNode = node.SelectSingleNode(key);
                 if (xmlNode == null) return new Item(null);
                 else return new Item(xmlNode);
+            }
+
+            public bool HasChild => node.HasChildNodes;
+            public IEnumerable<Item> EnumerateItems()
+            {
+                if (node == null) return System.Array.Empty<Item>();
+                var list = new List<Item>();
+                foreach (System.Xml.XmlNode item in node.ChildNodes) list.Add(new Item(item));
+                return list;
             }
             public Item[] GetItems()
             {
@@ -191,6 +210,7 @@ namespace FileFormat
                 if (items.Length > 0) return items;
                 else return new Item[0];
             }
+
             public Item GetItemByAttribute(string key, string attribute, string attributeValue = "")
             {
                 if (node == null) return new Item(null);
@@ -208,6 +228,7 @@ namespace FileFormat
                 if (items.Length > 0) return items;
                 else return null;
             }
+
             public Item CreateItem(string key)
             {
                 if (node == null) throw new System.Exception("This item does not exist! Can not create a child!\nCheck Item.Exist before calling this function.");
@@ -218,7 +239,6 @@ namespace FileFormat
 
             public bool Exist { get { return node != null; } }
 
-            public System.Collections.Generic.IEnumerator<Item> GetEnumerator() { return GetItems().ToList().GetEnumerator(); }
             public override string ToString() { return node.OuterXml; }
         }
     }

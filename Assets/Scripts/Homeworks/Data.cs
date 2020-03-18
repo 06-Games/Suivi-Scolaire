@@ -12,6 +12,12 @@ namespace Homeworks
         public string content;
         public bool done;
         public bool exam;
-        public IEnumerable<(string, string, UnityEngine.WWWForm)> documents;
+        public IEnumerable<(string, string, UnityEngine.WWWForm, (string, string)[], bool)> documents = new List<(string, string, UnityEngine.WWWForm, (string, string)[], bool)>();
+    }
+    public class Period
+    {
+        public string name;
+        public string id;
+        public TimeRange timeRange;
     }
 }

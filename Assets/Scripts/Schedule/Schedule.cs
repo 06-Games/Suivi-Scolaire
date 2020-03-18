@@ -16,6 +16,11 @@ namespace Schedule
 
         internal static Dictionary<string, List<Event>> periodSchedule = new Dictionary<string, List<Event>>();
         DateTime periodStart = DateTime.Now;
+        public void Reset()
+        {
+            periodSchedule = new Dictionary<string, List<Event>>();
+            periodStart = DateTime.Now;
+        }
 
         void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
         void Awake() { subjectColor = Utils.XMLtoClass<List<(string, Color)>>(PlayerPrefs.GetString("scheduleColors"))?.ToDictionary(s => s.Item1, s => s.Item2) ?? new Dictionary<string, Color>(); }

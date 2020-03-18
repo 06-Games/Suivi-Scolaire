@@ -32,7 +32,7 @@ public class FirstStart : MonoBehaviour
         {
             var go = Instantiate(accountList.GetChild(0).gameObject, accountList).transform;
             go.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>("Providers/" + account.provider);
-            go.GetChild(1).GetChild(0).GetComponent<Text>().text = account.provider;
+            go.GetChild(1).GetChild(0).GetComponent<Text>().text = account.GetProvider?.Name ?? account.provider;
             go.GetChild(1).GetChild(1).GetComponent<Text>().text = account.username;
             go.GetChild(2).GetComponent<Button>().onClick.AddListener(() => { accounts.Remove(account); Save(); Refresh(); });
             go.GetComponent<Button>().onClick.AddListener(() => ConnectTo(account));
@@ -50,16 +50,19 @@ public class FirstStart : MonoBehaviour
         }
         Manager.OpenModule(gameObject);
     }
-    void ConnectTo(Account account, bool add = false)
+    void ConnectTo(Account account)
     {
-        var Provider = Account.Providers[account.provider];
+        var Provider = account.GetProvider;
         if (Provider.TryGetModule<Auth>(out var authModule))
         {
             UnityThread.executeCoroutine(authModule.Connect(account,
                 (a) =>
                 {
                     selectedAccount = a;
-                    if (add) { accounts.Add(a); Save(); }
+                    accounts.Remove(account);
+                    accounts.Add(a);
+                    accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
+                    Save();
                     onComplete?.Invoke(Provider);
                 },
                 (error) =>
@@ -101,7 +104,7 @@ public class FirstStart : MonoBehaviour
                     id = auth.Find("ID").GetComponent<InputField>().text,
                     password = auth.Find("PASSWORD").GetComponent<InputField>().text
                 };
-                ConnectTo(account, true);
+                ConnectTo(account);
             });
             auth.gameObject.SetActive(true);
         }
@@ -129,6 +132,7 @@ public class FirstStart : MonoBehaviour
     public static void SelectChilds(List<(System.Action, string, Sprite)> childs)
     {
         var instance = Manager.instance.FirstStart.transform;
+        foreach (Transform gO in instance.Find("Content")) gO.gameObject.SetActive(false);
         var Childs = instance.Find("Content").Find("Childs");
         for (int i = 1; i < Childs.childCount; i++) Destroy(Childs.GetChild(i).gameObject);
 
@@ -154,6 +158,7 @@ public class FirstStart : MonoBehaviour
         selectedAccount = null;
         Save();
         Manager.OpenModule(gameObject);
+        ResetData();
         Initialise();
 
         transform.Find("Top").Find("Return").gameObject.SetActive(false);
@@ -161,6 +166,7 @@ public class FirstStart : MonoBehaviour
         auth.Find("ID").GetComponent<InputField>().text = "";
         auth.Find("PASSWORD").GetComponent<InputField>().text = "";
     }
+    public void ResetData() { foreach (var d in Manager.instance.modules) d?.Reset(); }
 
     private void Update()
     {

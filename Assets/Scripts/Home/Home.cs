@@ -6,9 +6,10 @@ using UnityEngine.UI;
 
 namespace Home
 {
-    public class Home : MonoBehaviour
+    public class Home : MonoBehaviour, Module
     {
         internal static List<Holiday> holidays;
+        public void Reset() => holidays = null;
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Home module)) { gameObject.SetActive(false); return; }
