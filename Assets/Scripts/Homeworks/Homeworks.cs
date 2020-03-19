@@ -99,14 +99,13 @@ namespace Homeworks
                     foreach (var doc in homework.documents)
                     {
                         var docGo = Instantiate(docs.GetChild(0).gameObject, docs).transform;
-                        docGo.GetComponent<Text>().text = $"• {doc.Item1}";
+                        docGo.GetComponent<Text>().text = $"• {doc.docName}";
                         docGo.GetComponent<Button>().onClick.AddListener(() =>
                         {
                             UnityThread.executeCoroutine(GetDoc());
                             IEnumerator GetDoc()
                             {
-                                var request = doc.Item5 ? UnityEngine.Networking.UnityWebRequest.Post(doc.Item2, doc.Item3) : UnityEngine.Networking.UnityWebRequest.Get(doc.Item2);
-                                foreach (var header in doc.Item4) request.SetRequestHeader(header.Item1, header.Item2);
+                                var request = doc.request;
                                 request.SendWebRequest();
                                 while (!request.isDone)
                                 {
@@ -115,7 +114,7 @@ namespace Homeworks
                                 }
                                 Manager.HideLoadingPanel();
 #if UNITY_STANDALONE
-                                var path = Application.temporaryCachePath + "/Homeworks___" + doc.Item1;
+                                var path = Application.temporaryCachePath + "/Homeworks___" + doc.docName;
                                 File.WriteAllBytes(path, request.downloadHandler.data);
                                 Application.OpenURL(path);
 #else

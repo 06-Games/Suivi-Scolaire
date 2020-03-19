@@ -202,7 +202,12 @@ namespace Integrations
                         form.AddField("token", token);
                         form.AddField("leTypeDeFichier", doc.Value<string>("type"));
                         form.AddField("fichierId", doc.Value<string>("id"));
-                        return (doc.Value<string>("libelle"), "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", form, new (string, string)[0], true);
+                        return new Request(){
+                             docName = doc.Value<string>("libelle"), 
+                            url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", 
+                            method = Request.Method.Post,
+                            postData = form
+                        };
                     })
                 }));
             }

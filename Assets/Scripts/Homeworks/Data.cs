@@ -12,8 +12,34 @@ namespace Homeworks
         public string content;
         public bool done;
         public bool exam;
-        public IEnumerable<(string, string, UnityEngine.WWWForm, (string, string)[], bool)> documents = new List<(string, string, UnityEngine.WWWForm, (string, string)[], bool)>();
+        public IEnumerable<Request> documents = new List<Request>();
     }
+    public class Request
+    {
+        public string docName;
+        public string url;
+        public Dictionary<string, string> headers;
+        public enum Method { Get, Post }
+        public Method method;
+        public UnityEngine.WWWForm postData;
+
+        public UnityEngine.Networking.UnityWebRequest request
+        {
+            get
+            {
+                UnityEngine.Networking.UnityWebRequest request = null;
+                switch (method)
+                {
+                    case Method.Get: request = UnityEngine.Networking.UnityWebRequest.Get(url); break;
+                    case Method.Post: request = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new UnityEngine.WWWForm()); break;
+                }
+                foreach (var header in headers ?? new Dictionary<string, string>()) request.SetRequestHeader(header.Key, header.Value);
+
+                return request;
+            }
+        }
+    }
+
     public class Period
     {
         public string name;

@@ -111,13 +111,13 @@ namespace Integrations
             var homeworks = result.jToken.SelectToken("list").SelectMany(obj =>
             {
                 var data = obj.SelectToken("page_section");
-                var docs = obj.SelectToken("link_file").Select(doc => (
-                    doc.Value<string>("file_name"),
-                    $"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.Value<string>("up_file_id")}",
-                    new WWWForm(),
-                    new (string, string)[] { ("User-Agent", "Mozilla/5.0 Firefox/74.0"), ("Cookie", sessionId) },
-                    false
-                ));
+                var docs = obj.SelectToken("link_file").Select(doc => new Request()
+                {
+                    docName = doc.Value<string>("file_name"),
+                    url = $"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.Value<string>("up_file_id")}",
+                    headers = new Dictionary<string, string>() { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
+                    method = Request.Method.Get
+                });
                 return data.Select(d => new Homework()
                 {
                     subject = new Subject() { name = d.Value<string>("sec_title") },
