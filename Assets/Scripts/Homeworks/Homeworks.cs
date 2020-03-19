@@ -35,7 +35,7 @@ namespace Homeworks
         {
             if (!Manager.provider.TryGetModule(out Integrations.Homeworks module)) { gameObject.SetActive(false); return; }
 
-            if (periodsMethod == null) { periodsMethod = module.DiaryPeriods(); periodsMethod.MoveNext(); }
+            if (periodsMethod == null) periodsMethod = module.DiaryPeriods();
             var period = periods.ElementAtOrDefault(periodIndex);
             if (period != null) Void();
             else if (periodIndex >= 0) LoadNext((p) => { period = p; Void(); });
