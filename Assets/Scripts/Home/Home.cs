@@ -29,7 +29,7 @@ namespace Home
             var Content = transform.Find("Content");
 
             var nextHoliday = holidays.LastOrDefault(h => h.start >= System.DateTime.Now);
-            Content.Find("Holidays").GetComponent<Text>().text = LangueAPI.Get("home.holidays", "Your next vacation is <i>[0]</i>, it will start in <b>[1]</b> days", nextHoliday?.name, nextHoliday == null ? "0" : (nextHoliday.start - System.DateTime.Now).ToString("dd"));
+            Content.Find("Holidays").GetComponent<Text>().text = holidays != null && holidays.Count > 0 ? LangueAPI.Get("home.holidays", "Your next vacation is <i>[0]</i>, it will start in <b>[1]</b> days", nextHoliday?.name, nextHoliday == null ? "0" : (nextHoliday.start - System.DateTime.Now).ToString("dd")) : "";
 
             Content.gameObject.SetActive(true);
         }
