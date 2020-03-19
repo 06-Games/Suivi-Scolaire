@@ -39,17 +39,14 @@ public class LayoutSwitcher : MonoBehaviour
         if (lastMode == mode) return;
         if (LayoutGroup != null) Destroy(LayoutGroup);
         foreach (var c in GetComponents<HorizontalOrVerticalLayoutGroup>()) Destroy(c);
-        try
+        UnityThread.executeInLateUpdate(() =>
         {
             switch (mode)
             {
-                case Mode.Horizontal:
-                    LayoutGroup = gameObject.AddComponent<HorizontalLayoutGroup>();
-                    break;
-                case Mode.Vertical:
-                    LayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>();
-                    break;
+                case Mode.Horizontal: LayoutGroup = gameObject.AddComponent<HorizontalLayoutGroup>(); break;
+                case Mode.Vertical: LayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>(); break;
             };
+            if(LayoutGroup == null) { Switch(); return; }
             LayoutGroup.hideFlags = HideFlags.HideAndDontSave;
             LayoutGroup.padding = padding;
             LayoutGroup.spacing = spacing;
@@ -71,8 +68,7 @@ public class LayoutSwitcher : MonoBehaviour
                     LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)child.transform);
                 }
             });
-        }
-        catch { }
+        });
     }
 
     new void Destroy(Object obj)
