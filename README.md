@@ -12,3 +12,7 @@ Suivi Scolaire is a mobile/web application that allows easy use of different sch
 Suivi-Scolaire can be used on the following platforms:
 * [Windows](https://github.com/06-Games/Suivi-Scolaire/releases/latest)
 * [Android](https://play.google.com/store/apps/details?id=com.fr_06Games.SuiviScolaire)
+
+## Supported languages
+* English
+* Français (French)
