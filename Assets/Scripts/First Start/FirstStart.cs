@@ -67,10 +67,8 @@ public class FirstStart : MonoBehaviour
                 },
                 (error) =>
                 {
-                    gameObject.SetActive(true);
-                    var auth = transform.Find("Content").Find("Auth");
-                    auth.gameObject.SetActive(true);
-                    auth.Find("Error").GetComponent<Text>().text = error;
+                    var auth = transform.Find("Content").Find("Auth").Find("Error").GetComponent<Text>().text = error;
+                    ConnectWith(account.provider);
                 }
             ));
         }
@@ -106,6 +104,8 @@ public class FirstStart : MonoBehaviour
                 };
                 ConnectTo(account);
             });
+            auth.Find("PASSWORD").GetComponent<InputField>().onEndEdit.RemoveAllListeners();
+            auth.Find("PASSWORD").GetComponent<InputField>().onEndEdit.AddListener((s) => auth.Find("Connexion").GetComponent<Button>().onClick.Invoke());
             auth.gameObject.SetActive(true);
         }
         else
@@ -138,16 +138,26 @@ public class FirstStart : MonoBehaviour
 
         var returnBtn = instance.Find("Top").Find("Return").GetComponent<Button>();
         returnBtn.onClick.RemoveAllListeners();
-        returnBtn.onClick.AddListener(() => { Childs.gameObject.SetActive(false); instance.Find("Content").Find("Auth").gameObject.SetActive(true); });
+        returnBtn.onClick.AddListener(() => {
+            Childs.gameObject.SetActive(false); 
+            instance.Find("Content").Find("Auth").gameObject.SetActive(true);
+
+            returnBtn.onClick.RemoveAllListeners();
+            returnBtn.onClick.AddListener(() => {
+                instance.Find("Content").Find("Auth").gameObject.SetActive(false);
+                instance.Find("Content").Find("Welcome").gameObject.SetActive(true); 
+                returnBtn.gameObject.SetActive(false); 
+            });
+        });
         returnBtn.gameObject.SetActive(true);
 
         foreach (var child in childs)
         {
-            var btn = Instantiate(Childs.GetChild(0).gameObject, Childs);
+            var btn = Instantiate(Childs.GetChild(0).gameObject, Childs).transform;
             btn.GetComponent<Button>().onClick.AddListener(() => { Childs.gameObject.SetActive(false); child.Item1(); });
-            btn.transform.GetChild(0).GetComponent<Text>().text = child.Item2;
-            if (child.Item3 != null) btn.GetComponent<Image>().sprite = child.Item3;
-            btn.SetActive(true);
+            btn.GetComponentInChildren<Text>().text = child.Item2;
+            if (child.Item3 != null) btn.Find("Image").GetComponent<Image>().sprite = child.Item3;
+            btn.gameObject.SetActive(true);
         }
         Childs.gameObject.SetActive(true);
     }

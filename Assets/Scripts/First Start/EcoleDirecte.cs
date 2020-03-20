@@ -59,7 +59,7 @@ namespace Integrations
                             Manager.HideLoadingPanel();
                             onComplete?.Invoke(account);
                         };
-                        var name = eleve.Value<string>("prenom") + "\n" + eleve.Value<string>("nom");
+                        var name = eleve.Value<string>("prenom") + " " + eleve.Value<string>("nom");
                         Sprite picture = null;
 
                         //Get picture

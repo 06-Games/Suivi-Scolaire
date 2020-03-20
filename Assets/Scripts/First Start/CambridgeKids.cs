@@ -68,7 +68,7 @@ namespace Integrations
                         account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{enfant.Value<string>("prenom")}{enfant.Value<string>("nom")}".ToLower());
                         onComplete?.Invoke(account);
                     };
-                    var name = enfant.Value<string>("prenom") + "\n" + enfant.Value<string>("nom");
+                    var name = enfant.Value<string>("prenom") + enfant.Value<string>("nom");
                     return (action, name, (Sprite)null);
                 }).ToList();
                 Manager.HideLoadingPanel();
