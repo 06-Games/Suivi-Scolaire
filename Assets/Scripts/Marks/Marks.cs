@@ -62,6 +62,11 @@ namespace Marks
                 return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => (float)m.mark / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
             });
             var coef = marksByS.Keys.ToDictionary(s => s, s => average[s] == null ? 0 : s.coef);
+            var classAverage = marksByS.ToDictionary(s => s.Key, s =>
+            {
+                var _marks = s.Value.Where(m => m.classAverage != null && !m.notSignificant);
+                return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => m.classAverage.Value / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
+            });
 
             var top = topLayoutSwitcher.transform;
             if (selectedSubject != null) top.Find("Subject Btns").Find("Subject").GetComponent<Text>().text = selectedSubject.name;
@@ -102,13 +107,15 @@ namespace Marks
                     if (subject.Value.Count() > 0) btn.GetComponent<Button>().onClick.AddListener(() => Refresh(subject.Key));
                     btn.Find("Name").GetComponent<Text>().text = subject.Key.name;
                     btn.Find("Teacher").GetComponent<Text>().text = string.Join("\n", subject.Key.teachers);
-                    btn.Find("Average").GetComponent<Text>().text = average[subject.Key] == null ? "" : ((float)average[subject.Key]).ToString("0.##") + "<size=12>/20</size>";
+                    btn.Find("Average").GetComponent<Text>().text = average[subject.Key] == null ? "" : average[subject.Key].Value.ToString("0.##") + "<size=12>/20</size>";
+                    btn.Find("Class Average").GetComponent<Text>().text = classAverage[subject.Key] == null ? "" : classAverage[subject.Key].Value.ToString("0.##") + "<size=12>/20</size>";
                     btn.gameObject.SetActive(true);
                 }
             }
 
             var bottom = transform.Find("Bottom");
             bottom.Find("Average").GetComponent<Text>().text = coef.Values.Sum() > 0 ? LangueAPI.Get(selectedSubject == null ? "marks.overallAverage" : "marks.average", selectedSubject == null ? "My overall average: [0]" : "My average: [0]", $"{(marksByS.Keys.Sum(s => (average[s] ?? 0) * coef[s]) / coef.Values.Sum()).ToString("0.##")}<size=12>/20</size>") : "";
+            bottom.Find("Class Average").GetComponent<Text>().text = coef.Values.Sum() > 0 ? $@"Moyenne générale de la classe: {(marksByS.Keys.Sum(s => (classAverage[s] ?? 0) * s.coef) / marksByS.Keys.Sum(s => s.coef)).ToString("0.##")}<size=12>/20</size>" : "";
         }
     }
 }
