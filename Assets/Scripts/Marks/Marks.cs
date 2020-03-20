@@ -59,7 +59,7 @@ namespace Marks
             var average = marksByS.ToDictionary(s => s.Key, s =>
             {
                 var _marks = s.Value.Where(m => m.mark != null && !m.notSignificant);
-                return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => (float)m.mark / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
+                return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => m.mark.Value / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
             });
             var coef = marksByS.Keys.ToDictionary(s => s, s => average[s] == null ? 0 : s.coef);
             var classAverage = marksByS.ToDictionary(s => s.Key, s =>
@@ -90,6 +90,7 @@ namespace Marks
                     var btn = Instantiate(subjectsPanel.GetChild(0).gameObject, subjectsPanel).transform;
                     btn.Find("Name").GetComponent<Text>().text = string.IsNullOrWhiteSpace(m.name) ? $"<i>{LangueAPI.Get("marks.noName", "Name not specified")}</i>" : m.name;
                     btn.Find("Value").GetComponent<Text>().text = m.mark == null ? $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>" : (m.notSignificant ? $"<color=#aaa>({m.mark}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=12>/{m.markOutOf}</size>");
+                    btn.Find("Class Average").GetComponent<Text>().text = m.classAverage == null ? "" : (m.notSignificant ? $"<color=#aaa>({m.classAverage}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.classAverage}<size=12>/{m.markOutOf}</size>");
                     btn.Find("Subject").GetComponent<Text>().text = selectedSubject == null ? m.subject.name : "";
                     btn.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM/yyyy");
                     btn.Find("Coef").GetComponent<Text>().text = LangueAPI.Get("marks.coef", "coef [0]", m.coef);
