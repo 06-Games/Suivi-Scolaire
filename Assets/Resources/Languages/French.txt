@@ -3,7 +3,6 @@ welcome.accounts.add = Ajouter un compte
 welcome.connection = Connexion
 welcome.connection.id = Identifiant
 welcome.connection.password = Mot de passe
-welcome.connection.rememberMe = Se souvenir de moi
 
 menu.credits = Réalisé par Evan Galli\nAvec l'aide de MazeWave
 menu.home = Accueil
@@ -15,6 +14,7 @@ menu.logout = Se déconnecter
 
 home = Accueil
 home.holidays = Vos prochaines vacances sont les <i>[0]</i>, elles commenceront dans <b>[1]</b> jours
+home.marks = Dernières notes
 
 schedule = Mon emploi du temps
 schedule.empty = Aucun évènement

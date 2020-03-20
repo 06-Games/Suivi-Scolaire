@@ -16,26 +16,21 @@ namespace Marks
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
-            if (marks == null) StartCoroutine(module.GetMarks(Initialise));
-            else
-            {
-                Refresh();
-                Manager.OpenModule(gameObject);
-            }
+            if (marks == null) StartCoroutine(module.GetMarks((p, s, m) => { Initialise(p, s, m); Refresh(); }));
+            else Refresh();
+            Manager.OpenModule(gameObject);
         }
-        public void Initialise(IEnumerable<Period> _periods, IEnumerable<Subject> _subjects, IEnumerable<Mark> _marks)
+        public static void Initialise(IEnumerable<Period> _periods, IEnumerable<Subject> _subjects, IEnumerable<Mark> _marks)
         {
             periods = _periods.OrderBy(s => s.start).ToList();
             subjects = _subjects.OrderBy(s => s.name).ToList();
-            marks = _marks.ToList();
+            marks = _marks.OrderBy(m => m.date).ToList();
 
-            period.ClearOptions();
-            period.AddOptions(new List<string>() { LangueAPI.Get("marks.displayedPeriod.all", "All") });
-            period.AddOptions(periods.Select(p => p.name).ToList());
-            period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
-
-            Refresh();
-            Manager.OpenModule(gameObject);
+            var instance = Manager.instance.transform.Find("Marks").GetComponent<Marks>();
+            instance.period.ClearOptions();
+            instance.period.AddOptions(new List<string>() { LangueAPI.Get("marks.displayedPeriod.all", "All") });
+            instance.period.AddOptions(periods.Select(p => p.name).ToList());
+            instance.period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
         }
 
         public LayoutSwitcher topLayoutSwitcher;
