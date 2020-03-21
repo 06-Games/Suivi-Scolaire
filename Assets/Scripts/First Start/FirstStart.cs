@@ -52,6 +52,7 @@ public class FirstStart : MonoBehaviour
     }
     void ConnectTo(Account account)
     {
+        Manager.provider = null;
         var Provider = account.GetProvider;
         if (Provider.TryGetModule<Auth>(out var authModule))
         {

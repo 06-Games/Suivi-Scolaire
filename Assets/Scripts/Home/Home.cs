@@ -11,7 +11,8 @@ namespace Periods
     public class Home : MonoBehaviour, Module
     {
         internal static List<Period> periods;
-        public void Reset() => periods = null;
+        static List<Schedule.Event> events;
+        public void Reset() { periods = null; events = null; }
         public void OnEnable()
         {
             StartCoroutine(enumerator());
@@ -21,6 +22,12 @@ namespace Periods
                 if (!Manager.isReady) { gameObject.SetActive(false); yield break; }
                 if (periods == null && Manager.provider.TryGetModule(out Integrations.Periods hM)) yield return hM.GetPeriods((p) => periods = p.OrderBy(d => d.start).ToList());
                 if (Marks.Marks.marks == null && Manager.provider.TryGetModule(out Integrations.Marks mM)) yield return mM.GetMarks(Marks.Marks.Initialise);
+                if (events == null)
+                {
+                    bool ended = false;
+                    if (!Schedule.Schedule.Initialise(DateTime.Now, (p, s) => { events = s.OrderBy(e => e.start).ToList(); ended = true; })) ended = true;
+                    yield return new WaitUntil(() => ended);
+                }
                 Refresh();
             }
         }
@@ -30,20 +37,21 @@ namespace Periods
         public void Refresh()
         {
             var Content = transform.Find("Content");
+            var now = DateTime.Now;
 
             var period = Content.Find("Period");
             if (periods?.Count > 0)
             {
-                var actualPeriod = periods.FirstOrDefault(p => p.start <= DateTime.Now && p.end >= DateTime.Now);
+                var actualPeriod = periods.FirstOrDefault(p => p.start <= now && p.end >= now);
                 period.Find("Img").Find("Image").GetComponent<Image>().sprite = null;
                 period.Find("Txt").Find("Period").GetComponent<Text>().text = actualPeriod.name;
-                if (actualPeriod.holiday) period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get("", "Elles se termineront dans [0] jours", (actualPeriod.start - DateTime.Now).ToString("dd"));
-                var nextPeriod = periods.FirstOrDefault(h => h.start > DateTime.Now);
+                if (actualPeriod.holiday) period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get("", "Elles se termineront dans [0] jours", (actualPeriod.start - now).ToString("dd"));
+                var nextPeriod = periods.FirstOrDefault(h => h.start > now);
                 period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get(
                     actualPeriod.holiday ? "home.holidays.end" : "home.holidays.start",
                     actualPeriod.holiday ? "It ends in <b>[1]</b> days" : "<i>[0]</i>\nstart in <b>[1]</b> days",
                     nextPeriod?.name.ToLower(),
-                    nextPeriod == null ? "0" : (nextPeriod.start - DateTime.Now).ToString("dd")
+                    nextPeriod == null ? "0" : (nextPeriod.start - now).ToString("dd")
                 );
                 period.gameObject.SetActive(true);
             }
@@ -67,6 +75,27 @@ namespace Periods
                 lastMarks.gameObject.SetActive(true);
             }
             else lastMarks.gameObject.SetActive(false);
+
+
+            var schedule = Content.Find("Schedule");
+            if (events?.Count > 0)
+            {
+                var actualIndex = events.FindIndex(e => e.start <= now && e.end >= now);
+                schedule.Find("Bar").gameObject.SetActive(true);
+                for (int i = 0; i < 2; i++)
+                {
+                    var go = schedule.Find(i == 0 ? "Currently" : "Next");
+                    var E = i == 0 ? events.FirstOrDefault(e => e.start <= now && e.end >= now) : events.FirstOrDefault(e => e.start > now);
+                    if (E == null || E.start.Day != now.Day) { go.gameObject.SetActive(false); schedule.Find("Bar").gameObject.SetActive(false); continue; }
+                    go.Find("Subject").GetComponent<Text>().text = E.subject.name;
+                    go.Find("Teacher").GetComponent<Text>().text = string.Join(", ", E.subject.teachers ?? Array.Empty<string>());
+                    go.Find("Room").GetComponent<Text>().text = E.room;
+                    go.Find("Hours").GetComponent<Text>().text = $"{E.start.ToString("HH:mm")} - {E.end.ToString("HH:mm")}";
+                    go.gameObject.SetActive(true);
+                }
+                schedule.gameObject.SetActive(true);
+            }
+            else schedule.gameObject.SetActive(false);
 
             Content.gameObject.SetActive(true);
         }

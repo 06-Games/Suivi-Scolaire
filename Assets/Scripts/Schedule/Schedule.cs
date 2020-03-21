@@ -15,7 +15,7 @@ namespace Schedule
         public float sizePerHour = 100F;
 
         internal static Dictionary<string, List<Event>> periodSchedule = new Dictionary<string, List<Event>>();
-        DateTime periodStart = DateTime.Now;
+        static DateTime periodStart = DateTime.Now;
         public void Reset()
         {
             periodSchedule = new Dictionary<string, List<Event>>();
@@ -23,28 +23,33 @@ namespace Schedule
         }
 
         void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
-        void Awake() { subjectColor = Utils.XMLtoClass<List<(string, Color)>>(PlayerPrefs.GetString("scheduleColors"))?.ToDictionary(s => s.Item1, s => s.Item2) ?? new Dictionary<string, Color>(); }
+        void Awake() { 
+            subjectColor = Utils.XMLtoClass<List<(string, Color)>>(PlayerPrefs.GetString("scheduleColors"))?.ToDictionary(s => s.Item1, s => s.Item2) ?? new Dictionary<string, Color>();
+            defaultAction = (period, schedule) =>
+            {
+                Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
+            };
+        }
         public void OnEnable()
         {
             StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
-            Initialise(periodStart);
+            Initialise(periodStart, defaultAction);
+            Manager.OpenModule(gameObject);
         }
-        public void Initialise(DateTime start)
+        internal static Action<TimeRange, List<Event>> defaultAction;
+        public static bool Initialise(DateTime start, Action<TimeRange, List<Event>> action)
         {
             if (Screen.width <= Screen.height) periodStart = start.Date;
             int delta = DayOfWeek.Monday - start.DayOfWeek;
             start = start.AddDays(delta > 0 ? delta - 7 : delta);
             if (Screen.width > Screen.height) periodStart = start.Date;
             var period = new TimeRange(start, start + new TimeSpan(6, 0, 0, 0));
-            Action<List<Event>> action = (schedule) =>
-            {
-                Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
-                Manager.OpenModule(gameObject);
-            };
-            if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { gameObject.SetActive(false); return; }
-            if (periodSchedule.TryGetValue(period.ToString("yyyy-MM-dd"), out var _schedule)) action(_schedule);
-            else StartCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(s); }));
+            
+            if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { Manager.instance.transform.Find("Schedule").gameObject.SetActive(false); return false; }
+            if (periodSchedule.TryGetValue(period.ToString("yyyy-MM-dd"), out var _schedule)) action(period, _schedule);
+            else UnityThread.executeCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(period, s); }));
+            return true;
         }
         Dictionary<string, Color> subjectColor;
         void Refresh(IEnumerable<Event> schedule, TimeRange period)
@@ -121,9 +126,9 @@ namespace Schedule
             if (Screen.width > Screen.height)
             {
                 int delta = DayOfWeek.Monday - periodStart.DayOfWeek;
-                Initialise(periodStart.AddDays(delta > 0 ? delta - 7 : delta) + new TimeSpan(next ? 7 : -7, 0, 0, 0));
+                Initialise(periodStart.AddDays(delta > 0 ? delta - 7 : delta) + new TimeSpan(next ? 7 : -7, 0, 0, 0), defaultAction);
             }
-            else Initialise(periodStart.AddDays(next ? 1 : -1));
+            else Initialise(periodStart.AddDays(next ? 1 : -1), defaultAction);
         }
 
 
@@ -136,7 +141,7 @@ namespace Schedule
                 bool paysage = Screen.width > Screen.height;
                 yield return new WaitWhile(() => paysage == Screen.width > Screen.height);
                 Top.Switch(paysage ? LayoutSwitcher.Mode.Vertical : LayoutSwitcher.Mode.Horizontal);
-                Initialise(periodStart);
+                Initialise(periodStart, defaultAction);
             }
         }
 

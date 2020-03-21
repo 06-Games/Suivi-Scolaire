@@ -16,6 +16,8 @@ home = Accueil
 home.holidays.start = Les <i>[0]</i>\ncommencent dans <b>[1]</b> jours
 home.holidays.end = Elles se terminent dans <b>[1]</b> jours
 home.marks = Dernières notes
+home.schedule.currently = Actuellement:
+home.schedule.next = Suivant:
 
 schedule = Mon emploi du temps
 schedule.empty = Aucun évènement

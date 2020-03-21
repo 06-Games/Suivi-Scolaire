@@ -16,6 +16,8 @@ home = Home
 home.holidays.start = <i>[0]</i>\nstart in <b>[1]</b> days
 home.holidays.end = It ends in <b>[1]</b> days
 home.marks = Latest Marks
+home.schedule.currently = Currently:
+home.schedule.next = Next:
 
 schedule = My schedule
 schedule.empty = No events
