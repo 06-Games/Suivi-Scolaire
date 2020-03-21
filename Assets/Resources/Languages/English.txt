@@ -13,7 +13,8 @@ menu.changeAccount = Change account
 menu.logout = Logout
 
 home = Home
-home.holidays = Your next vacation is <i>[0]</i>, it will start in <b>[1]</b> days
+home.holidays.start = <i>[0]</i>\nstart in <b>[1]</b> days
+home.holidays.end = It ends in <b>[1]</b> days
 home.marks = Latest Marks
 
 schedule = My schedule

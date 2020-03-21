@@ -1,11 +1,12 @@
 ﻿using DateTime = System.DateTime;
 
-namespace Home
+namespace Periods
 {
-    public class Holiday
+    public class Period
     {
         public string name;
         public DateTime start;
         public DateTime end;
+        public bool holiday;
     }
 }

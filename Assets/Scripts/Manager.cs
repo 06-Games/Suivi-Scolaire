@@ -4,7 +4,7 @@ public class Manager : MonoBehaviour
 {
     [Header("Modules")]
     public FirstStart FirstStart;
-    public Home.Home Home;
+    public Periods.Home Home;
     public System.Collections.Generic.List<Module> modules = new System.Collections.Generic.List<Module>();
 
     [Header("Others")]

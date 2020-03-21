@@ -1,13 +1,13 @@
-﻿using Home;
+﻿using Periods;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Integrations
 {
-    public class Local : Provider, Home
+    public class Local : Provider, Periods
     {
         public string Name => "Local";
-        public IEnumerator GetHolidays(Action<List<Holiday>> onComplete) { onComplete?.Invoke(new List<Holiday>()); yield break; }
+        public IEnumerator GetPeriods(Action<List<Period>> onComplete) { onComplete?.Invoke(new List<Period>()); yield break; }
     }
 }

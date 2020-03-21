@@ -13,7 +13,8 @@ menu.changeAccount = Changer de compte
 menu.logout = Se déconnecter
 
 home = Accueil
-home.holidays = Vos prochaines vacances sont les <i>[0]</i>, elles commenceront dans <b>[1]</b> jours
+home.holidays.start = Les <i>[0]</i>\ncommencent dans <b>[1]</b> jours
+home.holidays.end = Elles se terminent dans <b>[1]</b> jours
 home.marks = Dernières notes
 
 schedule = Mon emploi du temps

@@ -1,5 +1,4 @@
-﻿using Home;
-using Homeworks;
+﻿using Homeworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using Random = System.Random;
 
 namespace Integrations
 {
-    public class CambridgeKids : Provider, Auth, Home, Homeworks
+    public class CambridgeKids : Provider, Auth, Homeworks
     {
         public string Name => "Cambridge Kids";
 
@@ -81,7 +80,7 @@ namespace Integrations
                 onComplete?.Invoke(account);
             }
         }
-        public IEnumerator<Period> DiaryPeriods()
+        public IEnumerator<global::Homeworks.Period> DiaryPeriods()
         {
             var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={childId}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
             request.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
@@ -92,14 +91,14 @@ namespace Integrations
             var periods = result.jToken.SelectToken("service_search").Where(obj => !string.IsNullOrEmpty(obj.Value<string>("date_debut")));
             foreach (var period in periods)
             {
-                yield return new Period()
+                yield return new global::Homeworks.Period()
                 {
                     name = period.Value<string>("description"),
                     id = period.Value<string>("service_id")
                 };
             }
         }
-        public IEnumerator GetHomeworks(Period period, Action<List<Homework>> onComplete)
+        public IEnumerator GetHomeworks(global::Homeworks.Period period, Action<List<Homework>> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.homeworks", "Getting homeworks");
 
@@ -131,11 +130,6 @@ namespace Integrations
 
             onComplete?.Invoke(homeworks);
             Manager.HideLoadingPanel();
-        }
-        public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
-        {
-            onComplete?.Invoke(new List<Holiday>());
-            yield break;
         }
 
         private static Random random = new Random();

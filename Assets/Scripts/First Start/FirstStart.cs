@@ -138,15 +138,17 @@ public class FirstStart : MonoBehaviour
 
         var returnBtn = instance.Find("Top").Find("Return").GetComponent<Button>();
         returnBtn.onClick.RemoveAllListeners();
-        returnBtn.onClick.AddListener(() => {
-            Childs.gameObject.SetActive(false); 
+        returnBtn.onClick.AddListener(() =>
+        {
+            Childs.gameObject.SetActive(false);
             instance.Find("Content").Find("Auth").gameObject.SetActive(true);
 
             returnBtn.onClick.RemoveAllListeners();
-            returnBtn.onClick.AddListener(() => {
+            returnBtn.onClick.AddListener(() =>
+            {
                 instance.Find("Content").Find("Auth").gameObject.SetActive(false);
-                instance.Find("Content").Find("Welcome").gameObject.SetActive(true); 
-                returnBtn.gameObject.SetActive(false); 
+                instance.Find("Content").Find("Welcome").gameObject.SetActive(true);
+                returnBtn.gameObject.SetActive(false);
             });
         });
         returnBtn.gameObject.SetActive(true);

@@ -46,7 +46,7 @@ public class LayoutSwitcher : MonoBehaviour
                 case Mode.Horizontal: LayoutGroup = gameObject.AddComponent<HorizontalLayoutGroup>(); break;
                 case Mode.Vertical: LayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>(); break;
             };
-            if(LayoutGroup == null) { Switch(); return; }
+            if (LayoutGroup == null) { Switch(); return; }
             LayoutGroup.hideFlags = HideFlags.HideAndDontSave;
             LayoutGroup.padding = padding;
             LayoutGroup.spacing = spacing;

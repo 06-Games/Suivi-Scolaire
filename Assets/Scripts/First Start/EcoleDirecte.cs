@@ -1,5 +1,4 @@
-﻿using Home;
-using Homeworks;
+﻿using Homeworks;
 using Marks;
 using Newtonsoft.Json.Linq;
 using System;
@@ -11,7 +10,7 @@ using UnityEngine.Networking;
 
 namespace Integrations
 {
-    public class EcoleDirecte : Provider, Auth, Home, Homeworks, Marks, Schedule
+    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule
     {
         public string Name => "EcoleDirecte";
 
@@ -202,9 +201,10 @@ namespace Integrations
                         form.AddField("token", token);
                         form.AddField("leTypeDeFichier", doc.Value<string>("type"));
                         form.AddField("fichierId", doc.Value<string>("id"));
-                        return new Request(){
-                             docName = doc.Value<string>("libelle"), 
-                            url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", 
+                        return new Request()
+                        {
+                            docName = doc.Value<string>("libelle"),
+                            url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
                             method = Request.Method.Post,
                             postData = form
                         };
@@ -236,7 +236,7 @@ namespace Integrations
                 name = pEnd == DateTime.MaxValue ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", pStart.ToString("dd/MM"), pEnd.ToString("dd/MM"))
             };
         }
-        public IEnumerator GetHolidays(Action<List<Holiday>> onComplete)
+        public IEnumerator GetPeriods(Action<List<global::Periods.Period>> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.holidays", "Getting holidays");
             var establishmentRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
@@ -247,7 +247,7 @@ namespace Integrations
                 if (establishmentResult.Value<string>("message") == "Session expirée !")
                 {
                     yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
-                    yield return GetHolidays(onComplete);
+                    yield return GetPeriods(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(establishmentResult.Value<string>("message"), "Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"");
                 yield break;
@@ -264,15 +264,27 @@ namespace Integrations
             var holidaysRequest = UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-calendrier-scolaire&q={academy}&sort=end_date");
             yield return holidaysRequest.SendWebRequest();
             var holidaysResult = new FileFormat.JSON(holidaysRequest.downloadHandler.text);
-            var holidays = holidaysResult.jToken.SelectToken("records").Select(v =>
+            DateTime lastPeriod = DateTime.MinValue;
+            var holidays = holidaysResult.jToken.SelectToken("records").SelectMany(v =>
             {
+                var list = new List<global::Periods.Period>();
                 var obj = v.SelectToken("fields");
-                return new Holiday()
+                list.Add(new global::Periods.Period()
+                {
+                    name = "Periode scolaire",
+                    start = lastPeriod,
+                    end = obj.Value<DateTime>("start_date").AddDays(-1),
+                    holiday = false
+                });
+                list.Add(new global::Periods.Period()
                 {
                     name = obj.Value<string>("description"),
                     start = obj.Value<DateTime>("start_date"),
-                    end = obj.Value<DateTime>("end_date")
-                };
+                    end = obj.Value<DateTime>("end_date"),
+                    holiday = true
+                });
+                lastPeriod = list.Last().end;
+                return list;
             }).ToList();
 
             onComplete?.Invoke(holidays);

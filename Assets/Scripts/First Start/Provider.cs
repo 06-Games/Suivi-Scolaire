@@ -90,7 +90,7 @@ namespace Integrations
 
     public interface Provider { string Name { get; } }
     public interface Auth : Provider { IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError); }
-    public interface Home : Provider { IEnumerator GetHolidays(Action<List<global::Home.Holiday>> onComplete); }
+    public interface Periods : Provider { IEnumerator GetPeriods(Action<List<global::Periods.Period>> onComplete); }
     public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action<List<global::Schedule.Event>> onComplete); }
     public interface Homeworks : Provider
     {

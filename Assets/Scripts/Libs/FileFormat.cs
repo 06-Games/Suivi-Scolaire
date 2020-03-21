@@ -3,8 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using Tools;
-using System.Collections;
 
 namespace FileFormat
 {

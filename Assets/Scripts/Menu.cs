@@ -1,13 +1,13 @@
 ﻿using Integrations;
 using System.Linq;
-using UnityEngine;
 using Tools;
+using UnityEngine;
 
 [RequireComponent(typeof(SimpleSideMenu))]
 public class Menu : MonoBehaviour
 {
     public SimpleSideMenu sideMenu { get; private set; }
-    public Transform manager;
+    Transform manager;
     private void Awake() { sideMenu = GetComponent<SimpleSideMenu>(); }
     void Start()
     {
@@ -24,7 +24,7 @@ public class Menu : MonoBehaviour
             var provider = Manager.provider;
             var modulePanel = transform.Find("Panel").Find("Modules");
             var modules = provider.Modules().ToList();
-            foreach (Transform module in modulePanel) module.gameObject.SetActive(modules.Contains(module.name));
+            foreach (Transform module in modulePanel) module.gameObject.SetActive(module.name == "Home" | modules.Contains(module.name));
         };
         manager = Manager.instance.transform;
     }
