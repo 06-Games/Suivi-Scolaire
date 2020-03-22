@@ -118,7 +118,7 @@ namespace Homeworks
                                 File.WriteAllBytes(path, request.downloadHandler.data);
                                 Application.OpenURL(path);
 #else
-                                var path = "/storage/emulated/0/Download/Suivi-Scolaire/" + doc.Item1;
+                                var path = "/storage/emulated/0/Download/Suivi-Scolaire/" + doc.docName;
                                 if (!Directory.Exists(Path.GetDirectoryName(path))) Directory.CreateDirectory(Path.GetDirectoryName(path));
                                 File.WriteAllBytes(path, request.downloadHandler.data);
                                 UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path);
