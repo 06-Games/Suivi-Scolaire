@@ -10,6 +10,8 @@ namespace Periods
 {
     public class Home : MonoBehaviour, Module
     {
+        public Sprite[] periodSprites;
+
         internal static List<Period> periods;
         static List<Schedule.Event> events;
         public void Reset() { periods = null; events = null; }
@@ -43,7 +45,7 @@ namespace Periods
             if (periods?.Count > 0)
             {
                 var actualPeriod = periods.FirstOrDefault(p => p.start <= now && p.end >= now);
-                period.Find("Img").Find("Image").GetComponent<Image>().sprite = null;
+                period.Find("Img").Find("Image").GetComponent<Image>().sprite = periodSprites[actualPeriod.holiday ? 1 : 0];
                 period.Find("Txt").Find("Period").GetComponent<Text>().text = actualPeriod.name;
                 if (actualPeriod.holiday) period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get("", "Elles se termineront dans [0] jours", (actualPeriod.start - now).ToString("dd"));
                 var nextPeriod = periods.FirstOrDefault(h => h.start > now);
