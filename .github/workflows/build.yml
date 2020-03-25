@@ -24,10 +24,12 @@ jobs:
           - iOS # Build an iOS player.
           - Android # Build an Android .apk standalone app.
     steps:
-      - uses: actions/checkout@v2
+      - name: Clone repo
+        uses: actions/checkout@v2
         with:
           lfs: true
-      - uses: actions/cache@v1.1.0
+      - name: Get cached Libraries
+        uses: actions/cache@v1.1.0
         with:
           path: ${{ matrix.projectPath }}/Library
           key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
@@ -40,17 +42,16 @@ jobs:
          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           unityVersion: 2019.3.3f1
-      - name: Return license
-        uses: webbertakken/unity-return-license@v1
-        if: always()
-      - uses: webbertakken/unity-builder@v0.11
+      - name: Build
+        uses: webbertakken/unity-builder@v0.11
         env:
          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           projectPath: ${{ matrix.projectPath }}
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
-      - uses: actions/upload-artifact@v1
+      - name: Upload build
+        uses: actions/upload-artifact@v1
         with:
           name: Build
           path: build
