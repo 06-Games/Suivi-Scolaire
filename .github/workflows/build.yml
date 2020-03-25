@@ -40,11 +40,10 @@ jobs:
       - name: Build
         uses: webbertakken/unity-builder@v0.11
         with:
-          projectPath: ${{ matrix.projectPath }}
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:
-          name: Build
+          name: ${{ matrix.targetPlatform }}
           path: build
