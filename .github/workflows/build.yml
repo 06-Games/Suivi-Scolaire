@@ -33,10 +33,9 @@ jobs:
       - name: Get cached libraries
         uses: actions/cache@v1.1.0
         with:
-          path: ${{ matrix.projectPath }}/Library
-          key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
+          path: Library
+          key: Library-${{ matrix.targetPlatform }}
           restore-keys: |
-            Library-${{ matrix.projectPath }}-
             Library-
       - name: Build
         uses: webbertakken/unity-builder@v0.11
