@@ -66,8 +66,9 @@ jobs:
           xcode-version: '11.4' # Exact version of a Xcode version to use
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
+      - run: ls
       - name: Build Archive
-        run: xcodebuild -project xcode/Unity-iPhone.xcodeproj -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive
+        run: xcodebuild -project xcode/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive
       - name: Build IPA
         run: xcodebuild -exportArchive -archivePath build/archive.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build/XCode
       - name: Upload build
