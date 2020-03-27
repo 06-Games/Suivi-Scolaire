@@ -59,7 +59,7 @@ jobs:
         uses: actions/download-artifact@v1.0.0
         with:
           name: iOS
-          path: build
+          path: xcode
       - name: Install XCode
         uses: sinoru/actions-setup-xcode@v1.1
         with:
@@ -67,7 +67,7 @@ jobs:
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Build Archive
-        run: xcodebuild -workspace project.xcworkspace -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive
+        run: xcodebuild -project xcode/Unity-iPhone.xcodeproj -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive
       - name: Build IPA
         run: xcodebuild -exportArchive -archivePath build/archive.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build/XCode
       - name: Upload build
