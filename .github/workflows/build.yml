@@ -53,7 +53,7 @@ jobs:
   iOS_Builder:
     name: Build iOS IPA
     runs-on: macos-latest
-    #needs: [default_Builder]
+    needs: [default_Builder]
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v1.0.0
