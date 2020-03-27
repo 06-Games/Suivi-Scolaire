@@ -68,7 +68,7 @@ namespace Integrations
                     else if (item.Name == "li") result += $"• {AnalyseNode(item)}\n";
                     else if (item.Name == "span")
                     {
-                        string style = item.Attributes["style"].Value;
+                        string style = item.Attributes["style"]?.Value ?? "";
                         if (style.StartsWith("font-size:")) result += $"<size={style.Substring("font-size:".Length).TrimStart(' ').Replace("px;", "")}>{AnalyseNode(item)}</size>";
                         else if (style.StartsWith("color:"))
                         {
@@ -79,6 +79,7 @@ namespace Integrations
                                 value = "#" + string.Join("", value.Substring("rgba(".Length).TrimEnd(')').Split(',').Cast<byte>().Select(d => d.ToString("X2")));
                             result += $"<color={value}>{AnalyseNode(item)}</color>";
                         }
+                        else result += AnalyseNode(item);
                     }
                     else result += AnalyseNode(item);
                 }

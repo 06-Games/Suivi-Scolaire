@@ -14,7 +14,7 @@ namespace Homeworks
     {
         internal static Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
         List<Period> periods = new List<Period>();
-        IEnumerator<global::Homeworks.Period> periodsMethod;
+        IEnumerator<Period> periodsMethod;
         int periodIndex = 0;
         public void Reset()
         {
