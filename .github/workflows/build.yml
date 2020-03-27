@@ -67,7 +67,7 @@ jobs:
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Build Archive
-        run: xcodebuild -workspace Unity-iPhone.xcworkspace -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive
+        run: xcodebuild -workspace project.xcworkspace -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive
       - name: Build IPA
         run: xcodebuild -exportArchive -archivePath build/archive.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build/XCode
       - name: Upload build
