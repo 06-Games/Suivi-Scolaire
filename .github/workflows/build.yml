@@ -10,6 +10,7 @@ env:
   UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
   APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
   APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+  APPLE_TEAM: ${{ secrets.APPLE_TEAM }}
 
 jobs:
   default_Builder:
@@ -67,8 +68,10 @@ jobs:
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - run: chmod -R 777 xcode/iOS/iOS/
+      - name: Build Project
+        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -configuration Release -allowProvisioningUpdates build
       - name: Build Archive
-        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -allowProvisioningUpdates -sdk iphoneos -configuration AppStoreDistribution archive -archivePath build/archive.xcarchive DEVELOPMENT_TEAM=4HFHSS3VVC
+        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -sdk iphoneos -configuration Release archive -archivePath build/archive.xcarchive DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }}
       - name: Build IPA
         run: xcodebuild -exportArchive -archivePath build/archive.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build/XCode
       - name: Upload build
