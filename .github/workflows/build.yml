@@ -69,7 +69,7 @@ jobs:
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - run: chmod -R 777 xcode/iOS/iOS/
       - name: Build Project
-        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -configuration Release -allowProvisioningUpdates -allowProvisioningDeviceRegistration build DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }}
+        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -configuration Release -allowProvisioningUpdates -allowProvisioningDeviceRegistration -quiet build DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic"
       - name: Build Archive
         run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -sdk iphoneos -configuration Release archive -archivePath build/archive.xcarchive DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }}
       - name: Build IPA
