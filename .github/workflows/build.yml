@@ -85,7 +85,8 @@ jobs:
               -allowProvisioningUpdates -allowProvisioningDeviceRegistration
               archive \
               DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} \
-              PROVISIONING_PROFILE_SPECIFIER=${{ secrets.APPLE_PROFILE }}
+              PROVISIONING_PROFILE_SPECIFIER=${{ secrets.APPLE_PROFILE }} \
+              CODE_SIGN_STYLE="Automatic"
       - name: Build IPA
         run: |
           xcrun xcodebuild \
