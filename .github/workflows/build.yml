@@ -92,7 +92,7 @@ jobs:
               DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} \
               CODE_SIGN_STYLE="Manual" \ 
               OTHER_CODE_SIGN_FLAGS="--keychain key.keychain" \
-              CODE_SIGN_IDENTITY=${{ secrets.APPLE_EMAIL }}
+              CODE_SIGN_IDENTITY=${{ secrets.APPLE_EMAIL }} \
               | xcbeautify
       - name: Build IPA
         run: |
