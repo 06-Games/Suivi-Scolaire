@@ -82,7 +82,7 @@ jobs:
       - uses: "finnp/create-file-action@master"
         env:
           FILE_NAME: "ExportOptions.plist"
-          FILE_DATA: '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>method</key>\n<string>development</string>\n<key>teamID</key>\n<string>4HFHSS3VVC</string>\n</dict>\n</plist>'
+          FILE_DATA: '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>destination</key>\n<string>export</string>\n<key>method</key>\n<string>app-store</string>\n<key>signingStyle</key>\n<string>automatic</string>\n<key>generateAppStoreInformation</key>\n<true/>\n<key>stripSwiftSymbols</key>\n<true/>\n<key>teamID</key>\n<string>4HFHSS3VVC</string>\n<key>uploadBitcode</key>\n<true/>\n<key>uploadSymbols</key>\n<true/>\n</dict>\n</plist>'
       - name: Build IPA
         run: xcodebuild -quiet -exportArchive -exportOptionsPlist exportOptions.plist -archivePath build/archive.xcarchive -exportPath build/XCode/Suivi-Scolaire.ipa | xcbeautify -q
       - name: Upload build
