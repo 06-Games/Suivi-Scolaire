@@ -8,9 +8,6 @@ env:
   UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
   UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
   UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-  APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
-  APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-  APPLE_TEAM: ${{ secrets.APPLE_TEAM }}
 
 jobs:
   default_Builder:
@@ -68,12 +65,56 @@ jobs:
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - run: chmod -R 777 xcode/iOS/iOS/
+      - uses: Apple-Actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Build Project
-        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -configuration Release -allowProvisioningUpdates -allowProvisioningDeviceRegistration -quiet build DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic"
-      - name: Build Archive
-        run: xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -sdk iphoneos -configuration Release -quiet archive -archivePath build/archive.xcarchive DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic"
-      - name: Build IPA
-        run: xcodebuild -exportArchive -archivePath build/archive.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build/XCode
+        run: |
+          set -xeu
+          set -o pipefail
+
+          function finish() {
+            ditto -c -k --sequesterRsrc --keepParent "${RESULT_BUNDLE_PATH}" "${RESULT_BUNDLE_PATH}.zip"
+            rm -rf "${RESULT_BUNDLE_PATH}"
+          }
+
+          trap finish EXIT
+
+          SDK="${SDK:-iphoneos}"
+          SCHEME="${SCHEME:-Unity-iPhone}"
+          CONFIGURATION=${CONFIGURATION:-Release}
+
+          BUILD_DIR=${BUILD_DIR:-.build}
+          ARTIFACT_PATH="build/XCode"
+          RESULT_BUNDLE_PATH="${ARTIFACT_PATH}/${SCHEME}.xcresult"
+          ARCHIVE_PATH=${ARCHIVE_PATH:-${BUILD_DIR}/Archives/${SCHEME}.xcarchive}
+          DERIVED_DATA_PATH=${DERIVED_DATA_PATH:-${BUILD_DIR}/DerivedData}
+          EXPORT_OPTIONS_FILE="Support/ExportOptions.plist"
+
+          rm -rf "${RESULT_BUNDLE_PATH}"
+
+          xcrun xcodebuild \
+              -project xcode/iOS/iOS/Unity-iPhone.xcodeproj \
+              -scheme "${SCHEME}" \
+              -configuration "${CONFIGURATION}" \
+              -sdk "${SDK}" \
+              -parallelizeTargets \
+              -showBuildTimingSummary \
+              -disableAutomaticPackageResolution \
+              -derivedDataPath "${DERIVED_DATA_PATH}" \
+              -archivePath "${ARCHIVE_PATH}" \
+              -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+              archive
+
+          xcrun xcodebuild \
+              -exportArchive \
+              -exportOptionsPlist "${EXPORT_OPTIONS_FILE}" \
+              -archivePath "${ARCHIVE_PATH}" \
+              -exportPath "${ARTIFACT_PATH}/${SCHEME}.ipa"
+
+          # Zip up the Xcode Archive into Artifacts folder.
+          ditto -c -k --sequesterRsrc --keepParent "${ARCHIVE_PATH}" "${ARTIFACT_PATH}/${SCHEME}.xcarchive.zip"
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:
