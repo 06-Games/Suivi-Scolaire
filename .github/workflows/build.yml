@@ -79,14 +79,12 @@ jobs:
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -allowProvisioningUpdates -allowProvisioningDeviceRegistration build DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic"
       - name: Build Archive
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -allowProvisioningUpdates -allowProvisioningDeviceRegistration -archivePath build/archive.xcarchive archive DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic" | xcbeautify -q
+      - uses: "finnp/create-file-action@master"
+        env:
+          FILE_NAME: "ExportOptions.plist"
+          FILE_DATA: '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>method</key>\n<string>development</string>\n<key>teamID</key>\n<string>4HFHSS3VVC</string>\n</dict>\n</plist>'
       - name: Build IPA
-        run: |
-          xcrun xcodebuild \
-              -quiet \
-              -exportArchive \
-              -exportOptionsPlist exportOptions.plist \
-              -archivePath build/archive.xcarchive \
-              -exportPath build/XCode/Suivi-Scolaire.ipa
+        run: xcodebuild -quiet -exportArchive -exportOptionsPlist exportOptions.plist -archivePath build/archive.xcarchive -exportPath build/XCode/Suivi-Scolaire.ipa | xcbeautify -q
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:
