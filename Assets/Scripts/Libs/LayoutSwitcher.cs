@@ -41,6 +41,7 @@ public class LayoutSwitcher : MonoBehaviour
         foreach (var c in GetComponents<HorizontalOrVerticalLayoutGroup>()) Destroy(c);
         UnityThread.executeInLateUpdate(() =>
         {
+            if (gameObject == null) return;
             switch (mode)
             {
                 case Mode.Horizontal: LayoutGroup = gameObject.AddComponent<HorizontalLayoutGroup>(); break;
