@@ -76,7 +76,7 @@ jobs:
           p12-file-base64: ${{ secrets.CERTIFICATES_FILE_BASE64 }}
           p12-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Build Project
-        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -allowProvisioningUpdates -allowProvisioningDeviceRegistration build DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic" | xcbeautify -q
+        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -allowProvisioningUpdates -allowProvisioningDeviceRegistration build DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic"
       - name: Build Archive
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -allowProvisioningUpdates -allowProvisioningDeviceRegistration -archivePath build/archive.xcarchive archive DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} CODE_SIGN_STYLE="Automatic" | xcbeautify -q
       - name: Build IPA
