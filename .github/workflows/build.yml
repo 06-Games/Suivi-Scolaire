@@ -80,7 +80,9 @@ jobs:
               -showBuildTimingSummary \
               -archivePath build/archive.xcarchive \
               -quiet \
-              archive
+              -allowProvisioningUpdates -allowProvisioningDeviceRegistration
+              archive \
+              DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }}
       - name: Build IPA
         run: |
           xcrun xcodebuild \
