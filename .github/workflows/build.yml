@@ -64,6 +64,10 @@ jobs:
           xcode-version: '11.4' # Exact version of a Xcode version to use
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
+      - name: Install xcbeautify
+        uses: Cyberbeni/install-swift-tool@v1
+        with:
+          url: https://github.com/Cyberbeni/xcbeautify
       - run: chmod -R 777 xcode/iOS/iOS/
       - uses: Apple-Actions/import-codesign-certs@v1
         with:
@@ -73,7 +77,8 @@ jobs:
           p12-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Build Archive
         run: |
-          xcrun xcodebuild \
+          set -o pipefail && \
+          xcodebuild \
               -project xcode/iOS/iOS/Unity-iPhone.xcodeproj \
               -scheme Unity-iPhone \
               -configuration Release \
@@ -85,8 +90,8 @@ jobs:
               -allowProvisioningUpdates -allowProvisioningDeviceRegistration
               archive \
               DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM }} \
-              PROVISIONING_PROFILE_SPECIFIER=${{ secrets.APPLE_PROFILE }} \
-              CODE_SIGN_STYLE="Automatic"
+              CODE_SIGN_STYLE="Automatic" \ 
+              | xcbeautify
       - name: Build IPA
         run: |
           xcrun xcodebuild \
