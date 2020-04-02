@@ -50,7 +50,7 @@ namespace Marks
         public void Refresh() { Refresh(null); }
         public void Refresh(Subject selectedSubject)
         {
-            var marksByS = marks.GroupBy(m => m.subject).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.period == periods[period.value - 1]).ToList());
+            var marksByS = marks.GroupBy(m => m.subject).Where(s => s.Key == selectedSubject || selectedSubject == null).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.period == periods[period.value - 1]).ToList());
             var average = marksByS.ToDictionary(s => s.Key, s =>
             {
                 var _marks = s.Value.Where(m => m.mark != null && !m.notSignificant);
