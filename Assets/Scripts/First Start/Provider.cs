@@ -99,4 +99,8 @@ namespace Integrations
         IEnumerator<global::Homeworks.Period> DiaryPeriods();
     }
     public interface Marks : Provider { IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<global::Marks.Mark>> onComplete); }
+    public interface Messanging : Provider { 
+        IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete);
+        IEnumerator LoadExtraMessageData(global::Messanging.Message data, Action<global::Messanging.Message> onComplete);
+    }
 }

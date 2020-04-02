@@ -9,6 +9,7 @@ menu.home = Home
 menu.schedule = Schedule
 menu.marks = Marks
 menu.homeworks = Text book
+menu.messanging = Messanging
 menu.changeAccount = Change account
 menu.logout = Logout
 
@@ -46,8 +47,17 @@ homeworks.period = from [0] to [1]
 homeworks.added = Added on [0] by [1]
 homeworks.downloading = Downloading: [0]%
 
+messanging = Messanging
+
 provider.connecting = Establishing the connection with [0]
 provider.homeworks = Getting homeworks
 provider.marks = Getting marks
 provider.holidays = Getting holidays
 provider.schedule = Getting schedule
+provider.messages = Getting messages
+provider.messages.content = Getting message content
+
+updateWarn = An update is available. Would you like to install it ?
+updateWarn.yes = Yes
+updateWarn.no = No
+updateWarn.downloading = Downloading the update...

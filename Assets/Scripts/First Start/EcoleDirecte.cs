@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 
 namespace Integrations
 {
-    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule
+    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule, Messanging
     {
         public string Name => "EcoleDirecte";
 
@@ -319,6 +319,83 @@ namespace Integrations
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke(events ?? new List<global::Schedule.Event>());
+        }
+        public IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete)
+        {
+            Manager.UpdateLoadingStatus("provider.messages", "Getting messages");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
+            yield return request.SendWebRequest();
+            var result = new FileFormat.JSON(request.downloadHandler.text);
+            if (result.Value<int>("code") != 200)
+            {
+                if (result.Value<string>("message") == "Session expirée !")
+                {
+                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return GetMessages(onComplete);
+                }
+                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting messages, server returned \"" + result.Value<string>("message") + "\"");
+                yield break;
+            }
+
+            var msg = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
+            {
+                return t.Select(m =>
+                {
+                    var type = (m.Value<string>("mtype") == "received") ? "from" : "to";
+                    return new global::Messanging.Message()
+                    {
+                        id = m.Value<uint>("id"),
+                        read = m.Value<bool>("read"),
+                        date = m.Value<DateTime>("date"),
+                        subject = m.Value<string>("subject"),
+                        correspondents = (type == "from" ? Enumerable.Repeat(m[type], 1) : m[type]).Select(c => c.Value<string>("name")).ToList(),
+                        type = Enum.TryParse(m.Value<string>("mtype"), out global::Messanging.Message.Type _type) ? _type : global::Messanging.Message.Type.received
+                    };
+                });
+            }).ToList();
+
+            Manager.HideLoadingPanel();
+            onComplete?.Invoke(msg);
+        }
+        public IEnumerator LoadExtraMessageData(global::Messanging.Message message, Action<global::Messanging.Message> onComplete)
+        {
+            Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/messages/{message.id}.awp?verbe=get", $"data={{\"token\": \"{token}\"}}");
+            yield return request.SendWebRequest();
+            var result = new FileFormat.JSON(request.downloadHandler.text);
+            if (result.Value<int>("code") != 200)
+            {
+                if (result.Value<string>("message") == "Session expirée !")
+                {
+                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return LoadExtraMessageData(message, onComplete);
+                }
+                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting extra message data, server returned \"" + result.Value<string>("message") + "\"");
+                yield break;
+            }
+
+            var data = result.jToken.SelectToken("data");
+            message.extra = new global::Messanging.Message.Extra()
+            {
+                content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content")))),
+                documents = data.SelectToken("files").Select(doc =>
+                {
+                    WWWForm form = new WWWForm();
+                    form.AddField("token", token);
+                    form.AddField("leTypeDeFichier", doc.Value<string>("type"));
+                    form.AddField("fichierId", doc.Value<string>("id"));
+                    return new Request()
+                    {
+                        docName = doc.Value<string>("libelle"),
+                        url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
+                        method = Request.Method.Post,
+                        postData = form
+                    };
+                })
+            };
+
+            Manager.HideLoadingPanel();
+            onComplete.Invoke(message);
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));

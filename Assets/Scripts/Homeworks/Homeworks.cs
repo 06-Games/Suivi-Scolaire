@@ -100,31 +100,7 @@ namespace Homeworks
                     {
                         var docGo = Instantiate(docs.GetChild(0).gameObject, docs).transform;
                         docGo.GetComponent<Text>().text = $"• {doc.docName}";
-                        docGo.GetComponent<Button>().onClick.AddListener(() =>
-                        {
-                            UnityThread.executeCoroutine(GetDoc());
-                            IEnumerator GetDoc()
-                            {
-                                var request = doc.request;
-                                request.SendWebRequest();
-                                while (!request.isDone)
-                                {
-                                    Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", false, (request.downloadProgress * 100).ToString("0"));
-                                    yield return new WaitForEndOfFrame();
-                                }
-                                Manager.HideLoadingPanel();
-#if UNITY_STANDALONE
-                                var path = Application.temporaryCachePath + "/Homeworks___" + doc.docName;
-                                File.WriteAllBytes(path, request.downloadHandler.data);
-                                Application.OpenURL(path);
-#else
-                                var path = "/storage/emulated/0/Download/Suivi-Scolaire/" + doc.docName;
-                                if (!Directory.Exists(Path.GetDirectoryName(path))) Directory.CreateDirectory(Path.GetDirectoryName(path));
-                                File.WriteAllBytes(path, request.downloadHandler.data);
-                                UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path);
-#endif
-                            }
-                        });
+                        docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(doc.GetDoc()));
                         docGo.gameObject.SetActive(true);
                     }
 

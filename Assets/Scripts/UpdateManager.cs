@@ -63,6 +63,7 @@ public class UpdateManager : MonoBehaviour
         var progressText = progressBar.handleRect.GetChild(0).GetComponent<Text>();
         var progressData = installPanel.Find("Text").Find("Progress").GetComponent<Text>();
         progressBar.size = 0;
+        if (progressBar.TryGetComponent<UnityEngine.EventSystems.EventTrigger>(out var trigger)) Destroy(trigger);
         progressText.text = "0%";
         progressData.text = "";
         var pow = Mathf.Pow(10, 6);

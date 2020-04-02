@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 using DateTime = System.DateTime;
 
 namespace Homeworks
@@ -14,36 +17,61 @@ namespace Homeworks
         public bool exam;
         public IEnumerable<Request> documents = new List<Request>();
     }
-    public class Request
-    {
-        public string docName;
-        public string url;
-        public Dictionary<string, string> headers;
-        public enum Method { Get, Post }
-        public Method method;
-        public UnityEngine.WWWForm postData;
-
-        public UnityEngine.Networking.UnityWebRequest request
-        {
-            get
-            {
-                UnityEngine.Networking.UnityWebRequest request = null;
-                switch (method)
-                {
-                    case Method.Get: request = UnityEngine.Networking.UnityWebRequest.Get(url); break;
-                    case Method.Post: request = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new UnityEngine.WWWForm()); break;
-                }
-                foreach (var header in headers ?? new Dictionary<string, string>()) request.SetRequestHeader(header.Key, header.Value);
-
-                return request;
-            }
-        }
-    }
 
     public class Period
     {
         public string name;
         public string id;
         public TimeRange timeRange;
+    }
+}
+
+public class Request
+{
+    public string docName;
+    public string url;
+    public Dictionary<string, string> headers;
+    public enum Method { Get, Post }
+    public Method method;
+    public WWWForm postData;
+
+    public UnityEngine.Networking.UnityWebRequest request
+    {
+        get
+        {
+            UnityEngine.Networking.UnityWebRequest request = null;
+            switch (method)
+            {
+                case Method.Get: request = UnityEngine.Networking.UnityWebRequest.Get(url); break;
+                case Method.Post: request = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new UnityEngine.WWWForm()); break;
+            }
+            foreach (var header in headers ?? new Dictionary<string, string>()) request.SetRequestHeader(header.Key, header.Value);
+
+            return request;
+        }
+    }
+
+
+    public IEnumerator GetDoc()
+    {
+        var _request = request;
+        _request.SendWebRequest();
+        while (!_request.isDone)
+        {
+            Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", false, (_request.downloadProgress * 100).ToString("0"));
+            yield return new WaitForEndOfFrame();
+        }
+        Manager.HideLoadingPanel();
+
+#if UNITY_STANDALONE
+        var path = Application.temporaryCachePath + "/Docs___" + docName;
+        File.WriteAllBytes(path, _request.downloadHandler.data);
+        Application.OpenURL(path);
+#else
+        var path = "/storage/emulated/0/Download/Suivi-Scolaire/" + docName;
+        if (!Directory.Exists(Path.GetDirectoryName(path))) Directory.CreateDirectory(Path.GetDirectoryName(path));
+        File.WriteAllBytes(path, request.downloadHandler.data);
+        UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path);
+#endif
     }
 }
