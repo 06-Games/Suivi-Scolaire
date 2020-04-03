@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace Messanging
 {
-    public class Messanging : MonoBehaviour
+    public class Messanging : MonoBehaviour, Module
     {
         internal static List<Message> messages;
         public void Reset() { messages = null; }

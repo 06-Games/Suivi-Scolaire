@@ -1,8 +1,4 @@
-﻿// Simple Side-Menu
-// Version: 1.0.2
-// Author: Daniel Lochner
-
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -15,7 +11,6 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     public GameObject overlay { get; private set; }
     public GameObject blur { get; private set; }
     private RectTransform rectTransform;
-    private State currentState, targetState;
     private float thresholdStateChangeDistance = 10f, previousTime;
     private bool dragging, potentialDrag;
     public Material blurMaterial;
@@ -39,8 +34,8 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     #endregion
 
     #region Properties
-    public State CurrentState { get { return currentState; } }
-    public State TargetState { get { return targetState; } }
+    public State CurrentState { get; private set; }
+    public State TargetState { get; private set; }
     public float StateProgress { get { return ((rectTransform.anchoredPosition - closedPosition).magnitude / ((placement == Placement.Left || placement == Placement.Right) ? rectTransform.rect.width : rectTransform.rect.height)); } }
     #endregion
 
@@ -60,20 +55,9 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     #endregion
 
     #region Methods
-    private void Start()
-    {
-        if (Validate())
-        {
-            Setup();
-        }
-        else
-        {
-            throw new Exception("Invalid inspector input.");
-        }
-    }
+    private void Start() => Setup();
     private void Update()
     {
-        rectTransform.sizeDelta = (int)placement <= 1 ? new Vector2(rectTransform.sizeDelta.x, Screen.height / rectTransform.root.localScale.y) : new Vector2(Screen.width / rectTransform.root.localScale.x, rectTransform.sizeDelta.y);
         OnStateUpdate();
         OnOverlayUpdate();
     }
@@ -97,21 +81,18 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     {
         if (dragging)
         {
-            CanvasScaler canvasScaler = FindObjectOfType<Canvas>().GetComponent<CanvasScaler>();
-            Vector2 referenceResolution;
-            Vector2 displacement;
-
-            if (canvasScaler != null)
+            var scaleFactor = 1F;
+            if (FindObjectOfType<Canvas>().TryGetComponent(out CanvasScaler canvasScaler))
             {
-                referenceResolution = canvasScaler.referenceResolution;
-                displacement = ((targetState == State.Closed) ? closedPosition : openPosition) + (eventData.position - startPosition) * new Vector2(referenceResolution.x / Screen.width, referenceResolution.y / Screen.height);
-            }
-            else
-            {
-                displacement = ((targetState == State.Closed) ? closedPosition : openPosition) + (eventData.position - startPosition);
+                var kLogBase = 2;
+                var referenceResolution = canvasScaler.referenceResolution;
+                float logWidth = Mathf.Log(Screen.width / referenceResolution.x, kLogBase);
+                float logHeight = Mathf.Log(Screen.height / referenceResolution.y, kLogBase);
+                float logWeightedAverage = Mathf.Lerp(logWidth, logHeight, canvasScaler.matchWidthOrHeight);
+                scaleFactor = Mathf.Pow(kLogBase, logWeightedAverage);
             }
 
-
+            var displacement = ((TargetState == State.Closed) ? closedPosition : openPosition) + (eventData.position - startPosition) / scaleFactor;
             float x = (placement == Placement.Left || placement == Placement.Right) ? displacement.x : rectTransform.anchoredPosition.x;
             float y = (placement == Placement.Top || placement == Placement.Bottom) ? displacement.y : rectTransform.anchoredPosition.y;
 
@@ -144,52 +125,37 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         }
         return valid;
     }
-    private void Setup()
+    public void Setup()
     {
-        //Placement
-        Vector2 anchorMin = Vector2.zero;
-        Vector2 anchorMax = Vector2.zero;
-        Vector2 pivot = Vector2.zero;
+        if (!Validate()) throw new Exception("Invalid inspector input.");
 
+        //Placement
         switch (placement)
         {
             case Placement.Left:
-                anchorMin = new Vector2(0, 0.5f);
-                anchorMax = new Vector2(0, 0.5f);
-                pivot = new Vector2(1, 0.5f);
+                rectTransform.pivot = new Vector2(1, 0.5f);
                 closedPosition = new Vector2(0, rectTransform.localPosition.y);
                 openPosition = new Vector2(rectTransform.rect.width, rectTransform.localPosition.y);
                 break;
             case Placement.Right:
-                anchorMin = new Vector2(1, 0.5f);
-                anchorMax = new Vector2(1, 0.5f);
-                pivot = new Vector2(0, 0.5f);
+                rectTransform.pivot = new Vector2(0, 0.5f);
                 closedPosition = new Vector2(0, rectTransform.localPosition.y);
                 openPosition = new Vector2(-1 * rectTransform.rect.width, rectTransform.localPosition.y);
                 break;
             case Placement.Top:
-                anchorMin = new Vector2(0.5f, 1);
-                anchorMax = new Vector2(0.5f, 1);
-                pivot = new Vector2(0.5f, 0);
+                rectTransform.pivot = new Vector2(0.5f, 0);
                 closedPosition = new Vector2(rectTransform.localPosition.x, 0);
                 openPosition = new Vector2(rectTransform.localPosition.x, -1 * rectTransform.rect.height);
                 break;
             case Placement.Bottom:
-                anchorMin = new Vector2(0.5f, 0);
-                anchorMax = new Vector2(0.5f, 0);
-                pivot = new Vector2(0.5f, 1);
+                rectTransform.pivot = new Vector2(0.5f, 1);
                 closedPosition = new Vector2(rectTransform.localPosition.x, 0);
                 openPosition = new Vector2(rectTransform.localPosition.x, rectTransform.rect.height);
                 break;
         }
 
-        rectTransform.sizeDelta = rectTransform.rect.size;
-        rectTransform.anchorMin = anchorMin;
-        rectTransform.anchorMax = anchorMax;
-        rectTransform.pivot = pivot;
-
         //Default State
-        currentState = targetState = defaultState;
+        CurrentState = TargetState = defaultState;
         rectTransform.anchoredPosition = (defaultState == State.Closed) ? closedPosition : openPosition;
 
         //Drag Handle
@@ -296,7 +262,7 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         }
         else
         {
-            float nextStateProgress = (targetState == State.Open) ? 1 - StateProgress : StateProgress;
+            float nextStateProgress = (TargetState == State.Open) ? 1 - StateProgress : StateProgress;
 
             if (nextStateProgress > thresholdDraggedFraction)
             {
@@ -315,12 +281,12 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         }
         else
         {
-            Vector2 targetPosition = (targetState == State.Closed) ? closedPosition : openPosition;
+            Vector2 targetPosition = (TargetState == State.Closed) ? closedPosition : openPosition;
 
             rectTransform.anchoredPosition = Vector2.Lerp(rectTransform.anchoredPosition, targetPosition, Time.unscaledDeltaTime * transitionSpeed);
             if ((rectTransform.anchoredPosition - targetPosition).magnitude <= thresholdStateChangeDistance)
             {
-                currentState = targetState;
+                CurrentState = TargetState;
             }
         }
     }
@@ -328,7 +294,7 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     {
         if (useOverlay)
         {
-            overlay.GetComponent<Image>().raycastTarget = overlayCloseOnPressed && (targetState == State.Open);
+            overlay.GetComponent<Image>().raycastTarget = overlayCloseOnPressed && (TargetState == State.Open);
             overlay.GetComponent<Image>().color = new Color(overlayColour.r, overlayColour.g, overlayColour.b, overlayColour.a * StateProgress);
 
             if (useBlur)
@@ -340,18 +306,18 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
 
     public void ToggleState()
     {
-        if (targetState == State.Closed) Open();
-        else if (targetState == State.Open) Close();
+        if (TargetState == State.Closed) Open();
+        else if (TargetState == State.Open) Close();
     }
     public void Open()
     {
-        targetState = State.Open;
-        onStateUpdate?.Invoke(targetState);
+        TargetState = State.Open;
+        onStateUpdate?.Invoke(TargetState);
     }
     public void Close()
     {
-        targetState = State.Closed;
-        onStateUpdate?.Invoke(targetState);
+        TargetState = State.Closed;
+        onStateUpdate?.Invoke(TargetState);
     }
     #endregion
 }
