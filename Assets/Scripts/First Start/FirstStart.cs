@@ -158,9 +158,8 @@ public class FirstStart : MonoBehaviour
                     instance.ResetData();
                     SelectChild(child);
 
-                    var home = Manager.instance.Home;
-                    if (home.gameObject.activeInHierarchy) home.OnEnable();
-                    else Manager.OpenModule(home.gameObject);
+                    foreach(Transform module in Manager.instance.transform)
+                        if (module.gameObject.activeInHierarchy && module.TryGetComponent<Module>(out var m)) m.OnEnable();
                 });
             }
             go.Find("ImageBG").Find("Image").GetComponent<Image>().sprite = child.image ?? instance.defaultChildImage;

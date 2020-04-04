@@ -75,4 +75,4 @@ public class Manager : MonoBehaviour
     public static bool isReady => provider != null;
 }
 
-public interface Module { void Reset(); }
+public interface Module { void Reset(); void OnEnable(); }
