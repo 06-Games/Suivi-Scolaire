@@ -15,11 +15,13 @@ public class Manager : MonoBehaviour
     public static Integrations.Provider provider;
     void Start()
     {
-        FirstStart.onComplete += (Provider) =>
+        FirstStart.onComplete += (Provider, childs) =>
         {
             provider = Provider;
             OpenModule(Home.gameObject);
             Menu.sideMenu.handle.SetActive(true);
+            FirstStart.childAccounts = childs;
+            FirstStart.SelectChild();
         };
         Menu.sideMenu.handle.SetActive(false);
         FirstStart.Initialise();

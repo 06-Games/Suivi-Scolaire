@@ -1,5 +1,4 @@
 ﻿using Integrations;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,7 +12,7 @@ namespace Messanging
         public void Reset() { messages = null; }
 
         Integrations.Messanging module;
-        void Start()
+        void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out module)) { gameObject.SetActive(false); return; }
             if (messages == null) StartCoroutine(module.GetMessages((m) => { Initialise(m); Refresh(); }));

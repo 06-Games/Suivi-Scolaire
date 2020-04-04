@@ -15,9 +15,8 @@ namespace Integrations
         public string Name => "EcoleDirecte";
 
         static string token;
-        static string childID;
 
-        public IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError)
+        public IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError)
         {
             Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
 
@@ -34,70 +33,58 @@ namespace Integrations
             token = accountInfos.Value<string>("token");
 
             var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
+            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower());
             if (Account.Value<string>("typeCompte") == "E")
             {
-                account.child = childID = Account.Value<string>("id");
-                account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower());
+                account.child = new ChildAccount()
+                {
+                    name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower()),
+                    id = Account.Value<string>("id")
+                };
                 Manager.HideLoadingPanel();
-                onComplete?.Invoke(account);
+                onComplete?.Invoke(account, new List<ChildAccount>(Enumerable.Repeat(account.child, 1)));
             }
             else
             {
-                if (account.child == null)
+                //Get eleves
+                var eleves = Account.SelectToken("profile").Value<JArray>("eleves");
+                var childs = new List<ChildAccount>();
+                foreach (var eleve in eleves)
                 {
-                    //Get eleves
-                    var eleves = Account.SelectToken("profile").Value<JArray>("eleves");
-                    var childs = new List<(Action, string, Sprite)>();
-                    foreach (var eleve in eleves)
+                    var id = eleve.Value<string>("id");
+                    var name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{eleve.Value<string>("prenom")} {eleve.Value<string>("nom")}".ToLower());
+                    Sprite picture = null;
+
+                    //Get picture
+                    var profileRequest = UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
+                    profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Famille");
+                    yield return profileRequest.SendWebRequest();
+                    if (!profileRequest.isHttpError)
                     {
-                        Action action = () =>
-                        {
-                            Logging.Log(eleve.Value<string>("prenom") + " has been selected");
-                            account.child = childID = eleve.Value<string>("id");
-                            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{eleve.Value<string>("prenom")} {eleve.Value<string>("nom")}".ToLower());
-                            Manager.HideLoadingPanel();
-                            onComplete?.Invoke(account);
-                        };
-                        var name = eleve.Value<string>("prenom") + " " + eleve.Value<string>("nom");
-                        Sprite picture = null;
-
-                        //Get picture
-                        var profileRequest = UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
-                        profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Eleves/{eleve.Value<string>("id")}/Notes");
-                        yield return profileRequest.SendWebRequest();
-                        if (!profileRequest.isHttpError)
-                        {
-                            var tex = DownloadHandlerTexture.GetContent(profileRequest);
-                            picture = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-                        }
-                        else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
-
-                        childs.Add((action, name, picture));
+                        var tex = DownloadHandlerTexture.GetContent(profileRequest);
+                        picture = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
                     }
-                    Manager.HideLoadingPanel();
-                    FirstStart.SelectChilds(childs);
+                    else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
+
+                    childs.Add(new ChildAccount() { id = id, name = name, image = picture });
                 }
-                else
-                {
-                    var eleve = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault().SelectToken("profile").Value<JArray>("eleves").FirstOrDefault(e => e.Value<string>("id") == account.child);
-                    Logging.Log(eleve.Value<string>("prenom") + " has been selected");
-                    childID = eleve.Value<string>("id");
-                    Manager.HideLoadingPanel();
-                    onComplete?.Invoke(account);
-                }
+
+                account.child = childs.FirstOrDefault(c => c.id == account.child?.id) ?? childs.FirstOrDefault();
+                Manager.HideLoadingPanel();
+                onComplete?.Invoke(account, childs);
             }
         }
         public IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<Mark>> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.marks", "Getting marks");
-            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return markRequest.SendWebRequest();
             var result = new FileFormat.JSON(markRequest.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return Connect(FirstStart.selectedAccount, null, null);
                     yield return GetMarks(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting marks, server returned \"" + result.Value<string>("message") + "\"");
@@ -157,14 +144,14 @@ namespace Integrations
             IEnumerable<string> dates = null;
             if (period.timeRange.End == DateTime.MaxValue)
             {
-                var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{FirstStart.selectedAccount.child.id}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return homeworksRequest.SendWebRequest();
                 var result = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
                 if (result.Value<int>("code") != 200)
                 {
                     if (result.Value<string>("message") == "Session expirée !")
                     {
-                        yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                        yield return Connect(FirstStart.selectedAccount, null, null);
                         yield return GetHomeworks(period, onComplete);
                     }
                     else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting homeworks, server returned \"" + result.Value<string>("message") + "\"");
@@ -177,7 +164,7 @@ namespace Integrations
             var homeworks = new List<Homework>();
             foreach (var date in dates)
             {
-                var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{childID}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{FirstStart.selectedAccount.child.id}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return request.SendWebRequest();
                 var result = new FileFormat.JSON(request.downloadHandler.text);
                 if (result.Value<int>("code") != 200)
@@ -246,7 +233,7 @@ namespace Integrations
             {
                 if (establishmentResult.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return Connect(FirstStart.selectedAccount, null, null);
                     yield return GetPeriods(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(establishmentResult.Value<string>("message"), "Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"");
@@ -294,14 +281,14 @@ namespace Integrations
         {
             Manager.UpdateLoadingStatus("provider.schedule", "Getting schedule");
 
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{childID}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{FirstStart.selectedAccount.child.id}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return Connect(FirstStart.selectedAccount, null, null);
                     yield return GetSchedule(period, onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"");
@@ -323,14 +310,14 @@ namespace Integrations
         public IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages", "Getting messages");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return Connect(FirstStart.selectedAccount, null, null);
                     yield return GetMessages(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting messages, server returned \"" + result.Value<string>("message") + "\"");
@@ -360,14 +347,14 @@ namespace Integrations
         public IEnumerator LoadExtraMessageData(global::Messanging.Message message, Action<global::Messanging.Message> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{childID}/messages/{message.id}.awp?verbe=get", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(Manager.instance.FirstStart.selectedAccount, null, null);
+                    yield return Connect(FirstStart.selectedAccount, null, null);
                     yield return LoadExtraMessageData(message, onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting extra message data, server returned \"" + result.Value<string>("message") + "\"");

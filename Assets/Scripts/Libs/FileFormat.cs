@@ -27,7 +27,7 @@ namespace FileFormat
         public void Delete() { if (jToken != null) jToken.Remove(); }
         public bool ContainsValues { get { if (jToken == null) return false; else return jToken.HasValues; } }
 
-        public System.Collections.Generic.IEnumerable<T> Values<T>() { if (jToken == null) return default; else return jToken.Values<T>(); }
+        public IEnumerable<T> Values<T>() { if (jToken == null) return default; else return jToken.Values<T>(); }
         public T Value<T>(string value) { if (jToken == null) return default; else return jToken.Value<T>(value); }
         public bool ValueExist(string value) { if (jToken == null) return false; else return jToken.Value<string>(value) != null; }
 

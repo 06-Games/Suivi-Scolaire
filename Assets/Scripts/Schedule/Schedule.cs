@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace Schedule
 {
-    public class Schedule : MonoBehaviour
+    public class Schedule : MonoBehaviour, Module
     {
         public float sizePerHour = 100F;
 
@@ -23,7 +23,8 @@ namespace Schedule
         }
 
         void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
-        void Awake() { 
+        void Awake()
+        {
             subjectColor = Utils.XMLtoClass<List<(string, Color)>>(PlayerPrefs.GetString("scheduleColors"))?.ToDictionary(s => s.Item1, s => s.Item2) ?? new Dictionary<string, Color>();
             defaultAction = (period, schedule) =>
             {
@@ -45,7 +46,7 @@ namespace Schedule
             start = start.AddDays(delta > 0 ? delta - 7 : delta);
             if (Screen.width > Screen.height) periodStart = start.Date;
             var period = new TimeRange(start, start + new TimeSpan(6, 0, 0, 0));
-            
+
             if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { Manager.instance.transform.Find("Schedule").gameObject.SetActive(false); return false; }
             if (periodSchedule.TryGetValue(period.ToString("yyyy-MM-dd"), out var _schedule)) action(period, _schedule);
             else UnityThread.executeCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(period, s); }));

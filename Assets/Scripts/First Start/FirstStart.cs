@@ -6,10 +6,13 @@ using UnityEngine.UI;
 
 public class FirstStart : MonoBehaviour
 {
-    public System.Action<Provider> onComplete;
+    public Sprite defaultChildImage;
+
+    public System.Action<Provider, List<ChildAccount>> onComplete;
 
     HashSet<Account> accounts = null;
-    public Account selectedAccount { get; private set; } = null;
+    public static Account selectedAccount { get; private set; } = null;
+    public static List<ChildAccount> childAccounts { get; set; }
     public void Initialise()
     {
         try
@@ -57,14 +60,14 @@ public class FirstStart : MonoBehaviour
         if (Provider.TryGetModule<Auth>(out var authModule))
         {
             UnityThread.executeCoroutine(authModule.Connect(account,
-                (a) =>
+                (a, c) =>
                 {
                     selectedAccount = a;
                     accounts.Remove(account);
                     accounts.Add(a);
                     accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
                     Save();
-                    onComplete?.Invoke(Provider);
+                    onComplete?.Invoke(Provider, c);
                 },
                 (error) =>
                 {
@@ -76,7 +79,7 @@ public class FirstStart : MonoBehaviour
         else
         {
             selectedAccount = account;
-            onComplete?.Invoke(Provider);
+            onComplete?.Invoke(Provider, null);
         }
     }
 
@@ -114,7 +117,7 @@ public class FirstStart : MonoBehaviour
             selectedAccount = new Account() { provider = provider };
             accounts.Add(selectedAccount);
             Save();
-            onComplete?.Invoke(Provider);
+            onComplete?.Invoke(Provider, null);
         }
     }
     void Save() => PlayerPrefs.SetString("Accounts", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(accounts), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
@@ -130,39 +133,44 @@ public class FirstStart : MonoBehaviour
         }
     }
 
-    public static void SelectChilds(List<(System.Action, string, Sprite)> childs)
+    public static void SelectChild() { SelectChild(selectedAccount.child); }
+    public static void SelectChild(ChildAccount selectedChild)
     {
-        var instance = Manager.instance.FirstStart.transform;
-        foreach (Transform gO in instance.Find("Content")) gO.gameObject.SetActive(false);
-        var Childs = instance.Find("Content").Find("Childs");
-        for (int i = 1; i < Childs.childCount; i++) Destroy(Childs.GetChild(i).gameObject);
+        var childSelection = Manager.instance.Menu.transform.Find("Panel").Find("Child").Find("Slide");
+        childSelection.gameObject.SetActive(childAccounts != null);
+        if (childAccounts == null) return;
 
-        var returnBtn = instance.Find("Top").Find("Return").GetComponent<Button>();
-        returnBtn.onClick.RemoveAllListeners();
-        returnBtn.onClick.AddListener(() =>
+        var instance = Manager.instance.FirstStart;
+        selectedAccount.child = selectedChild;
+        instance.Save();
+
+        var list = childSelection.Find("List");
+        for (int i = 1; i < list.childCount; i++) Destroy(list.GetChild(i).gameObject);
+        foreach (var child in childAccounts)
         {
-            Childs.gameObject.SetActive(false);
-            instance.Find("Content").Find("Auth").gameObject.SetActive(true);
-
-            returnBtn.onClick.RemoveAllListeners();
-            returnBtn.onClick.AddListener(() =>
+            Transform go = null;
+            if (child == selectedChild) go = childSelection.Find("Selected");
+            else
             {
-                instance.Find("Content").Find("Auth").gameObject.SetActive(false);
-                instance.Find("Content").Find("Welcome").gameObject.SetActive(true);
-                returnBtn.gameObject.SetActive(false);
-            });
-        });
-        returnBtn.gameObject.SetActive(true);
+                go = Instantiate(list.GetChild(0).gameObject, list).transform;
+                go.GetComponent<Button>().onClick.AddListener(() =>
+                {
+                    instance.ResetData();
+                    SelectChild(child);
 
-        foreach (var child in childs)
-        {
-            var btn = Instantiate(Childs.GetChild(0).gameObject, Childs).transform;
-            btn.GetComponent<Button>().onClick.AddListener(() => { Childs.gameObject.SetActive(false); child.Item1(); });
-            btn.GetComponentInChildren<Text>().text = child.Item2;
-            if (child.Item3 != null) btn.Find("Image").GetComponent<Image>().sprite = child.Item3;
-            btn.gameObject.SetActive(true);
+                    var home = Manager.instance.Home;
+                    if (home.gameObject.activeInHierarchy) home.OnEnable();
+                    else Manager.OpenModule(home.gameObject);
+                });
+            }
+            go.Find("ImageBG").Find("Image").GetComponent<Image>().sprite = child.image ?? instance.defaultChildImage;
+            go.Find("Text").GetComponent<Text>().text = child.name;
+            go.gameObject.SetActive(true);
         }
-        Childs.gameObject.SetActive(true);
+        var rect = childSelection.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(rect.sizeDelta.x, 40 * (childAccounts.Count - 1));
+        childSelection.GetComponent<SimpleSideMenu>().Setup();
+        rect.pivot = new Vector2(0.5F, 0);
     }
 
     public void Logout()

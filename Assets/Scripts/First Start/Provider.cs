@@ -18,12 +18,23 @@ namespace Integrations
         public string username;
         public string id;
         public string password;
-        public string child;
+        public ChildAccount child;
 
-        public bool Equals(Account other) => provider == other.provider && username == other.username && id == other.id && child == other.child;
+        public bool Equals(Account other) => provider == other.provider && username == other.username && id == other.id;
         public override bool Equals(object obj) => Equals(obj as Account);
-        public override int GetHashCode() => string.Format("{0}-{1}-{2}-{3}", provider, username, id, child).GetHashCode();
+        public override int GetHashCode() => string.Format("{0}-{1}-{2}", provider, username, id).GetHashCode();
     }
+    public class ChildAccount
+    {
+        public string id;
+        public string name;
+        [System.Xml.Serialization.XmlIgnore] public UnityEngine.Sprite image;
+
+        public bool Equals(ChildAccount other) => id == other.id && name == other.name && image == other.image;
+        public override bool Equals(object obj) => Equals(obj as ChildAccount);
+        public override int GetHashCode() => string.Format("{0}-{1}", id, name).GetHashCode();
+    }
+
 
     public static class ProviderExtension
     {
@@ -90,7 +101,10 @@ namespace Integrations
     }
 
     public interface Provider { string Name { get; } }
-    public interface Auth : Provider { IEnumerator Connect(Account account, Action<Account> onComplete, Action<string> onError); }
+    public interface Auth : Provider
+    {
+        IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError);
+    }
     public interface Periods : Provider { IEnumerator GetPeriods(Action<List<global::Periods.Period>> onComplete); }
     public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action<List<global::Schedule.Event>> onComplete); }
     public interface Homeworks : Provider
@@ -99,7 +113,8 @@ namespace Integrations
         IEnumerator<global::Homeworks.Period> DiaryPeriods();
     }
     public interface Marks : Provider { IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<global::Marks.Mark>> onComplete); }
-    public interface Messanging : Provider { 
+    public interface Messanging : Provider
+    {
         IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete);
         IEnumerator LoadExtraMessageData(global::Messanging.Message data, Action<global::Messanging.Message> onComplete);
     }
