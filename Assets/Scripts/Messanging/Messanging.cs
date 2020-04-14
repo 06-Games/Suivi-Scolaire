@@ -23,6 +23,11 @@ namespace Messanging
         public static void Initialise(IEnumerable<Message> _messages)
         {
             messages = _messages.OrderByDescending(m => m.date).ToList();
+            Save();
+        }
+        static void Save()
+        {
+            FirstStart.SetConfig("messages", messages);
         }
         public void Refresh()
         {

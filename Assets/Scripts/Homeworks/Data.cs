@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Tools;
 using UnityEngine;
 using DateTime = System.DateTime;
 
@@ -15,7 +16,7 @@ namespace Homeworks
         public string content;
         public bool done;
         public bool exam;
-        public IEnumerable<Request> documents = new List<Request>();
+        public List<Request> documents = new List<Request>();
     }
 
     public class Period
@@ -30,10 +31,10 @@ public class Request
 {
     public string docName;
     public string url;
-    public Dictionary<string, string> headers;
+    public List<(string, string)> headers;
     public enum Method { Get, Post }
     public Method method;
-    public WWWForm postData;
+    public List<(string, string)> postData;
 
     public UnityEngine.Networking.UnityWebRequest request
     {
@@ -43,9 +44,9 @@ public class Request
             switch (method)
             {
                 case Method.Get: request = UnityEngine.Networking.UnityWebRequest.Get(url); break;
-                case Method.Post: request = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new UnityEngine.WWWForm()); break;
+                case Method.Post: request = UnityEngine.Networking.UnityWebRequest.Post(url, postData.ToDictionary()); break;
             }
-            foreach (var header in headers ?? new Dictionary<string, string>()) request.SetRequestHeader(header.Key, header.Value);
+            foreach (var header in headers ?? new List<(string, string)>()) request.SetRequestHeader(header.Item1, header.Item2);
 
             return request;
         }

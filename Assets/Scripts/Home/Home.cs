@@ -17,7 +17,12 @@ namespace Periods
         public void Reset() { periods = null; events = null; }
         public void OnEnable()
         {
-            StartCoroutine(enumerator());
+            if (Manager.connectedToInternet) StartCoroutine(enumerator());
+            else
+            {
+                periods = FirstStart.GetConfig<List<Period>>("periods");
+                Refresh();
+            }
 
             IEnumerator enumerator()
             {
@@ -29,12 +34,14 @@ namespace Periods
                     bool ended = false;
                     if (!Schedule.Schedule.Initialise(DateTime.Now, (p, s) => { events = s.OrderBy(e => e.start).ToList(); ended = true; })) ended = true;
                     yield return new WaitUntil(() => ended);
+                    Save();
                 }
                 Refresh();
             }
         }
 
         private void Awake() { transform.Find("Content").gameObject.SetActive(false); }
+        static void Save() { FirstStart.SetConfig("periods", periods); }
 
         public void Refresh()
         {

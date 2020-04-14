@@ -667,6 +667,12 @@ namespace Tools
         }
     }
 
+    public static class DictionaryExtensions
+    {
+        public static List<(TKey, TValue)> Serializable<TKey, TValue>(this Dictionary<TKey, TValue> dic) => dic?.Select(c => (c.Key, c.Value)).ToList();
+        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this List<(TKey, TValue)> dic) => dic?.ToDictionary(s => s.Item1, s => s.Item2);
+    }
+
     namespace Dictionary
     {
         [System.Serializable]

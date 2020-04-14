@@ -13,6 +13,20 @@ public class FirstStart : MonoBehaviour
     HashSet<Account> accounts = null;
     public static Account selectedAccount { get; private set; } = null;
     public static List<ChildAccount> childAccounts { get; set; }
+
+    public static string DataPath => Application.persistentDataPath + $"/data/{selectedAccount.provider}_{selectedAccount.username}/{selectedAccount.child.name}/";
+    public static T GetConfig<T>(string filename)
+    {
+        var path = DataPath + filename + ".xml";
+        if (System.IO.File.Exists(path)) return FileFormat.XML.Utils.XMLtoClass<T>(System.IO.File.ReadAllText(path));
+        else return default;
+    }
+    public static void SetConfig<T>(string filename, T config)
+    {
+        if (!System.IO.Directory.Exists(DataPath)) System.IO.Directory.CreateDirectory(DataPath);
+        System.IO.File.WriteAllText(DataPath + filename + ".xml", FileFormat.XML.Utils.ClassToXML(config, false));
+    }
+
     public void Initialise()
     {
         try
@@ -37,7 +51,13 @@ public class FirstStart : MonoBehaviour
             go.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>("Providers/" + account.provider);
             go.GetChild(1).GetChild(0).GetComponent<Text>().text = account.GetProvider?.Name ?? account.provider;
             go.GetChild(1).GetChild(1).GetComponent<Text>().text = account.username;
-            go.GetChild(2).GetComponent<Button>().onClick.AddListener(() => { accounts.Remove(account); Save(); Refresh(); });
+            go.GetChild(2).GetComponent<Button>().onClick.AddListener(() => { 
+                accounts.Remove(account); 
+                Save();
+                var dir = new System.IO.DirectoryInfo(Application.persistentDataPath + $"/data/{selectedAccount.provider}_{selectedAccount.username}/");
+                if (dir.Exists) dir.Delete(true);
+                Refresh(); 
+            });
             go.GetComponent<Button>().onClick.AddListener(() => ConnectTo(account));
             go.gameObject.SetActive(true);
         }
@@ -57,7 +77,7 @@ public class FirstStart : MonoBehaviour
     {
         Manager.provider = null;
         var Provider = account.GetProvider;
-        if (Provider.TryGetModule<Auth>(out var authModule))
+        if (Manager.connectedToInternet && Provider.TryGetModule<Auth>(out var authModule))
         {
             UnityThread.executeCoroutine(authModule.Connect(account,
                 (a, c) =>

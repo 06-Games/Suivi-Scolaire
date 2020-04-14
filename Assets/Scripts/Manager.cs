@@ -73,6 +73,7 @@ public class Manager : MonoBehaviour
     public static void HideLoadingPanel() => instance.Loading.SetActive(false);
 
     public static bool isReady => provider != null;
+    public static bool connectedToInternet => Application.internetReachability != NetworkReachability.NotReachable;
 }
 
 public interface Module { void Reset(); void OnEnable(); }

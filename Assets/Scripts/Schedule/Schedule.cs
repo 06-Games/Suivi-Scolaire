@@ -1,10 +1,10 @@
-﻿using FileFormat.XML;
-using Integrations;
+﻿using Integrations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Tools;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,28 +16,37 @@ namespace Schedule
 
         internal static Dictionary<string, List<Event>> periodSchedule = new Dictionary<string, List<Event>>();
         static DateTime periodStart = DateTime.Now;
+        static Dictionary<string, Color> subjectColor = new Dictionary<string, Color>();
         public void Reset()
         {
             periodSchedule = new Dictionary<string, List<Event>>();
             periodStart = DateTime.Now;
+            subjectColor = new Dictionary<string, Color>();
         }
 
-        void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
         void Awake()
         {
-            subjectColor = Utils.XMLtoClass<List<(string, Color)>>(PlayerPrefs.GetString("scheduleColors"))?.ToDictionary(s => s.Item1, s => s.Item2) ?? new Dictionary<string, Color>();
             defaultAction = (period, schedule) =>
             {
-                Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
+                Refresh(schedule?.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
             };
         }
         public void OnEnable()
         {
-            StartCoroutine(CheckOriantation());
+            periodSchedule = FirstStart.GetConfig<List<(string, List<Event>)>>("schedule").ToDictionary() ?? new Dictionary<string, List<Event>>();
+            subjectColor = FirstStart.GetConfig<List<(string, Color)>>("scheduleColors").ToDictionary() ?? new Dictionary<string, Color>();
+
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
+            StartCoroutine(CheckOriantation());
             Initialise(periodStart, defaultAction);
             Manager.OpenModule(gameObject);
         }
+        static void Save()
+        {
+            FirstStart.SetConfig("schedule", periodSchedule.Serializable());
+            FirstStart.SetConfig("scheduleColors", subjectColor.Serializable());
+        }
+
         internal static Action<TimeRange, List<Event>> defaultAction;
         public static bool Initialise(DateTime start, Action<TimeRange, List<Event>> action)
         {
@@ -49,10 +58,10 @@ namespace Schedule
 
             if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { Manager.instance.transform.Find("Schedule").gameObject.SetActive(false); return false; }
             if (periodSchedule.TryGetValue(period.ToString("yyyy-MM-dd"), out var _schedule)) action(period, _schedule);
-            else UnityThread.executeCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(period, s); }));
+            else if (Manager.connectedToInternet) UnityThread.executeCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(period, s); }));
+            else action(period, null);
             return true;
         }
-        Dictionary<string, Color> subjectColor;
         void Refresh(IEnumerable<Event> schedule, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
@@ -120,6 +129,7 @@ namespace Schedule
                 }
                 datePanel.gameObject.SetActive(true);
             }
+            Save();
         }
 
         public void ChangePeriod(bool next)

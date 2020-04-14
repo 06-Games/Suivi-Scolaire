@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Tools;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +13,7 @@ namespace Homeworks
     public class Homeworks : MonoBehaviour, Module
     {
         internal static Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
-        List<Period> periods = new List<Period>();
+        static List<Period> periods = new List<Period>();
         IEnumerator<Period> periodsMethod;
         int periodIndex = 0;
         public void Reset()
@@ -27,6 +28,11 @@ namespace Homeworks
         {
             StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
+            if (!Manager.connectedToInternet)
+            {
+                periodHomeworks = FirstStart.GetConfig<List<(string, List<Homework>)>>("homeworks").ToDictionary();
+                periods = FirstStart.GetConfig<List<Period>>("homeworksPeriods");
+            }
             if (periodIndex == 0) Initialise();
             else Manager.OpenModule(gameObject);
         }
@@ -44,13 +50,21 @@ namespace Homeworks
             {
                 Action<List<Homework>> action = (homeworks) =>
                 {
-                    Refresh(homeworks.OrderBy(h => h.forThe), period);
+                    Refresh(homeworks?.OrderBy(h => h.forThe), period);
                     Manager.OpenModule(gameObject);
+                    Save();
                 };
                 if (periodHomeworks.TryGetValue(period.id, out var _homeworks)) action(_homeworks);
-                else StartCoroutine(module.GetHomeworks(period, (h) => { periodHomeworks.Add(period.id, h); action(h); }));
+                else if (Manager.connectedToInternet) StartCoroutine(module.GetHomeworks(period, (h) => { periodHomeworks.Add(period.id, h); action(h); }));
+                else action(null);
             }
         }
+        static void Save()
+        {
+            FirstStart.SetConfig("homeworks", periodHomeworks.Serializable());
+            FirstStart.SetConfig("homeworksPeriods", periods);
+        }
+
         bool LoadNext(Action<Period> onComplete = null)
         {
             if (!periodsMethod.MoveNext()) return false;
@@ -79,6 +93,7 @@ namespace Homeworks
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);
             var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
+            if (homeworks == null) return;
             foreach (var Homeworks in homeworks.GroupBy(h => h.forThe))
             {
                 var datePanel = Instantiate(Content.GetChild(0).gameObject, Content).transform;

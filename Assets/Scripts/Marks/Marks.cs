@@ -16,7 +16,16 @@ namespace Marks
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
-            if (marks == null) StartCoroutine(module.GetMarks((p, s, m) => { Initialise(p, s, m); Refresh(); }));
+            if (marks == null && Manager.connectedToInternet) StartCoroutine(module.GetMarks((p, s, m) => { Initialise(p, s, m); Refresh(); }));
+            else if (marks == null)
+            {
+                Initialise(
+                    FirstStart.GetConfig<List<Period>>("quarters"),
+                    FirstStart.GetConfig<List<Subject>>("subjects"),
+                    FirstStart.GetConfig<List<Mark>>("marks")
+                );
+                Refresh();
+            }
             else Refresh();
             Manager.OpenModule(gameObject);
         }
@@ -25,12 +34,20 @@ namespace Marks
             periods = _periods.OrderBy(s => s.start).ToList();
             subjects = _subjects.OrderBy(s => s.name).ToList();
             marks = _marks.OrderBy(m => m.date).ToList();
+            Save();
 
             var instance = Manager.instance.transform.Find("Marks").GetComponent<Marks>();
             instance.period.ClearOptions();
             instance.period.AddOptions(new List<string>() { LangueAPI.Get("marks.displayedPeriod.all", "All") });
             instance.period.AddOptions(periods.Select(p => p.name).ToList());
             instance.period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
+        }
+
+        static void Save()
+        {
+            FirstStart.SetConfig("quarters", periods);
+            FirstStart.SetConfig("subjects", subjects);
+            FirstStart.SetConfig("marks", marks);
         }
 
         public LayoutSwitcher topLayoutSwitcher;

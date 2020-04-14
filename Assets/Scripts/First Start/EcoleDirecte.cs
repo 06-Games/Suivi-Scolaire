@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Tools;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -112,12 +113,12 @@ namespace Integrations
             var marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark()
             {
                 //Date
-                period = periods.FirstOrDefault(p => p.id == obj.Value<string>("codePeriode")),
+                periodID = obj.Value<string>("codePeriode"),
                 date = obj.Value<DateTime>("date"),
                 dateAdded = obj.Value<DateTime>("dateSaisie"),
 
                 //Infos
-                subject = subjects.FirstOrDefault(s => s.id == obj.Value<string>("codeMatiere")),
+                subjectID = obj.Value<string>("codeMatiere"),
                 name = obj.Value<string>("devoir"),
                 coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
                 mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : (float?)null,
@@ -184,10 +185,7 @@ namespace Integrations
                     exam = v.Value<bool>("interrogation"),
                     documents = v.SelectToken("aFaire.documents").Select(doc =>
                     {
-                        WWWForm form = new WWWForm();
-                        form.AddField("token", token);
-                        form.AddField("leTypeDeFichier", doc.Value<string>("type"));
-                        form.AddField("fichierId", doc.Value<string>("id"));
+                        var form = new List<(string, string)>() { ("token", token), ("leTypeDeFichier", doc.Value<string>("type")), ("fichierId", doc.Value<string>("id")) };
                         return new Request()
                         {
                             docName = doc.Value<string>("libelle"),
@@ -195,7 +193,7 @@ namespace Integrations
                             method = Request.Method.Post,
                             postData = form
                         };
-                    })
+                    }).ToList()
                 }));
             }
 
@@ -367,10 +365,7 @@ namespace Integrations
                 content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content")))),
                 documents = data.SelectToken("files").Select(doc =>
                 {
-                    WWWForm form = new WWWForm();
-                    form.AddField("token", token);
-                    form.AddField("leTypeDeFichier", doc.Value<string>("type"));
-                    form.AddField("fichierId", doc.Value<string>("id"));
+                    var form = new List<(string, string)>() { ("token", token), ("leTypeDeFichier", doc.Value<string>("type")), ("fichierId", doc.Value<string>("id")) };
                     return new Request()
                     {
                         docName = doc.Value<string>("libelle"),
@@ -378,7 +373,7 @@ namespace Integrations
                         method = Request.Method.Post,
                         postData = form
                     };
-                })
+                }).ToList()
             };
 
             Manager.HideLoadingPanel();

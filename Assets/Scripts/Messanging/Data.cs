@@ -16,7 +16,7 @@ namespace Messanging
         public class Extra
         {
             public string content;
-            public IEnumerable<Request> documents = new List<Request>();
+            public List<Request> documents = new List<Request>();
         }
     }
 }

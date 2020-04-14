@@ -1,4 +1,6 @@
-﻿using DateTime = System.DateTime;
+﻿using System.Linq;
+using System.Xml.Serialization;
+using DateTime = System.DateTime;
 
 public class Subject
 {
@@ -21,12 +23,14 @@ namespace Marks
     public class Mark
     {
         //Date
-        public Period period;
+        [XmlIgnore] public Period period => Marks.periods.FirstOrDefault(p => p.id == periodID);
+        public string periodID;
         public DateTime date;
         public DateTime dateAdded;
 
         //Infos
-        public Subject subject;
+        [XmlIgnore] public Subject subject => Marks.subjects.FirstOrDefault(s => s.id == subjectID);
+        public string subjectID;
         public string name;
         public float coef;
         public float? mark;
