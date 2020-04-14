@@ -29,6 +29,8 @@ namespace Integrations
         public string id;
         public string name;
         [System.Xml.Serialization.XmlIgnore] public UnityEngine.Sprite image;
+        [System.Xml.Serialization.XmlIgnore] public List<string> modules;
+        [System.Xml.Serialization.XmlIgnore] public Dictionary<string, string> extraData;
 
         public bool Equals(ChildAccount other) => id == other.id && name == other.name && image == other.image;
         public override bool Equals(object obj) => Equals(obj as ChildAccount);
@@ -38,18 +40,19 @@ namespace Integrations
 
     public static class ProviderExtension
     {
+        static string[] whiteList = new string[] { "Auth" };
         public static bool TryGetModule<T>(this Provider provider, out T module)
         {
             module = GetModule<T>(provider);
-            return !module?.Equals(null) ?? false;
+            return !module?.Equals(default) ?? false;
         }
         public static T GetModule<T>(this Provider provider)
         {
+            var moduleName = typeof(T).ToString().Substring("Integrations.".Length);
+            if (!whiteList.Contains(moduleName) && (!FirstStart.selectedAccount?.child?.modules?.Contains(moduleName) ?? false)) return default;
             try { return (T)provider; }
             catch { return default; }
         }
-        public static IEnumerable<string> Modules(this Provider provider) => provider.GetType().GetInterfaces().Where(i => i.Namespace == "Integrations").Select(i => i.ToString().Substring("Integrations.".Length));
-
 
         public static string HtmlToRichText(string html)
         {

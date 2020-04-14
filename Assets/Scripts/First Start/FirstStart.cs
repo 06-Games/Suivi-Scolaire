@@ -160,6 +160,7 @@ public class FirstStart : MonoBehaviour
 
                     foreach(Transform module in Manager.instance.transform)
                         if (module.gameObject.activeInHierarchy && module.TryGetComponent<Module>(out var m)) m.OnEnable();
+                    Manager.instance.Menu.UpdateModules();
                 });
             }
             go.Find("ImageBG").Find("Image").GetComponent<Image>().sprite = child.image ?? instance.defaultChildImage;

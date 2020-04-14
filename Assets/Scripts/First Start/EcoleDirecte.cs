@@ -33,30 +33,27 @@ namespace Integrations
             token = accountInfos.Value<string>("token");
 
             var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
-            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower());
-            if (Account.Value<string>("typeCompte") == "E")
-            {
-                account.child = new ChildAccount()
-                {
-                    name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{Account.Value<string>("prenom")} {Account.Value<string>("nom")}".ToLower()),
-                    id = Account.Value<string>("id")
-                };
-                Manager.HideLoadingPanel();
-                onComplete?.Invoke(account, new List<ChildAccount>(Enumerable.Repeat(account.child, 1)));
-            }
-            else
+            var childs = new List<ChildAccount>();
+            yield return GetChild(Account, Account.Value<string>("typeCompte") == "E" ? "eleves": "familles", (c) => { childs.Add(c); account.username = c.name; });
+
+            if (Account.Value<string>("typeCompte") != "E")
             {
                 //Get eleves
                 var eleves = Account.SelectToken("profile").Value<JArray>("eleves");
-                var childs = new List<ChildAccount>();
-                foreach (var eleve in eleves)
-                {
-                    var id = eleve.Value<string>("id");
-                    var name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{eleve.Value<string>("prenom")} {eleve.Value<string>("nom")}".ToLower());
-                    Sprite picture = null;
+                foreach (var eleve in eleves) yield return GetChild(eleve, "eleves", (c) => childs.Add(c));
+            }
+            account.child = childs.FirstOrDefault(c => c.id == account.child?.id) ?? childs.FirstOrDefault();
+            Manager.HideLoadingPanel();
+            onComplete?.Invoke(account, childs);
 
-                    //Get picture
-                    var profileRequest = UnityWebRequestTexture.GetTexture("https:" + eleve.Value<string>("photo"));
+            IEnumerator GetChild(JToken profile, string type, Action<ChildAccount> child)
+            {
+                //Get picture
+                Sprite picture = null;
+                var url = profile.Value<string>("photo");
+                if (!string.IsNullOrWhiteSpace(url))
+                {
+                    var profileRequest = UnityWebRequestTexture.GetTexture("https:" + url);
                     profileRequest.SetRequestHeader("referer", $"https://www.ecoledirecte.com/Famille");
                     yield return profileRequest.SendWebRequest();
                     if (!profileRequest.isHttpError)
@@ -65,13 +62,25 @@ namespace Integrations
                         picture = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
                     }
                     else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
-
-                    childs.Add(new ChildAccount() { id = id, name = name, image = picture });
                 }
 
-                account.child = childs.FirstOrDefault(c => c.id == account.child?.id) ?? childs.FirstOrDefault();
-                Manager.HideLoadingPanel();
-                onComplete?.Invoke(account, childs);
+                var moduleCores = new Dictionary<string, string>()
+                {
+                    { "NOTES", "Marks" },
+                    { "MESSAGERIE", "Messanging" },
+                    { "EDT", "Schedule" },
+                    { "CAHIER_DE_TEXTES", "Homeworks" }
+                };
+                child?.Invoke(new ChildAccount()
+                {
+                    name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{profile.Value<string>("prenom")} {profile.Value<string>("nom")}".ToLower()),
+                    id = profile.Value<string>("id"),
+                    modules = profile.SelectToken("modules")
+                        .Where(m => m.Value<bool>("enable") && moduleCores.ContainsKey(m.Value<string>("code")))
+                        .Select(m => moduleCores[m.Value<string>("code")]).Append("Periods").ToList(),
+                    image = picture,
+                    extraData = new Dictionary<string, string>() { { "type", type } }
+                });
             }
         }
         public IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<Mark>> onComplete)
@@ -310,7 +319,7 @@ namespace Integrations
         public IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages", "Getting messages");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
@@ -347,7 +356,7 @@ namespace Integrations
         public IEnumerator LoadExtraMessageData(global::Messanging.Message message, Action<global::Messanging.Message> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)

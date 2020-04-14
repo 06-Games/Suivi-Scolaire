@@ -58,7 +58,7 @@ namespace Integrations
             var enfants = json.jToken.SelectToken("account_user").Where(obj => obj.Value<string>("type") == "1").Select(enfant =>
             {
                 var name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{enfant.Value<string>("prenom")}{enfant.Value<string>("nom")}".ToLower());
-                return new ChildAccount() { name = name, id = enfant.Value<string>("user_id") };
+                return new ChildAccount() { name = name, id = enfant.Value<string>("user_id"), modules = new List<string>() { "Homeworks" } };
             }).ToList();
             account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(json.Value<string>("account_name").ToLower());
             account.child = enfants.FirstOrDefault(c => c.id == account.child?.id) ?? enfants.FirstOrDefault();
