@@ -24,6 +24,7 @@ public class UpdateManager : MonoBehaviour
 
         var request = UnityWebRequest.Get("https://api.github.com/repos/06-Games/Suivi-Scolaire/releases/latest");
         yield return request.SendWebRequest();
+        if (request.isNetworkError) yield break;
         lastestRelease = new JSON(request.downloadHandler.text);
 
         var version = lastestRelease.Value<string>("tag_name");
