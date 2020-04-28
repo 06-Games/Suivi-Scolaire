@@ -54,36 +54,87 @@ namespace Integrations
             catch { return default; }
         }
 
-        public static string HtmlToRichText(string html)
+        public static string HtmlToRichText(string Html)
         {
-            html = html.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace("&", "£|µ");
-            try
+            var html = Html.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace("&", "£|µ");
+            try { return AnalyseHTML(); }
+            catch //The HTML isn't well formed
+            {
+                try { FixHTML(); return AnalyseHTML(); } //Try to fix the HTML
+                catch (Exception e)
+                {
+                    UnityEngine.Debug.LogError(e + "\n\n" + html + "\n\n" + Html);
+                    return Html;
+                }
+            }
+
+            void FixHTML()
+            {
+                html = string.Join("=",
+                    html.Split(new char[] { '=' }).Skip(1)
+                    .Select(p =>
+                    {
+                        var spaceNb = p.Count(x => x == '"');
+                        if (spaceNb != 0 && (spaceNb % 2F) != 0) return p; //We are in a string
+
+                        var end = p.IndexOfAny(new char[] { ' ', '>' });
+                        return p.StartsWith("\"") ? p : $"\"{p.Substring(0, end == -1 ? 0 : end)}\"{p.Substring(end == -1 ? 0 : end)}";
+                    })
+                    .Prepend(html.Substring(0, html.IndexOf('=') == -1 ? html.Length : html.IndexOf('=')))
+                );
+                foreach (var t in new string[] { "img", "br" }.SelectMany(s => new string[] { s, s.ToUpper() }))
+                {
+                    html = string.Join($"<{t}",
+                        html.Split(new string[] { $"<{t}" }, StringSplitOptions.RemoveEmptyEntries).Skip(1)
+                        .Select(p =>
+                        {
+                            if (p.Contains($"</{t}>")) return p; //Well formed html
+
+                            var end = p.IndexOfAny(new char[] { '>' });
+                            return p[end <= 0 ? 0 : end - 1] == '/' ? p : $"{p.Substring(0, end <= 0 ? 0 : end)}/{p.Substring(end <= 0 ? 0 : end)}";
+                        })
+                        .Prepend(html.Substring(0, html.IndexOf($"<{t}") == -1 ? html.Length : html.IndexOf($"<{t}")))
+                    );
+                };
+            }
+
+            string AnalyseHTML()
             {
                 var xmlDoc = new System.Xml.XmlDocument();
                 xmlDoc.LoadXml($"<root>{html}</root>");
                 return System.Net.WebUtility.HtmlDecode(AnalyseNode(xmlDoc?.DocumentElement)?.Replace("£|µ", "&") ?? "");
             }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.LogError(e + "\n\n" + html);
-                return html;
-            }
-
             string AnalyseNode(System.Xml.XmlNode node)
             {
                 var result = "";
                 if (!node.HasChildNodes) return node.Value;
                 foreach (System.Xml.XmlNode item in node)
                 {
-                    if (item.Name == "p" | item.Name == "div") result += AnalyseNode(item) + "\n";
-                    else if (item.Name == "strong") result += $"<b>{AnalyseNode(item)}</b>";
-                    else if (item.Name == "em") result += $"<i>{AnalyseNode(item)}</i>";
-                    else if (item.Name == "a") result += $"<link={item.Attributes["href"].Value}>{AnalyseNode(item)}</link>";
-                    else if (item.Name == "li") result += $"• {AnalyseNode(item)}\n";
-                    else if (item.Name == "span")
+                    var itemName = item.Name.ToLower();
+                    if (itemName == "p" | itemName == "div") result += AnalyseNode(item) + "\n";
+                    else if (itemName == "strong") result += $"<b>{AnalyseNode(item)}</b>";
+                    else if (itemName == "em") result += $"<i>{AnalyseNode(item)}</i>";
+                    else if (itemName == "a") result += $"<link={item.Attributes["href"].Value}>{AnalyseNode(item)}</link>";
+                    else if (itemName == "br") result += "\n";
+                    else if (itemName == "li") result += $"• {AnalyseNode(item)}\n";
+                    else if (itemName == "span" | itemName == "body")
                     {
-                        string style = item.Attributes["style"]?.Value ?? "";
-                        if (style.StartsWith("font-size:")) result += $"<size={style.Substring("font-size:".Length).TrimStart(' ').Replace("px;", "")}>{AnalyseNode(item)}</size>";
+                        string style = item.Attributes["style"]?.Value.ToLower() ?? "";
+                        if (style.StartsWith("font-size:"))
+                        {
+                            var value = style.Substring("font-size:".Length).TrimStart(' ').TrimEnd(';');
+                            var medium = 20F;
+                            var parsedValue = medium;
+                            if (value.EndsWith("px")) parsedValue = float.TryParse(value.Replace("px", ""), out var vFloat) ? vFloat : medium;
+                            else if (value == "xx-small") parsedValue = 0.6F * medium;
+                            else if (value == "x-small") parsedValue = 0.75F * medium;
+                            else if (value == "small") parsedValue = 8F / 9F * medium;
+                            else if (value == "medium") parsedValue = 1F * medium;
+                            else if (value == "large") parsedValue = 1.2F * medium;
+                            else if (value == "x-large") parsedValue = 1.5F * medium;
+                            else if (value == "xx-large") parsedValue = 2F * medium;
+                            result += $"<size={parsedValue}>{AnalyseNode(item)}</size>";
+                        }
                         else if (style.StartsWith("color:"))
                         {
                             var value = style.Substring("color:".Length).TrimStart(' ').TrimEnd(';');
@@ -95,7 +146,11 @@ namespace Integrations
                         }
                         else result += AnalyseNode(item);
                     }
-                    else result += AnalyseNode(item);
+                    else
+                    {
+                        Logging.Log("Unknown HTML element: " + itemName, UnityEngine.LogType.Warning);
+                        result += AnalyseNode(item);
+                    }
                 }
                 return result;
             }
