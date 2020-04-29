@@ -80,6 +80,7 @@ jobs:
       - name: Create DEB File
         run: |
           mv build/archive.xcarchive build/archive.zip;
+          ls build/;
           unzip -v build/archive.zip;
           mkdir -p build/SuiviScolaireapp;
           mkdir -p build/SuiviScolaireapp/DEBIAN;
