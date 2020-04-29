@@ -74,7 +74,7 @@ jobs:
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Debug -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" | xcbeautify -q
 
       - name: Install Homebrew
-        uses: artemnovichkov/action-homebrew@0.1.0
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: Install Dpkg
         run: brew install dpkg
       - name: Create DEB File
