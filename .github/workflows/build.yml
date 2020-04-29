@@ -69,8 +69,6 @@ jobs:
         with:
           url: https://github.com/Cyberbeni/xcbeautify
       - run: chmod -R 777 xcode/iOS/iOS/
-      - name: Build Project
-        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Debug -sdk iphoneos -parallelizeTargets -quiet build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" | xcbeautify -q
       - name: Build Archive
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Debug -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" | xcbeautify -q
       - run: echo '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>method</key>\n<string>app-store</string>\n</dict>\n</plist>' >> ExportOptions.plist
