@@ -75,7 +75,7 @@ jobs:
         uses: artemnovichkov/action-homebrew@0.1.0
       - name: Install Dpkg
         run: brew install dpkg
-      - name: Build IPA
+      - name: Create DEB File
         run: |
           mv build/archive.xcarchive build/archive.zip;
           unzip -v build/archive.zip;
@@ -91,5 +91,5 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:
-          name: iOS IPA
+          name: iOS DEB
           path: build/Output
