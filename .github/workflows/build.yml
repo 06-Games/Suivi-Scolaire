@@ -71,18 +71,25 @@ jobs:
       - run: chmod -R 777 xcode/iOS/iOS/
       - name: Build Archive
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Debug -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" | xcbeautify -q
-      - uses: Apple-Actions/import-codesign-certs@v1
-        with:
-          keychain: key
-          keychain-password: ${{ secrets.APPLE_PASSWORD }}
-          p12-file-base64: ${{ secrets.CERTIFICATES_FILE_BASE64 }}
-          p12-password: ${{ secrets.APPLE_PASSWORD }}
-      - name: Create exportOptions.plist
-        run: echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>method</key><string>app-store</string><key>teamID</key><string>4HFHSS3VVC</string></dict></plist>' > ExportOptions.plist
+      - name: Install Homebrew
+        uses: artemnovichkov/action-homebrew@0.1.0
+      - name: Install Dpkg
+        run: brew install dpkg
       - name: Build IPA
-        run: xcodebuild -quiet -exportArchive -exportOptionsPlist exportOptions.plist -archivePath build/archive.xcarchive -exportPath build/XCode/Suivi-Scolaire.ipa | xcbeautify -q
+        run: |
+          mv build/archive.xcarchive build/archive.zip;
+          unzip -v build/archive.zip;
+          mkdir -p build/SuiviScolaireapp;
+          mkdir -p build/SuiviScolaireapp/DEBIAN;
+          "Package: com.06Games.Suivi-Scolaire\nVersion: 0.2.3\nName: Suivi-Scolaire\nSection: Application\nDescription: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services\nArchitecture: iphoneos-arm\nAuthor: 06Games" > build/SuiviScolaireapp/DEBIAN/control;
+          cp build/archive/Payloads/Applications build/SuiviScolaireapp/Applications;
+          dpkg-deb -b build/SuiviScolaireapp;
+          mkdir -p build/Output;
+          ls build/;
+          ls build/SuiviScolaireapp/;
+          mv build/SuiviScolaireapp.deb build/Output/SuiviScolaireapp.deb;
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:
           name: iOS IPA
-          path: build/XCode
+          path: build/Output
