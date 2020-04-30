@@ -81,7 +81,7 @@ jobs:
         run: |
           mkdir -p build/SuiviScolaireapp;
           mkdir -p build/SuiviScolaireapp/DEBIAN;
-          "Package: com.06Games.Suivi-Scolaire\nVersion: 0.2.3\nName: Suivi-Scolaire\nSection: Application\nDescription: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services\nArchitecture: iphoneos-arm\nAuthor: 06Games" > build/SuiviScolaireapp/DEBIAN/control;
+          echo "Package: com.06Games.Suivi-Scolaire\nVersion: 0.2.3\nName: Suivi-Scolaire\nSection: Application\nDescription: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services\nArchitecture: iphoneos-arm\nAuthor: 06Games" > build/SuiviScolaireapp/DEBIAN/control;
           cp build/archive.xcarchive/Payloads/Applications build/SuiviScolaireapp/Applications;
           dpkg-deb -b build/SuiviScolaireapp;
           mkdir -p build/Output;
