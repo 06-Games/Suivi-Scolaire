@@ -89,6 +89,7 @@ jobs:
           Description: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services
           Architecture: iphoneos-arm
           Author: 06Games
+          Depends: net.angelxwind.appsyncunified
           " > build/SuiviScolaireapp/DEBIAN/control;
           cp -r build/archive.xcarchive/Products/Applications build/SuiviScolaireapp;
           dpkg-deb -b build/SuiviScolaireapp;
