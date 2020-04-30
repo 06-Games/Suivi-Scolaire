@@ -95,9 +95,31 @@ jobs:
           dpkg-deb -b build/SuiviScolaireapp;
           mkdir -p build/Output;
           mv build/SuiviScolaireapp.deb build/Output/SuiviScolaireapp.deb;
-
+          
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:
           name: iOS DEB
           path: build/Output
+      
+      - name: Create exportOptionsPlist
+        run: |
+          "<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+              <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>uploadSymbols</key>
+              <true/>
+              </dict>
+          </plist>" > app.plist
+          mkdir build/OutputIPA/;
+      - name: Create IPA
+        run: set -o pipefail && xcodebuild -exportArchive -exportOptionsPlist app.plist  -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa | xcbeautify -q
+        
+      - name: Upload build
+        uses: actions/upload-artifact@v1
+        with:
+          name: iOS IPA
+          path: build/OutputIPA
