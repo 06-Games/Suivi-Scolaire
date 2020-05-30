@@ -39,15 +39,11 @@ public class Request
     {
         get
         {
-            UnityEngine.Networking.UnityWebRequest request = null;
-            switch (method)
-            {
-                case Method.Get: request = UnityEngine.Networking.UnityWebRequest.Get(url); break;
-                case Method.Post: request = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new UnityEngine.WWWForm()); break;
-            }
-            foreach (var header in headers ?? new Dictionary<string, string>()) request.SetRequestHeader(header.Key, header.Value);
-
-            return request;
+            UnityEngine.Networking.UnityWebRequest webRequest = null;
+            if (method == Method.Get) webRequest = UnityEngine.Networking.UnityWebRequest.Get(url);
+            else if (method == Method.Post) webRequest = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new WWWForm());
+            if (headers != null) foreach (var header in headers) webRequest.SetRequestHeader(header.Key, header.Value);
+            return webRequest;
         }
     }
 

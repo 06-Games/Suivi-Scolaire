@@ -11,10 +11,10 @@ namespace Homeworks
 {
     public class Homeworks : MonoBehaviour, Module
     {
-        internal static Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
+        Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
         List<Period> periods = new List<Period>();
         IEnumerator<Period> periodsMethod;
-        int periodIndex = 0;
+        int periodIndex;
         public void Reset()
         {
             periodHomeworks = new Dictionary<string, List<Homework>>();

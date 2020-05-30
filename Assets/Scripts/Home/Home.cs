@@ -12,8 +12,8 @@ namespace Periods
     {
         public Sprite[] periodSprites;
 
-        internal static List<Period> periods;
-        static List<Schedule.Event> events;
+        internal List<Period> periods;
+        List<Schedule.Event> events;
         public void Reset() { periods = null; events = null; }
         public void OnEnable()
         {
@@ -83,7 +83,6 @@ namespace Periods
             schedule.gameObject.SetActive(false);
             if (events?.Count > 0)
             {
-                var actualIndex = events.FindIndex(e => e.start <= now && e.end >= now);
                 schedule.Find("Bar").gameObject.SetActive(true);
                 for (int i = 0; i < 2; i++)
                 {

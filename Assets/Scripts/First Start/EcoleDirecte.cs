@@ -14,8 +14,7 @@ namespace Integrations
     {
         public string Name => "EcoleDirecte";
 
-        static string token;
-
+        string token;
         public IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError)
         {
             Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
@@ -34,7 +33,7 @@ namespace Integrations
 
             var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
             var childs = new List<ChildAccount>();
-            yield return GetChild(Account, Account.Value<string>("typeCompte") == "E" ? "eleves": "familles", (c) => { childs.Add(c); account.username = c.name; });
+            yield return GetChild(Account, Account.Value<string>("typeCompte") == "E" ? "eleves" : "familles", (c) => { childs.Add(c); account.username = c.name; });
 
             if (Account.Value<string>("typeCompte") != "E")
             {
@@ -64,14 +63,14 @@ namespace Integrations
                     else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
                 }
 
-                var moduleCores = new Dictionary<string, string>()
+                var moduleCores = new Dictionary<string, string>
                 {
                     { "NOTES", "Marks" },
                     { "MESSAGERIE", "Messanging" },
                     { "EDT", "Schedule" },
                     { "CAHIER_DE_TEXTES", "Homeworks" }
                 };
-                child?.Invoke(new ChildAccount()
+                child?.Invoke(new ChildAccount
                 {
                     name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{profile.Value<string>("prenom")} {profile.Value<string>("nom")}".ToLower()),
                     id = profile.Value<string>("id"),
@@ -79,7 +78,7 @@ namespace Integrations
                         .Where(m => m.Value<bool>("enable") && moduleCores.ContainsKey(m.Value<string>("code")))
                         .Select(m => moduleCores[m.Value<string>("code")]).Append("Periods").ToList(),
                     image = picture,
-                    extraData = new Dictionary<string, string>() { { "type", type } }
+                    extraData = new Dictionary<string, string> { { "type", type } }
                 });
             }
         }
@@ -110,7 +109,7 @@ namespace Integrations
 
             var subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
                 .Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>())
-                .Select(obj => new Subject()
+                .Select(obj => new Subject
                 {
                     id = obj.SelectToken("codeMatiere").Value<string>(),
                     name = obj.SelectToken("discipline").Value<string>(),
@@ -118,7 +117,7 @@ namespace Integrations
                     teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
                 }).ToList();
 
-            var marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark()
+            var marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark
             {
                 //Date
                 period = periods.FirstOrDefault(p => p.id == obj.Value<string>("codePeriode")),
@@ -131,7 +130,7 @@ namespace Integrations
                 coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
                 mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : (float?)null,
                 markOutOf = float.Parse(obj.Value<string>("noteSur").Replace(",", ".")),
-                skills = obj.Value<JArray>("elementsProgramme").Select(c => new Skill()
+                skills = obj.Value<JArray>("elementsProgramme").Select(c => new Skill
                 {
                     id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : (uint?)null,
                     name = c.Value<string>("descriptif"),
@@ -182,7 +181,7 @@ namespace Integrations
                     continue;
                 }
 
-                homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework()
+                homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
                 {
                     subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
                     forThe = DateTime.Parse(date),
@@ -197,7 +196,7 @@ namespace Integrations
                         form.AddField("token", token);
                         form.AddField("leTypeDeFichier", doc.Value<string>("type"));
                         form.AddField("fichierId", doc.Value<string>("id"));
-                        return new Request()
+                        return new Request
                         {
                             docName = doc.Value<string>("libelle"),
                             url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
@@ -225,7 +224,7 @@ namespace Integrations
                 start += new TimeSpan(-7, 0, 0, 0);
             }
 
-            global::Homeworks.Period ToPeriod(DateTime pStart, DateTime pEnd) => new global::Homeworks.Period()
+            global::Homeworks.Period ToPeriod(DateTime pStart, DateTime pEnd) => new global::Homeworks.Period
             {
                 timeRange = new TimeRange(pStart, pEnd),
                 id = new TimeRange(pStart, pEnd).ToString("yyyy-MM-dd") ?? "Upcomming",
@@ -265,14 +264,14 @@ namespace Integrations
             {
                 var list = new List<global::Periods.Period>();
                 var obj = v.SelectToken("fields");
-                list.Add(new global::Periods.Period()
+                list.Add(new global::Periods.Period
                 {
                     name = "Periode scolaire",
                     start = lastPeriod,
                     end = obj.Value<DateTime>("start_date").AddDays(-1),
                     holiday = false
                 });
-                list.Add(new global::Periods.Period()
+                list.Add(new global::Periods.Period
                 {
                     name = obj.Value<string>("description"),
                     start = obj.Value<DateTime>("start_date"),
@@ -304,7 +303,7 @@ namespace Integrations
                 yield break;
             }
 
-            var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v => new global::Schedule.Event()
+            var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v => new global::Schedule.Event
             {
                 subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
                 start = v.Value<DateTime>("start_date"),
@@ -338,7 +337,7 @@ namespace Integrations
                 return t.Select(m =>
                 {
                     var type = (m.Value<string>("mtype") == "received") ? "from" : "to";
-                    return new global::Messanging.Message()
+                    return new global::Messanging.Message
                     {
                         id = m.Value<uint>("id"),
                         read = m.Value<bool>("read"),
@@ -380,7 +379,7 @@ namespace Integrations
                     form.AddField("token", token);
                     form.AddField("leTypeDeFichier", doc.Value<string>("type"));
                     form.AddField("fichierId", doc.Value<string>("id"));
-                    return new Request()
+                    return new Request
                     {
                         docName = doc.Value<string>("libelle"),
                         url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",

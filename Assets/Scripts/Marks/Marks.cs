@@ -8,10 +8,9 @@ namespace Marks
 {
     public class Marks : MonoBehaviour, Module
     {
-        internal static List<Period> periods;
-        internal static List<Subject> subjects;
+        static List<Period> periods;
         internal static List<Mark> marks;
-        public void Reset() { periods = null; subjects = null; marks = null; }
+        public void Reset() { periods = null; marks = null; }
 
         public void OnEnable()
         {
@@ -23,12 +22,11 @@ namespace Marks
         public static void Initialise(IEnumerable<Period> _periods, IEnumerable<Subject> _subjects, IEnumerable<Mark> _marks)
         {
             periods = _periods.OrderBy(s => s.start).ToList();
-            subjects = _subjects.OrderBy(s => s.name).ToList();
             marks = _marks.OrderBy(m => m.date).ToList();
 
             var instance = Manager.instance.transform.Find("Marks").GetComponent<Marks>();
             instance.period.ClearOptions();
-            instance.period.AddOptions(new List<string>() { LangueAPI.Get("marks.displayedPeriod.all", "All") });
+            instance.period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
             instance.period.AddOptions(periods.Select(p => p.name).ToList());
             instance.period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
         }

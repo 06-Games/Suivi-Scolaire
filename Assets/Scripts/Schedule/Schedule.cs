@@ -14,7 +14,7 @@ namespace Schedule
     {
         public float sizePerHour = 100F;
 
-        internal static Dictionary<string, List<Event>> periodSchedule = new Dictionary<string, List<Event>>();
+        static Dictionary<string, List<Event>> periodSchedule = new Dictionary<string, List<Event>>();
         static DateTime periodStart = DateTime.Now;
         public void Reset()
         {
@@ -136,7 +136,6 @@ namespace Schedule
         IEnumerator CheckOriantation()
         {
             var Top = transform.Find("Top").GetComponent<LayoutSwitcher>();
-            var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             while (true)
             {
                 bool paysage = Screen.width > Screen.height;

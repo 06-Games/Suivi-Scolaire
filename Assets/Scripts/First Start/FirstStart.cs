@@ -100,7 +100,7 @@ public class FirstStart : MonoBehaviour
             auth.Find("Connexion").GetComponent<Button>().onClick.AddListener(() =>
             {
                 auth.gameObject.SetActive(false);
-                var account = new Account()
+                var account = new Account
                 {
                     provider = provider,
                     id = auth.Find("ID").GetComponent<InputField>().text,
@@ -158,7 +158,7 @@ public class FirstStart : MonoBehaviour
                     instance.ResetData();
                     SelectChild(child);
 
-                    foreach(Transform module in Manager.instance.transform)
+                    foreach (Transform module in Manager.instance.transform)
                         if (module.gameObject.activeInHierarchy && module.TryGetComponent<Module>(out var m)) m.OnEnable();
                     Manager.instance.Menu.UpdateModules();
                 });

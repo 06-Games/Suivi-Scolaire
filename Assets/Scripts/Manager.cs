@@ -12,7 +12,7 @@ public class Manager : MonoBehaviour
     public GameObject Loading;
     public Sprite LoadingError;
 
-    public static Integrations.Provider provider;
+    public static Integrations.Provider provider { get; set; }
     void Start()
     {
         FirstStart.onComplete += (Provider, childs) =>
@@ -28,7 +28,7 @@ public class Manager : MonoBehaviour
         foreach (Transform obj in transform) modules.Add(obj.GetComponent<Module>());
     }
 
-    internal static Manager instance;
+    internal static Manager instance { get; private set; }
     void Awake()
     {
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;

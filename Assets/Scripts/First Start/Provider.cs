@@ -7,7 +7,7 @@ namespace Integrations
 {
     public class Account : IEquatable<Account>
     {
-        public static Dictionary<string, Provider> Providers = new Dictionary<string, Provider>() {
+        internal static readonly Dictionary<string, Provider> Providers = new Dictionary<string, Provider> {
             //{ "Local", new Local() },
             { "EcoleDirecte", new EcoleDirecte() },
             { "CambridgeKids", new CambridgeKids() }
@@ -24,7 +24,7 @@ namespace Integrations
         public override bool Equals(object obj) => Equals(obj as Account);
         public override int GetHashCode() => string.Format("{0}-{1}-{2}", provider, username, id).GetHashCode();
     }
-    public class ChildAccount
+    public class ChildAccount : IEquatable<ChildAccount>
     {
         public string id;
         public string name;
@@ -40,7 +40,7 @@ namespace Integrations
 
     public static class ProviderExtension
     {
-        static string[] whiteList = new string[] { "Auth" };
+        static string[] whiteList = new[] { "Auth" };
         public static bool TryGetModule<T>(this Provider provider, out T module)
         {
             module = GetModule<T>(provider);
@@ -77,25 +77,25 @@ namespace Integrations
                         var spaceNb = p.Count(x => x == '"');
                         if (spaceNb != 0 && (spaceNb % 2F) != 0) return p; //We are in a string
 
-                        var end = p.IndexOfAny(new char[] { ' ', '>' });
+                        var end = p.IndexOfAny(new[] { ' ', '>' });
                         return p.StartsWith("\"") ? p : $"\"{p.Substring(0, end == -1 ? 0 : end)}\"{p.Substring(end == -1 ? 0 : end)}";
                     })
                     .Prepend(html.Substring(0, html.IndexOf('=') == -1 ? html.Length : html.IndexOf('=')))
                 );
-                foreach (var t in new string[] { "img", "br" }.SelectMany(s => new string[] { s, s.ToUpper() }))
+                foreach (var t in new[] { "img", "br" }.SelectMany(s => new[] { s, s.ToUpper() }))
                 {
                     html = string.Join($"<{t}",
-                        html.Split(new string[] { $"<{t}" }, StringSplitOptions.RemoveEmptyEntries).Skip(1)
+                        html.Split(new[] { $"<{t}" }, StringSplitOptions.RemoveEmptyEntries).Skip(1)
                         .Select(p =>
                         {
                             if (p.Contains($"</{t}>")) return p; //Well formed html
 
-                            var end = p.IndexOfAny(new char[] { '>' });
+                            var end = p.IndexOfAny(new[] { '>' });
                             return p[end <= 0 ? 0 : end - 1] == '/' ? p : $"{p.Substring(0, end <= 0 ? 0 : end)}/{p.Substring(end <= 0 ? 0 : end)}";
                         })
                         .Prepend(html.Substring(0, html.IndexOf($"<{t}") == -1 ? html.Length : html.IndexOf($"<{t}")))
                     );
-                };
+                }
             }
 
             string AnalyseHTML()
@@ -106,18 +106,18 @@ namespace Integrations
             }
             string AnalyseNode(System.Xml.XmlNode node)
             {
-                var result = "";
+                var result = new System.Text.StringBuilder();
                 if (!node.HasChildNodes) return node.Value;
                 foreach (System.Xml.XmlNode item in node)
                 {
                     var itemName = item.Name.ToLower();
-                    if (itemName == "p" | itemName == "div") result += AnalyseNode(item) + "\n";
-                    else if (itemName == "strong") result += $"<b>{AnalyseNode(item)}</b>";
-                    else if (itemName == "em") result += $"<i>{AnalyseNode(item)}</i>";
-                    else if (itemName == "a") result += $"<link={item.Attributes["href"].Value}>{AnalyseNode(item)}</link>";
-                    else if (itemName == "br") result += "\n";
-                    else if (itemName == "li") result += $"• {AnalyseNode(item)}\n";
-                    else if (itemName == "span" | itemName == "body")
+                    if (itemName == "p" || itemName == "div") result.AppendLine(AnalyseNode(item));
+                    else if (itemName == "strong") result.Append($"<b>{AnalyseNode(item)}</b>");
+                    else if (itemName == "em") result.Append($"<i>{AnalyseNode(item)}</i>");
+                    else if (itemName == "a") result.Append($"<link={item.Attributes["href"].Value}>{AnalyseNode(item)}</link>");
+                    else if (itemName == "br") result.AppendLine("");
+                    else if (itemName == "li") result.AppendLine($"• {AnalyseNode(item)}");
+                    else if (itemName == "span" || itemName == "body")
                     {
                         string style = item.Attributes["style"]?.Value.ToLower() ?? "";
                         if (style.StartsWith("font-size:"))
@@ -133,7 +133,7 @@ namespace Integrations
                             else if (value == "large") parsedValue = 1.2F * medium;
                             else if (value == "x-large") parsedValue = 1.5F * medium;
                             else if (value == "xx-large") parsedValue = 2F * medium;
-                            result += $"<size={parsedValue}>{AnalyseNode(item)}</size>";
+                            result.Append($"<size={parsedValue}>{AnalyseNode(item)}</size>");
                         }
                         else if (style.StartsWith("color:"))
                         {
@@ -142,17 +142,17 @@ namespace Integrations
                                 value = "#" + string.Join("", value.Substring("rgb(".Length).TrimEnd(')').Replace(" ", "").Split(',').Select(d => byte.TryParse(d, out var b) ? b.ToString("X2") : "00"));
                             else if (value.StartsWith("rgba("))
                                 value = "#" + string.Join("", value.Substring("rgba(".Length).TrimEnd(')').Split(',').Cast<byte>().Select(d => d.ToString("X2")));
-                            result += $"<color={value}>{AnalyseNode(item)}</color>";
+                            result.Append($"<color={value}>{AnalyseNode(item)}</color>");
                         }
-                        else result += AnalyseNode(item);
+                        else result.Append(AnalyseNode(item));
                     }
                     else
                     {
                         Logging.Log("Unknown HTML element: " + itemName, UnityEngine.LogType.Warning);
-                        result += AnalyseNode(item);
+                        result.Append(AnalyseNode(item));
                     }
                 }
-                return result;
+                return result.ToString();
             }
         }
         public static string RemoveEmptyLines(string lines) => lines == null ? "" : System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();

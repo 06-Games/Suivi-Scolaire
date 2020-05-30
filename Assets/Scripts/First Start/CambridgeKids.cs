@@ -13,7 +13,7 @@ namespace Integrations
     {
         public string Name => "Cambridge Kids";
 
-        static string sessionId = "";
+        string sessionId = "";
         public IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError)
         {
             Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
@@ -58,7 +58,7 @@ namespace Integrations
             var enfants = json.jToken.SelectToken("account_user").Where(obj => obj.Value<string>("type") == "1").Select(enfant =>
             {
                 var name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{enfant.Value<string>("prenom")}{enfant.Value<string>("nom")}".ToLower());
-                return new ChildAccount() { name = name, id = enfant.Value<string>("user_id"), modules = new List<string>() { "Homeworks" } };
+                return new ChildAccount { name = name, id = enfant.Value<string>("user_id"), modules = new List<string>() { "Homeworks" } };
             }).ToList();
             account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(json.Value<string>("account_name").ToLower());
             account.child = enfants.FirstOrDefault(c => c.id == account.child?.id) ?? enfants.FirstOrDefault();
@@ -99,12 +99,12 @@ namespace Integrations
                 {
                     docName = doc.Value<string>("file_name"),
                     url = $"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.Value<string>("up_file_id")}",
-                    headers = new Dictionary<string, string>() { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
+                    headers = new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
                     method = Request.Method.Get
                 });
                 return data.Select(d => new Homework()
                 {
-                    subject = new Subject() { name = d.Value<string>("sec_title") },
+                    subject = new Subject { name = d.Value<string>("sec_title") },
                     forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),
                     addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
                     addedThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0),
