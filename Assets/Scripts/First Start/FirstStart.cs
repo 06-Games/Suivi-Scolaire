@@ -10,8 +10,8 @@ public class FirstStart : MonoBehaviour
 
     public System.Action<Provider, List<ChildAccount>> onComplete;
 
-    HashSet<Account> accounts = null;
-    public static Account selectedAccount { get; private set; } = null;
+    HashSet<Account> accounts;
+    public static Account selectedAccount { get; private set; }
     public static List<ChildAccount> childAccounts { get; set; }
     public void Initialise()
     {
@@ -71,7 +71,7 @@ public class FirstStart : MonoBehaviour
                 },
                 (error) =>
                 {
-                    var auth = transform.Find("Content").Find("Auth").Find("Error").GetComponent<Text>().text = error;
+                    transform.Find("Content").Find("Auth").Find("Error").GetComponent<Text>().text = error;
                     ConnectWith(account.provider);
                 }
             ));
@@ -114,7 +114,7 @@ public class FirstStart : MonoBehaviour
         }
         else
         {
-            selectedAccount = new Account() { provider = provider };
+            selectedAccount = new Account { provider = provider };
             accounts.Add(selectedAccount);
             Save();
             onComplete?.Invoke(Provider, null);

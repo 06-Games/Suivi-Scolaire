@@ -8,7 +8,7 @@ namespace Messanging
 {
     public class Messanging : MonoBehaviour, Module
     {
-        internal static List<Message> messages;
+        internal List<Message> messages;
         public void Reset() { messages = null; }
 
         Integrations.Messanging module;
@@ -20,10 +20,7 @@ namespace Messanging
             Manager.OpenModule(gameObject);
         }
 
-        public static void Initialise(IEnumerable<Message> _messages)
-        {
-            messages = _messages.OrderByDescending(m => m.date).ToList();
-        }
+        public void Initialise(IEnumerable<Message> _messages) => messages = _messages.OrderByDescending(m => m.date).ToList();
         public void Refresh()
         {
             var content = transform.Find("Content");

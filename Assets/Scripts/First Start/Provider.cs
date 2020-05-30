@@ -71,7 +71,7 @@ namespace Integrations
             void FixHTML()
             {
                 html = string.Join("=",
-                    html.Split(new char[] { '=' }).Skip(1)
+                    html.Split(new[] { '=' }).Skip(1)
                     .Select(p =>
                     {
                         var spaceNb = p.Count(x => x == '"');

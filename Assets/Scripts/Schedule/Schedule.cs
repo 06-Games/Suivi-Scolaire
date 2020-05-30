@@ -79,7 +79,7 @@ namespace Schedule
 
             transform.Find("Content").gameObject.SetActive(schedule?.Count() > 0);
             transform.Find("Empty").gameObject.SetActive(!(schedule?.Count() > 0));
-            if (!(schedule?.Count() > 0)) return;
+            if (schedule == null || schedule.Count() == 0) return;
 
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);

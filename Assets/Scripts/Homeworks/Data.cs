@@ -42,7 +42,7 @@ public class Request
             UnityEngine.Networking.UnityWebRequest webRequest = null;
             if (method == Method.Get) webRequest = UnityEngine.Networking.UnityWebRequest.Get(url);
             else if (method == Method.Post) webRequest = UnityEngine.Networking.UnityWebRequest.Post(url, postData ?? new WWWForm());
-            if (headers != null) foreach (var header in headers) webRequest.SetRequestHeader(header.Key, header.Value);
+            if (headers != null) foreach (var header in headers) webRequest?.SetRequestHeader(header.Key, header.Value);
             return webRequest;
         }
     }

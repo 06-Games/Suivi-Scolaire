@@ -58,7 +58,7 @@ namespace Integrations
             var enfants = json.jToken.SelectToken("account_user").Where(obj => obj.Value<string>("type") == "1").Select(enfant =>
             {
                 var name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{enfant.Value<string>("prenom")}{enfant.Value<string>("nom")}".ToLower());
-                return new ChildAccount { name = name, id = enfant.Value<string>("user_id"), modules = new List<string>() { "Homeworks" } };
+                return new ChildAccount { name = name, id = enfant.Value<string>("user_id"), modules = new List<string> { "Homeworks" } };
             }).ToList();
             account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(json.Value<string>("account_name").ToLower());
             account.child = enfants.FirstOrDefault(c => c.id == account.child?.id) ?? enfants.FirstOrDefault();
@@ -76,7 +76,7 @@ namespace Integrations
             var periods = result.jToken.SelectToken("service_search").Where(obj => !string.IsNullOrEmpty(obj.Value<string>("date_debut")));
             foreach (var period in periods)
             {
-                yield return new Period()
+                yield return new Period
                 {
                     name = period.Value<string>("description"),
                     id = period.Value<string>("service_id")
@@ -95,14 +95,14 @@ namespace Integrations
             var homeworks = result.jToken.SelectToken("list").SelectMany(obj =>
             {
                 var data = obj.SelectToken("page_section");
-                var docs = obj.SelectToken("link_file").Select(doc => new Request()
+                var docs = obj.SelectToken("link_file").Select(doc => new Request
                 {
                     docName = doc.Value<string>("file_name"),
                     url = $"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.Value<string>("up_file_id")}",
                     headers = new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
                     method = Request.Method.Get
                 });
-                return data.Select(d => new Homework()
+                return data.Select(d => new Homework
                 {
                     subject = new Subject { name = d.Value<string>("sec_title") },
                     forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),

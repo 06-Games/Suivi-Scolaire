@@ -305,7 +305,7 @@ namespace Integrations
 
             var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v => new global::Schedule.Event
             {
-                subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                subject = new Subject { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
                 start = v.Value<DateTime>("start_date"),
                 end = v.Value<DateTime>("end_date"),
                 room = v.Value<string>("salle"),
@@ -370,7 +370,7 @@ namespace Integrations
             }
 
             var data = result.jToken.SelectToken("data");
-            message.extra = new global::Messanging.Message.Extra()
+            message.extra = new global::Messanging.Message.Extra
             {
                 content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content")))),
                 documents = data.SelectToken("files").Select(doc =>
