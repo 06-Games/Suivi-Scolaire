@@ -183,7 +183,7 @@ namespace Integrations
 
                 homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
                 {
-                    subject = new Subject() { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                    subject = new Subject { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
                     forThe = DateTime.Parse(date),
                     addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
@@ -260,15 +260,15 @@ namespace Integrations
             yield return holidaysRequest.SendWebRequest();
             var holidaysResult = new FileFormat.JSON(holidaysRequest.downloadHandler.text);
             DateTime lastPeriod = DateTime.MinValue;
-            var holidays = holidaysResult.jToken.SelectToken("records").SelectMany(v =>
+            var holidays = holidaysResult.jToken.SelectToken("records").Reverse().SelectMany(v =>
             {
                 var list = new List<global::Periods.Period>();
                 var obj = v.SelectToken("fields");
                 list.Add(new global::Periods.Period
                 {
                     name = "Periode scolaire",
-                    start = lastPeriod,
-                    end = obj.Value<DateTime>("start_date").AddDays(-1),
+                    start = lastPeriod.AddSeconds(1),
+                    end = obj.Value<DateTime>("start_date").AddSeconds(-1),
                     holiday = false
                 });
                 list.Add(new global::Periods.Period

@@ -148,7 +148,7 @@ namespace Integrations
                         }
                         else result.Append(AnalyseNode(item));
                     }
-                    else if(item.NodeType == System.Xml.XmlNodeType.Text) result.Append(AnalyseNode(item));
+                    else if (item.NodeType == System.Xml.XmlNodeType.Text) result.Append(AnalyseNode(item));
                     else
                     {
                         Logging.Log("Unknown HTML element: " + itemName + "\nAt: " + item.OuterXml, UnityEngine.LogType.Warning);
