@@ -114,8 +114,10 @@ namespace Integrations
                     if (itemName == "p" || itemName == "div") result.AppendLine(AnalyseNode(item));
                     else if (itemName == "strong") result.Append($"<b>{AnalyseNode(item)}</b>");
                     else if (itemName == "em") result.Append($"<i>{AnalyseNode(item)}</i>");
+                    else if (itemName == "u") result.Append($"<u>{AnalyseNode(item)}</u>");
                     else if (itemName == "a") result.Append($"<link={item.Attributes["href"].Value}>{AnalyseNode(item)}</link>");
                     else if (itemName == "br") result.AppendLine("");
+                    else if (itemName == "ul") result.Append(AnalyseNode(item));
                     else if (itemName == "li") result.AppendLine($"• {AnalyseNode(item)}");
                     else if (itemName == "span" || itemName == "body")
                     {
@@ -146,9 +148,10 @@ namespace Integrations
                         }
                         else result.Append(AnalyseNode(item));
                     }
+                    else if(item.NodeType == System.Xml.XmlNodeType.Text) result.Append(AnalyseNode(item));
                     else
                     {
-                        Logging.Log("Unknown HTML element: " + itemName, UnityEngine.LogType.Warning);
+                        Logging.Log("Unknown HTML element: " + itemName + "\nAt: " + item.OuterXml, UnityEngine.LogType.Warning);
                         result.Append(AnalyseNode(item));
                     }
                 }
