@@ -47,13 +47,19 @@ namespace Periods
                 var actualPeriod = periods.FirstOrDefault(p => p.start <= now && p.end >= now);
                 period.Find("Img").Find("Image").GetComponent<Image>().sprite = periodSprites[actualPeriod.holiday ? 1 : 0];
                 period.Find("Txt").Find("Period").GetComponent<Text>().text = actualPeriod.name;
-                if (actualPeriod.holiday) period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get("", "Elles se termineront dans [0] jours", (actualPeriod.start - now).ToString("dd"));
+
                 var nextPeriod = periods.FirstOrDefault(h => h.start > now);
+                var remaining = nextPeriod == null ? new TimeSpan() : (nextPeriod.start - now);
+                var unit = remaining.TotalDays > 1 ? new[] { "days", "dd" } : (remaining.TotalHours > 1 ? new[] { "hours", "hh" } : new[] { "minutes", "mm" });
                 period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get(
                     actualPeriod.holiday ? "home.holidays.end" : "home.holidays.start",
-                    actualPeriod.holiday ? "It ends in <b>[1]</b> days" : "<i>[0]</i>\nstart in <b>[1]</b> days",
+                    actualPeriod.holiday ? "It ends in [1]" : "<i>[0]</i>\nstart in [1]",
                     nextPeriod?.name.ToLower(),
-                    nextPeriod == null ? "0" : (nextPeriod.start - now).ToString("dd")
+                    LangueAPI.Get(
+                        "home.holidays." + unit[0],
+                        "<b>[0]</b> " + unit[0],
+                        remaining.ToString(unit[1])
+                    )
                 );
                 period.gameObject.SetActive(true);
             }

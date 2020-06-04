@@ -14,8 +14,11 @@ menu.changeAccount = Change account
 menu.logout = Logout
 
 home = Home
-home.holidays.start = <i>[0]</i>\nstart in <b>[1]</b> days
-home.holidays.end = It ends in <b>[1]</b> days
+home.holidays.start = <i>[0]</i>\nstart in [1]
+home.holidays.end = It ends in [1]
+home.holidays.days = <b>[0]</b> days
+home.holidays.hours = <b>[0]</b> hours
+home.holidays.minutes = <b>[0]</b> minutes
 home.marks = Latest Marks
 home.schedule.currently = Currently:
 home.schedule.next = Next:
