@@ -355,7 +355,7 @@ namespace Integrations
         public IEnumerator LoadExtraMessageData(global::Messanging.Message message, Action<global::Messanging.Message> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get&mode={(message.type == global::Messanging.Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)

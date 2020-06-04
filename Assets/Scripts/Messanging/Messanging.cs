@@ -49,6 +49,7 @@ namespace Messanging
 
         public void OpenMsg(Message message)
         {
+            message.read = true;
             var content = transform.Find("Content");
             foreach (Transform go in content) go.gameObject.SetActive(false);
 
