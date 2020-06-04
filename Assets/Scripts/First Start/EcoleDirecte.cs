@@ -344,7 +344,7 @@ namespace Integrations
                         date = m.Value<DateTime>("date"),
                         subject = m.Value<string>("subject"),
                         correspondents = (type == "from" ? Enumerable.Repeat(m[type], 1) : m[type]).Select(c => c.Value<string>("name")).ToList(),
-                        type = Enum.TryParse(m.Value<string>("mtype"), out global::Messanging.Message.Type _type) ? _type : global::Messanging.Message.Type.received
+                        type = m.Value<string>("mtype") == "send" ? global::Messanging.Message.Type.sent : global::Messanging.Message.Type.received
                     };
                 });
             }).ToList();
@@ -365,7 +365,7 @@ namespace Integrations
                     yield return Connect(FirstStart.selectedAccount, null, null);
                     yield return LoadExtraMessageData(message, onComplete);
                 }
-                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting extra message data, server returned \"" + result.Value<string>("message") + "\"");
+                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting extra message data, server returned \"{result.Value<string>("message")}\"\nRequest URL: {request.url}\n\nFull server response: {result}");
                 yield break;
             }
 
