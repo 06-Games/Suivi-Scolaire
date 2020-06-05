@@ -134,7 +134,7 @@ namespace Integrations
                 {
                     id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : (uint?)null,
                     name = c.Value<string>("descriptif"),
-                    value = c.Value<string>("valeur"),
+                    value = uint.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : (uint?)null,
                     categoryID = c.Value<uint>("idCompetence"),
                     categoryName = c.Value<string>("libelleCompetence")
                 }).ToArray(),

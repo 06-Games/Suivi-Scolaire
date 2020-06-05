@@ -51,8 +51,10 @@ namespace Marks
             var marksByS = marks.GroupBy(m => m.subject).Where(s => s.Key == selectedSubject || selectedSubject == null).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.period == periods[period.value - 1]).ToList());
             var average = marksByS.ToDictionary(s => s.Key, s =>
             {
-                var _marks = s.Value.Where(m => m.mark != null && !m.notSignificant);
-                return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => m.mark.Value / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
+                var _marks = s.Value.Where(m => (m.mark != null || (m.skills?.Any(skill => skill.value.HasValue) ?? false)) && !m.notSignificant);
+                if (_marks.Count() == 0) return (float?)null;
+                if (_marks.FirstOrDefault()?.mark == null) return _marks.SelectMany(m => m.skills).Sum(skill => (skill.value.Value + 1) / 4F * 20F) / _marks.Sum(m => m.skills.Length);
+                return _marks.Sum(m => m.mark.Value / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
             });
             var coef = marksByS.Keys.ToDictionary(s => s, s => average[s] == null ? 0 : s.coef);
             var classAverage = marksByS.ToDictionary(s => s.Key, s =>
@@ -82,11 +84,17 @@ namespace Marks
                 {
                     var btn = Instantiate(subjectsPanel.GetChild(0).gameObject, subjectsPanel).transform;
                     btn.Find("Name").GetComponent<Text>().text = string.IsNullOrWhiteSpace(m.name) ? $"<i>{LangueAPI.Get("marks.noName", "Name not specified")}</i>" : m.name;
-                    btn.Find("Value").GetComponent<Text>().text = m.mark == null ? $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>" : (m.notSignificant ? $"<color=#aaa>({m.mark}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=12>/{m.markOutOf}</size>");
+                    var valueField = btn.Find("Value").GetComponent<TMPro.TextMeshProUGUI>();
+                    if (m.mark != null) valueField.text = m.notSignificant ? $"<color=#aaa>({m.mark}<size=17>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=17>/{m.markOutOf}</size>";
+                    else if (m.skills.Length == 0 || m.skills.Any(s => !s.value.HasValue)) valueField.text = $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>";
+                    else {
+                        valueField.text = string.Join(" ", m.skills.Select(s => $"<sprite index={s.value}>"));
+                        valueField.margin = new Vector4(0, 0, -100, 0);
+                    }
                     btn.Find("Class Average").GetComponent<Text>().text = m.classAverage == null ? "" : (m.notSignificant ? $"<color=#aaa>({m.classAverage}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.classAverage}<size=12>/{m.markOutOf}</size>");
                     btn.Find("Subject").GetComponent<Text>().text = selectedSubject == null ? m.subject.name : "";
                     btn.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM/yyyy");
-                    btn.Find("Coef").GetComponent<Text>().text = LangueAPI.Get("marks.coef", "coef [0]", m.coef);
+                    btn.Find("Coef").GetComponent<Text>().text = m.coef == 0 ? "" : LangueAPI.Get("marks.coef", "coef [0]", m.coef);
                     btn.gameObject.SetActive(true);
                 }
             }
@@ -101,7 +109,7 @@ namespace Marks
                     if (subject.Value.Count() > 0) btn.GetComponent<Button>().onClick.AddListener(() => Refresh(subject.Key));
                     btn.Find("Name").GetComponent<Text>().text = subject.Key.name;
                     btn.Find("Teacher").GetComponent<Text>().text = string.Join("\n", subject.Key.teachers);
-                    btn.Find("Average").GetComponent<Text>().text = average[subject.Key] == null ? "" : average[subject.Key].Value.ToString("0.##") + "<size=12>/20</size>";
+                    btn.Find("Average").GetComponent<TMPro.TextMeshProUGUI>().text = average[subject.Key] == null ? "" : average[subject.Key].Value.ToString("0.##") + "<size=12>/20</size>";
                     btn.Find("Class Average").GetComponent<Text>().text = classAverage[subject.Key] == null ? "" : classAverage[subject.Key].Value.ToString("0.##") + "<size=12>/20</size>";
                     btn.gameObject.SetActive(true);
                 }
@@ -109,7 +117,8 @@ namespace Marks
 
             var bottom = transform.Find("Bottom");
             bottom.Find("Average").GetComponent<Text>().text = coef.Values.Sum() > 0 ? LangueAPI.Get(selectedSubject == null ? "marks.overallAverage" : "marks.average", selectedSubject == null ? "My overall average: [0]" : "My average: [0]", $"{(marksByS.Keys.Sum(s => (average[s] ?? 0) * coef[s]) / coef.Values.Sum()).ToString("0.##")}<size=12>/20</size>") : "";
-            bottom.Find("Class Average").GetComponent<Text>().text = coef.Values.Sum() > 0 ? $"Moyenne générale de la classe: {(marksByS.Keys.Sum(s => (classAverage[s] ?? 0) * s.coef) / coef.Values.Sum()).ToString("0.##")}<size=12>/20</size>" : "";
+            var _classAverage = marksByS.Keys.Sum(s => (classAverage[s] ?? 0) * s.coef) / coef.Values.Sum();
+            bottom.Find("Class Average").GetComponent<Text>().text = coef.Values.Sum() > 0 && _classAverage > 0 ? $"Moyenne générale de la classe: {_classAverage.ToString("0.##")}<size=12>/20</size>" : "";
         }
     }
 }

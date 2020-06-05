@@ -40,7 +40,7 @@ namespace Marks
     {
         public uint? id;
         public string name;
-        public string value;
+        public uint? value;
         public uint categoryID;
         public string categoryName;
     }

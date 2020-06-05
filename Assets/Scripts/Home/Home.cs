@@ -76,8 +76,11 @@ namespace Periods
                     var go = Instantiate(lastMarks.Find("Template").gameObject, lastMarks).transform;
                     go.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM");
                     go.Find("Subject").GetComponent<Text>().text = m.subject.name;
-                    go.Find("Value").GetComponent<Text>().text = m.mark == null ? $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>" : (m.notSignificant ? $"<color=#aaa>({m.mark}<size=14>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=14>/{m.markOutOf}</size>");
-                    go.Find("Coef").GetComponent<Text>().text = LangueAPI.Get("marks.coef", "coef [0]", m.coef);
+                    go.Find("Value").GetComponent<TMPro.TextMeshProUGUI>().text = m.mark != null ? m.notSignificant ? $"<color=#aaa>({m.mark}<size=17>/{m.markOutOf}</size>)</color>" 
+                        : $"{m.mark}<size=17>/{m.markOutOf}</size>"
+                        : (m.skills.Length == 0 || m.skills.Any(s => !s.value.HasValue) ? $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>"
+                        : string.Join(" ", m.skills.Select(s => $"<sprite index={s.value}>")));
+                    go.Find("Coef").GetComponent<Text>().text = m.coef == 0 ? "" : LangueAPI.Get("marks.coef", "coef [0]", m.coef);
                     go.gameObject.SetActive(true);
                 }
                 lastMarks.gameObject.SetActive(true);
