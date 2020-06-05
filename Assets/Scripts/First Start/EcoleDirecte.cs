@@ -250,7 +250,12 @@ namespace Integrations
             var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
             Logging.Log("The address of the establishment is " + adress);
 
-            var gouvRequest = UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education&q={adress}&rows=1");
+            var adressRequest = UnityWebRequest.Get($"https://api-adresse.data.gouv.fr/search/?q={adress}&limit=1");
+            yield return adressRequest.SendWebRequest();
+            var adressResult = new FileFormat.JSON(adressRequest.downloadHandler.text);
+            var location = adressResult.jToken.SelectToken("features[0].properties");
+
+            var gouvRequest = UnityWebRequest.Get($"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education&q={location?.Value<string>("postcode")} {location?.Value<string>("city")}&rows=1");
             yield return gouvRequest.SendWebRequest();
             var gouvResult = new FileFormat.JSON(gouvRequest.downloadHandler.text);
             var academy = gouvResult.jToken.SelectToken("records[0].fields")?.Value<string>("libelle_academie");
