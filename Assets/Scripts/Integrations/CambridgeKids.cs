@@ -1,4 +1,4 @@
-﻿using Homeworks;
+﻿using Integrations.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -65,7 +65,7 @@ namespace Integrations
             Manager.HideLoadingPanel();
             onComplete?.Invoke(account, enfants);
         }
-        public IEnumerator<Period> DiaryPeriods()
+        public IEnumerator<Homework.Period> DiaryPeriods()
         {
             var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={FirstStart.selectedAccount.child.id}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
             request.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
@@ -76,14 +76,14 @@ namespace Integrations
             var periods = result.jToken.SelectToken("service_search").Where(obj => !string.IsNullOrEmpty(obj.Value<string>("date_debut")));
             foreach (var period in periods)
             {
-                yield return new Period
+                yield return new Homework.Period
                 {
                     name = period.Value<string>("description"),
                     id = period.Value<string>("service_id")
                 };
             }
         }
-        public IEnumerator GetHomeworks(Period period, Action<List<Homework>> onComplete)
+        public IEnumerator GetHomeworks(Homework.Period period, Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.homeworks", "Getting homeworks");
 
@@ -92,7 +92,9 @@ namespace Integrations
             request.SetRequestHeader("Cookie", sessionId);
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON($"{{\"list\":{request.downloadHandler.text}}}");
-            var homeworks = result.jToken.SelectToken("list").SelectMany(obj =>
+            if(Manager.Data.Subjects == null) Manager.Data.Subjects = new List<Subject>();
+            if (Manager.Data.Homeworks == null) Manager.Data.Homeworks = new List<Homework>();
+            Manager.Data.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
             {
                 var data = obj.SelectToken("page_section");
                 var docs = obj.SelectToken("link_file").Select(doc => new Request
@@ -102,18 +104,24 @@ namespace Integrations
                     headers = new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
                     method = Request.Method.Get
                 });
-                return data.Select(d => new Homework
+                return data.Select(d =>
                 {
-                    subject = new Subject { name = d.Value<string>("sec_title") },
-                    forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),
-                    addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
-                    addedThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0),
-                    content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(d.Value<string>("text"))),
-                    documents = docs
+                    if (!Manager.Data.Subjects.Any(s => s.id == d.Value<string>("page_section_id")))
+                        Manager.Data.Subjects.Add(new Subject { id = d.Value<string>("page_section_id"), name = d.Value<string>("sec_title") });
+                    return new Homework
+                    {
+                        subjectID = d.Value<string>("page_section_id"),
+                        periodID = period.id,
+                        forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),
+                        addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
+                        addedThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0),
+                        content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(d.Value<string>("text"))),
+                        documents = docs
+                    };
                 });
-            }).ToList();
+            }));
 
-            onComplete?.Invoke(homeworks);
+            onComplete?.Invoke();
             Manager.HideLoadingPanel();
         }
 

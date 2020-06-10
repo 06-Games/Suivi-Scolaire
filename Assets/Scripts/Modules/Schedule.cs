@@ -1,5 +1,6 @@
 ﻿using FileFormat.XML;
 using Integrations;
+using Integrations.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,11 +15,9 @@ namespace Schedule
     {
         public float sizePerHour = 100F;
 
-        static Dictionary<string, List<Event>> periodSchedule = new Dictionary<string, List<Event>>();
         static DateTime periodStart = DateTime.Now;
         public void Reset()
         {
-            periodSchedule = new Dictionary<string, List<Event>>();
             periodStart = DateTime.Now;
         }
 
@@ -38,8 +37,8 @@ namespace Schedule
             Initialise(periodStart, defaultAction);
             Manager.OpenModule(gameObject);
         }
-        internal static Action<TimeRange, List<Event>> defaultAction;
-        public static bool Initialise(DateTime start, Action<TimeRange, List<Event>> action)
+        internal static Action<TimeRange, List<ScheduledEvent>> defaultAction;
+        public static bool Initialise(DateTime start, Action<TimeRange, List<ScheduledEvent>> action)
         {
             if (Screen.width <= Screen.height) periodStart = start.Date;
             int delta = DayOfWeek.Monday - start.DayOfWeek;
@@ -48,12 +47,14 @@ namespace Schedule
             var period = new TimeRange(start, start + new TimeSpan(6, 0, 0, 0));
 
             if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { Manager.instance.transform.Find("Schedule").gameObject.SetActive(false); return false; }
-            if (periodSchedule.TryGetValue(period.ToString("yyyy-MM-dd"), out var _schedule)) action(period, _schedule);
-            else UnityThread.executeCoroutine(module.GetSchedule(period, (s) => { periodSchedule.Add(period.ToString("yyyy-MM-dd"), s); action(period, s); }));
+            var dayList = period.DayList();
+            var _schedule = Manager.Data.Schedule?.Where(h => dayList.Contains(h.start.Date)).ToList();
+            if (_schedule != null) action(period, _schedule);
+            else UnityThread.executeCoroutine(module.GetSchedule(period, () => action(period, Manager.Data.Schedule.Where(h => dayList.Contains(h.start)).ToList())));
             return true;
         }
         Dictionary<string, Color> subjectColor;
-        void Refresh(IEnumerable<Event> schedule, TimeRange period)
+        void Refresh(IEnumerable<ScheduledEvent> schedule, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
             WeekSwitcher.Find("Text").GetComponent<Text>().text = Screen.width > Screen.height ? LangueAPI.Get("schedule.period", "from [0] to [1]", period.Start.ToString("dd/MM"), period.End.ToString("dd/MM")) : period.Start.ToString("dd/MM");
@@ -99,19 +100,20 @@ namespace Schedule
                         hole.transform.SetParent(dateContent);
                         hole.AddComponent<RectTransform>().sizeDelta = new Vector2(1, sizePerHour * (float)(Event.start.TimeOfDay - lastTime).TotalHours);
                     }
-                    if (!subjectColor.ContainsKey(Event.subject?.id))
+                    if (!subjectColor.ContainsKey(Event.subjectID))
                     {
                         var index = rnd.Next(colorPalette.Count);
                         var color = index < colorPalette.Count ? colorPalette[index] : new Color32();
-                        subjectColor.Add(Event.subject?.id, color);
+                        subjectColor.Add(Event.subjectID, color);
                         colorPalette.Remove(color);
                     }
 
                     var go = Instantiate(dateContent.GetChild(0).gameObject, dateContent).transform;
-                    var goColor = subjectColor[Event.subject?.id];
+                    var goColor = subjectColor.TryGetValue(Event.subjectID ?? "", out var c) ? c : (Color)colorPalette[0];
                     goColor.a = Event.canceled ? 0.4F : 1;
                     go.GetComponent<Image>().color = goColor;
-                    go.Find("Subject").GetComponent<Text>().text = Event.subject?.name;
+                    if (Event.subject == null) Debug.LogError(Event.room + " " + Event.start + "\n" + Event.subjectID);
+                    go.Find("Subject").GetComponent<Text>().text = Event.subject?.name ?? Event.subjectID;
                     go.Find("Room").GetComponent<Text>().text = Event.canceled ? $"<color=#F56E6E>{LangueAPI.Get("schedule.canceled", "Canceled")}</color>" : Event.room;
                     go.Find("Hours").GetComponent<Text>().text = $"{Event.start.ToString("HH:mm")} - {Event.end.ToString("HH:mm")}";
                     ((RectTransform)go).sizeDelta = new Vector2(1, sizePerHour * (float)(Event.end - Event.start).TotalHours);

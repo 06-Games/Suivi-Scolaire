@@ -1,12 +1,11 @@
-﻿using Homeworks;
-using Marks;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
+using Integrations.Data;
 
 namespace Integrations
 {
@@ -82,7 +81,7 @@ namespace Integrations
                 });
             }
         }
-        public IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<Mark>> onComplete)
+        public IEnumerator GetMarks(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.marks", "Getting marks");
             var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
@@ -99,7 +98,7 @@ namespace Integrations
                 yield break;
             }
 
-            var periods = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new global::Marks.Period()
+            Manager.Data.Trimesters = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Trimester
             {
                 id = obj.Value<string>("idPeriode"),
                 name = obj.Value<string>("periode"),
@@ -107,7 +106,7 @@ namespace Integrations
                 end = obj.Value<DateTime>("dateFin")
             }).ToList();
 
-            var subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
+            Manager.Data.Subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
                 .Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>())
                 .Select(obj => new Subject
                 {
@@ -117,20 +116,20 @@ namespace Integrations
                     teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
                 }).ToList();
 
-            var marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark
+            Manager.Data.Marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark
             {
                 //Date
-                period = periods.FirstOrDefault(p => p.id == obj.Value<string>("codePeriode")),
+                trimesterID = obj.Value<string>("codePeriode"),
                 date = obj.Value<DateTime>("date"),
                 dateAdded = obj.Value<DateTime>("dateSaisie"),
 
                 //Infos
-                subject = subjects.FirstOrDefault(s => s.id == obj.Value<string>("codeMatiere")),
+                subjectID = obj.Value<string>("codeMatiere"),
                 name = obj.Value<string>("devoir"),
                 coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
                 mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : (float?)null,
                 markOutOf = float.Parse(obj.Value<string>("noteSur").Replace(",", ".")),
-                skills = obj.Value<JArray>("elementsProgramme").Select(c => new Skill
+                skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.Skill
                 {
                     id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : (uint?)null,
                     name = c.Value<string>("descriptif"),
@@ -143,9 +142,9 @@ namespace Integrations
             }).ToList();
 
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(periods, subjects, marks);
+            onComplete?.Invoke();
         }
-        public IEnumerator GetHomeworks(global::Homeworks.Period period, Action<List<Homework>> onComplete)
+        public IEnumerator GetHomeworks(Homework.Period period, Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.homeworks", "Getting homeworks");
 
@@ -169,7 +168,7 @@ namespace Integrations
             }
             else dates = period.timeRange.DayList().Select(d => d.ToString("yyyy-MM-dd"));
 
-            var homeworks = new List<Homework>();
+            var homeworks = Manager.Data.Homeworks ?? new List<Homework>();
             foreach (var date in dates)
             {
                 var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{FirstStart.selectedAccount.child.id}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
@@ -183,7 +182,8 @@ namespace Integrations
 
                 homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
                 {
-                    subject = new Subject { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
+                    subjectID = v.Value<string>("codeMatiere"),
+                    periodID = period.id,
                     forThe = DateTime.Parse(date),
                     addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
@@ -206,11 +206,12 @@ namespace Integrations
                     })
                 }));
             }
+            Manager.Data.Homeworks = homeworks;
 
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(homeworks);
+            onComplete?.Invoke();
         }
-        public IEnumerator<global::Homeworks.Period> DiaryPeriods()
+        public IEnumerator<Homework.Period> DiaryPeriods()
         {
             DateTime start = DateTime.Now;
             yield return ToPeriod(start, DateTime.MaxValue);
@@ -224,14 +225,14 @@ namespace Integrations
                 start += new TimeSpan(-7, 0, 0, 0);
             }
 
-            global::Homeworks.Period ToPeriod(DateTime pStart, DateTime pEnd) => new global::Homeworks.Period
+            Homework.Period ToPeriod(DateTime pStart, DateTime pEnd) => new Homework.Period
             {
                 timeRange = new TimeRange(pStart, pEnd),
                 id = new TimeRange(pStart, pEnd).ToString("yyyy-MM-dd") ?? "Upcomming",
                 name = pEnd == DateTime.MaxValue ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", pStart.ToString("dd/MM"), pEnd.ToString("dd/MM"))
             };
         }
-        public IEnumerator GetPeriods(Action<List<global::Periods.Period>> onComplete)
+        public IEnumerator GetPeriods(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.holidays", "Getting holidays");
             var establishmentRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
@@ -265,18 +266,18 @@ namespace Integrations
             yield return holidaysRequest.SendWebRequest();
             var holidaysResult = new FileFormat.JSON(holidaysRequest.downloadHandler.text);
             DateTime lastPeriod = DateTime.MinValue;
-            var holidays = holidaysResult.jToken.SelectToken("records").Reverse().SelectMany(v =>
+            Manager.Data.Periods = holidaysResult.jToken.SelectToken("records").Reverse().SelectMany(v =>
             {
-                var list = new List<global::Periods.Period>();
+                var list = new List<Period>();
                 var obj = v.SelectToken("fields");
-                list.Add(new global::Periods.Period
+                list.Add(new Period
                 {
                     name = "Periode scolaire",
                     start = lastPeriod.AddSeconds(1),
                     end = obj.Value<DateTime>("start_date").AddSeconds(-1),
                     holiday = false
                 });
-                list.Add(new global::Periods.Period
+                list.Add(new Period
                 {
                     name = obj.Value<string>("description"),
                     start = obj.Value<DateTime>("start_date"),
@@ -287,10 +288,10 @@ namespace Integrations
                 return list;
             }).ToList();
 
-            onComplete?.Invoke(holidays);
+            onComplete?.Invoke();
             Manager.HideLoadingPanel();
         }
-        public IEnumerator GetSchedule(TimeRange period, Action<List<global::Schedule.Event>> onComplete)
+        public IEnumerator GetSchedule(TimeRange period, Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.schedule", "Getting schedule");
 
@@ -308,19 +309,33 @@ namespace Integrations
                 yield break;
             }
 
-            var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v => new global::Schedule.Event
+            if (Manager.Data.Schedule == null) Manager.Data.Schedule = new List<ScheduledEvent>();
+            Manager.Data.Schedule.AddRange(result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v =>
             {
-                subject = new Subject { id = v.Value<string>("codeMatiere"), name = v.Value<string>("matiere") },
-                start = v.Value<DateTime>("start_date"),
-                end = v.Value<DateTime>("end_date"),
-                room = v.Value<string>("salle"),
-                canceled = v.Value<bool>("isAnnule")
-            }).ToList();
+                if (Manager.Data.Subjects == null) Manager.Data.Subjects = new List<Subject>();
+                if (!Manager.Data.Subjects.Any(s => s.id == v.Value<string>("codeMatiere")))
+                {
+                    Manager.Data.Subjects.Add(new Subject
+                    {
+                        id = v.Value<string>("codeMatiere"),
+                        name = v.Value<string>("matiere"),
+                        teachers = new[] { v.Value<string>("prof") }
+                    });
+                }
+                return new ScheduledEvent
+                {
+                    subjectID = v.Value<string>("codeMatiere"),
+                    start = v.Value<DateTime>("start_date"),
+                    end = v.Value<DateTime>("end_date"),
+                    room = v.Value<string>("salle"),
+                    canceled = v.Value<bool>("isAnnule")
+                };
+            }));
 
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(events ?? new List<global::Schedule.Event>());
+            onComplete?.Invoke();
         }
-        public IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete)
+        public IEnumerator GetMessages(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages", "Getting messages");
             var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
@@ -337,30 +352,32 @@ namespace Integrations
                 yield break;
             }
 
-            var msg = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
+            Manager.Data.Messages = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
             {
                 return t.Select(m =>
                 {
                     var type = (m.Value<string>("mtype") == "received") ? "from" : "to";
-                    return new global::Messanging.Message
+                    return new Message
                     {
                         id = m.Value<uint>("id"),
                         read = m.Value<bool>("read"),
                         date = m.Value<DateTime>("date"),
                         subject = m.Value<string>("subject"),
                         correspondents = (type == "from" ? Enumerable.Repeat(m[type], 1) : m[type]).Select(c => c.Value<string>("name")).ToList(),
-                        type = m.Value<string>("mtype") == "send" ? global::Messanging.Message.Type.sent : global::Messanging.Message.Type.received
+                        type = m.Value<string>("mtype") == "send" ? Message.Type.sent : Message.Type.received
                     };
                 });
             }).ToList();
 
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(msg);
+            onComplete?.Invoke();
         }
-        public IEnumerator LoadExtraMessageData(global::Messanging.Message message, Action<global::Messanging.Message> onComplete)
+        public IEnumerator LoadExtraMessageData(uint messageID, Action onComplete)
         {
+            var message = Manager.Data.Messages.FirstOrDefault(m => m.id == messageID);
+
             Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get&mode={(message.type == global::Messanging.Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
@@ -368,34 +385,31 @@ namespace Integrations
                 if (result.Value<string>("message") == "Session expirée !")
                 {
                     yield return Connect(FirstStart.selectedAccount, null, null);
-                    yield return LoadExtraMessageData(message, onComplete);
+                    yield return LoadExtraMessageData(message.id, onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting extra message data, server returned \"{result.Value<string>("message")}\"\nRequest URL: {request.url}\n\nFull server response: {result}");
                 yield break;
             }
 
             var data = result.jToken.SelectToken("data");
-            message.extra = new global::Messanging.Message.Extra
-            {
-                content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content")))),
-                documents = data.SelectToken("files").Select(doc =>
-                {
-                    WWWForm form = new WWWForm();
-                    form.AddField("token", token);
-                    form.AddField("leTypeDeFichier", doc.Value<string>("type"));
-                    form.AddField("fichierId", doc.Value<string>("id"));
-                    return new Request
-                    {
-                        docName = doc.Value<string>("libelle"),
-                        url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                        method = Request.Method.Post,
-                        postData = form
-                    };
-                })
-            };
+            message.content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content"))));
+            message.documents = data.SelectToken("files").Select(doc =>
+                 {
+                     WWWForm form = new WWWForm();
+                     form.AddField("token", token);
+                     form.AddField("leTypeDeFichier", doc.Value<string>("type"));
+                     form.AddField("fichierId", doc.Value<string>("id"));
+                     return new Request
+                     {
+                         docName = doc.Value<string>("libelle"),
+                         url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
+                         method = Request.Method.Post,
+                         postData = form
+                     };
+                 });
 
             Manager.HideLoadingPanel();
-            onComplete.Invoke(message);
+            onComplete.Invoke();
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));

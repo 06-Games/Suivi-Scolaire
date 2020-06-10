@@ -187,7 +187,7 @@ public class FirstStart : MonoBehaviour
         auth.Find("ID").GetComponent<InputField>().text = "";
         auth.Find("PASSWORD").GetComponent<InputField>().text = "";
     }
-    public void ResetData() { foreach (var d in Manager.instance.modules) d?.Reset(); }
+    public void ResetData() { Manager.Data = new Integrations.Data.Data(); foreach (var d in Manager.instance.modules) d?.Reset(); }
 
     private void Update()
     {

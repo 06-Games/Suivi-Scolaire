@@ -166,17 +166,17 @@ namespace Integrations
     {
         IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError);
     }
-    public interface Periods : Provider { IEnumerator GetPeriods(Action<List<global::Periods.Period>> onComplete); }
-    public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action<List<global::Schedule.Event>> onComplete); }
+    public interface Periods : Provider { IEnumerator GetPeriods(Action onComplete = null); }
+    public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action onComplete = null); }
     public interface Homeworks : Provider
     {
-        IEnumerator GetHomeworks(global::Homeworks.Period period, Action<List<global::Homeworks.Homework>> onComplete);
-        IEnumerator<global::Homeworks.Period> DiaryPeriods();
+        IEnumerator GetHomeworks(Data.Homework.Period period, Action onComplete);
+        IEnumerator<Data.Homework.Period> DiaryPeriods();
     }
-    public interface Marks : Provider { IEnumerator GetMarks(Action<List<global::Marks.Period>, List<Subject>, List<global::Marks.Mark>> onComplete); }
+    public interface Marks : Provider { IEnumerator GetMarks(Action onComplete = null); }
     public interface Messanging : Provider
     {
-        IEnumerator GetMessages(Action<List<global::Messanging.Message>> onComplete);
-        IEnumerator LoadExtraMessageData(global::Messanging.Message data, Action<global::Messanging.Message> onComplete);
+        IEnumerator GetMessages(Action onComplete = null);
+        IEnumerator LoadExtraMessageData(uint messageID, Action onComplete = null);
     }
 }

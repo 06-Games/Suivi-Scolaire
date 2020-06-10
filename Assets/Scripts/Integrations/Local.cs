@@ -5,9 +5,8 @@ using System.Collections.Generic;
 
 namespace Integrations
 {
-    public class Local : Provider, Periods
+    public class Local : Provider
     {
         public string Name => "Local";
-        public IEnumerator GetPeriods(Action<List<Period>> onComplete) { onComplete?.Invoke(new List<Period>()); yield break; }
     }
 }

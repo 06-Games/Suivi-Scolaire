@@ -1,4 +1,5 @@
 ﻿using Integrations;
+using Integrations.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,14 +12,12 @@ namespace Homeworks
 {
     public class Homeworks : MonoBehaviour, Module
     {
-        Dictionary<string, List<Homework>> periodHomeworks = new Dictionary<string, List<Homework>>();
-        List<Period> periods = new List<Period>();
-        IEnumerator<Period> periodsMethod;
+        List<Homework.Period> periods = new List<Homework.Period>();
+        IEnumerator<Homework.Period> periodsMethod;
         int periodIndex;
         public void Reset()
         {
-            periodHomeworks = new Dictionary<string, List<Homework>>();
-            periods = new List<Period>();
+            periods = new List<Homework.Period>();
             periodsMethod = null;
             periodIndex = 0;
         }
@@ -47,11 +46,12 @@ namespace Homeworks
                     Refresh(homeworks.OrderBy(h => h.forThe), period);
                     Manager.OpenModule(gameObject);
                 };
-                if (periodHomeworks.TryGetValue(period.id, out var _homeworks)) action(_homeworks);
-                else StartCoroutine(module.GetHomeworks(period, (h) => { periodHomeworks.Add(period.id, h); action(h); }));
+                var _homeworks = Manager.Data.Homeworks?.Where(h => h.periodID == period.id).ToList();
+                if (_homeworks?.Count > 0) action(_homeworks);
+                else StartCoroutine(module.GetHomeworks(period, () => action(Manager.Data.Homeworks.Where(h => h.periodID == period.id).ToList())));
             }
         }
-        bool LoadNext(Action<Period> onComplete = null)
+        bool LoadNext(Action<Homework.Period> onComplete = null)
         {
             if (!periodsMethod.MoveNext()) return false;
             UnityThread.executeCoroutine(enumerator());
@@ -69,7 +69,7 @@ namespace Homeworks
                 onComplete?.Invoke(value);
             }
         }
-        void Refresh(IEnumerable<Homework> homeworks, Period period)
+        void Refresh(IEnumerable<Homework> homeworks, Homework.Period period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
             WeekSwitcher.Find("Text").GetComponent<Text>().text = period.name;

@@ -13,10 +13,12 @@ public class Manager : MonoBehaviour
     public Sprite LoadingError;
 
     public static Integrations.Provider provider { get; set; }
+    public static Integrations.Data.Data Data;
     void Start()
     {
         FirstStart.onComplete += (Provider, childs) =>
         {
+            Data = new Integrations.Data.Data();
             provider = Provider;
             OpenModule(Home.gameObject);
             Menu.sideMenu.handle.SetActive(true);
@@ -75,4 +77,4 @@ public class Manager : MonoBehaviour
     public static bool isReady => provider != null;
 }
 
-public interface Module { void Reset(); void OnEnable(); }
+public interface Module { void OnEnable(); void Reset(); }

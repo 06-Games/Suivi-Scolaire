@@ -1,4 +1,5 @@
 ﻿using Integrations;
+using Integrations.Data;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -8,27 +9,23 @@ namespace Marks
 {
     public class Marks : MonoBehaviour, Module
     {
-        static List<Period> periods;
-        internal static List<Mark> marks;
-        public void Reset() { periods = null; marks = null; }
-
+        public void Reset() { }
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
-            if (marks == null) StartCoroutine(module.GetMarks((p, s, m) => { Initialise(p, s, m); Refresh(); }));
-            else Refresh();
+            if (Manager.Data.Marks == null) StartCoroutine(module.GetMarks(() => Initialise()));
+            else Initialise();
             Manager.OpenModule(gameObject);
-        }
-        public static void Initialise(IEnumerable<Period> _periods, IEnumerable<Subject> _subjects, IEnumerable<Mark> _marks)
-        {
-            periods = _periods.OrderBy(s => s.start).ToList();
-            marks = _marks.OrderBy(m => m.date).ToList();
 
-            var instance = Manager.instance.transform.Find("Marks").GetComponent<Marks>();
-            instance.period.ClearOptions();
-            instance.period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
-            instance.period.AddOptions(periods.Select(p => p.name).ToList());
-            instance.period.value = periods.IndexOf(periods.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
+            void Initialise()
+            {
+                period.onValueChanged.RemoveAllListeners();
+                period.ClearOptions();
+                period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
+                period.AddOptions(Manager.Data.Trimesters.Select(p => p.name).ToList());
+                period.value = Manager.Data.Trimesters.IndexOf(Manager.Data.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
+                Refresh();
+            }
         }
 
         public LayoutSwitcher topLayoutSwitcher;
@@ -48,7 +45,7 @@ namespace Marks
         public void Refresh() { Refresh(null); }
         public void Refresh(Subject selectedSubject)
         {
-            var marksByS = marks.GroupBy(m => m.subject).Where(s => s.Key == selectedSubject || selectedSubject == null).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.period == periods[period.value - 1]).ToList());
+            var marksByS = Manager.Data.Marks.GroupBy(m => m.subject).Where(s => s.Key == selectedSubject || selectedSubject == null).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.trimesterID == Manager.Data.Trimesters[period.value - 1].id).ToList());
             var average = marksByS.ToDictionary(s => s.Key, s =>
             {
                 var _marks = s.Value.Where(m => (m.mark != null || (m.skills?.Any(skill => skill.value.HasValue) ?? false)) && !m.notSignificant);
