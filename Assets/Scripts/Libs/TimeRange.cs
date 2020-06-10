@@ -6,7 +6,7 @@ public class TimeRange
     public DateTime Start { get; set; } = DateTime.MinValue;
     public DateTime End { get; set; } = DateTime.MaxValue;
 
-    public TimeRange() {}
+    public TimeRange() { }
     public TimeRange(DateTime start, DateTime end) { Start = start; End = end; }
 
     public override string ToString() => $"{Start} - {End}";

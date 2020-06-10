@@ -5,11 +5,11 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Marks
+namespace Modules
 {
     public class Marks : MonoBehaviour, Module
     {
-        public void Reset() { }
+        public void Reset() { /* There is nothing to reset */ }
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
@@ -84,7 +84,8 @@ namespace Marks
                     var valueField = btn.Find("Value").GetComponent<TMPro.TextMeshProUGUI>();
                     if (m.mark != null) valueField.text = m.notSignificant ? $"<color=#aaa>({m.mark}<size=17>/{m.markOutOf}</size>)</color>" : $"{m.mark}<size=17>/{m.markOutOf}</size>";
                     else if (m.skills.Length == 0 || m.skills.Any(s => !s.value.HasValue)) valueField.text = $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>";
-                    else {
+                    else
+                    {
                         valueField.text = string.Join(" ", m.skills.Select(s => $"<sprite index={s.value}>"));
                         valueField.margin = new Vector4(0, 0, -100, 0);
                     }

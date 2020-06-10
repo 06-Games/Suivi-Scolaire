@@ -67,7 +67,7 @@ namespace Integrations
         }
         public IEnumerator<Homework.Period> DiaryPeriods()
         {
-            var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={FirstStart.selectedAccount.child.id}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
+            var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={Modules.Accounts.selectedAccount.child.id}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
             request.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
             request.SetRequestHeader("Cookie", sessionId);
             request.SendWebRequest();
@@ -92,7 +92,7 @@ namespace Integrations
             request.SetRequestHeader("Cookie", sessionId);
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON($"{{\"list\":{request.downloadHandler.text}}}");
-            if(Manager.Data.Subjects == null) Manager.Data.Subjects = new List<Subject>();
+            if (Manager.Data.Subjects == null) Manager.Data.Subjects = new List<Subject>();
             if (Manager.Data.Homeworks == null) Manager.Data.Homeworks = new List<Homework>();
             Manager.Data.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
             {

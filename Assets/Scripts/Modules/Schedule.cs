@@ -9,17 +9,15 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Schedule
+namespace Modules
 {
     public class Schedule : MonoBehaviour, Module
     {
         public float sizePerHour = 100F;
 
-        static DateTime periodStart = DateTime.Now;
-        public void Reset()
-        {
-            periodStart = DateTime.Now;
-        }
+        Action<TimeRange, List<ScheduledEvent>> defaultAction;
+        static DateTime periodStart { get; set; } = DateTime.Now;
+        public void Reset() => periodStart = DateTime.Now;
 
         void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
         void Awake()
@@ -37,7 +35,6 @@ namespace Schedule
             Initialise(periodStart, defaultAction);
             Manager.OpenModule(gameObject);
         }
-        internal static Action<TimeRange, List<ScheduledEvent>> defaultAction;
         public static bool Initialise(DateTime start, Action<TimeRange, List<ScheduledEvent>> action)
         {
             if (Screen.width <= Screen.height) periodStart = start.Date;

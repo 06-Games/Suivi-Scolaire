@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Integrations.Data;
+using Modules;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
-using Integrations.Data;
 
 namespace Integrations
 {
@@ -84,14 +85,14 @@ namespace Integrations
         public IEnumerator GetMarks(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.marks", "Getting marks");
-            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{FirstStart.selectedAccount.child.id}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{Accounts.selectedAccount.child.id}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return markRequest.SendWebRequest();
             var result = new FileFormat.JSON(markRequest.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(FirstStart.selectedAccount, null, null);
+                    yield return Connect(Accounts.selectedAccount, null, null);
                     yield return GetMarks(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting marks, server returned \"" + result.Value<string>("message") + "\"");
@@ -151,14 +152,14 @@ namespace Integrations
             IEnumerable<string> dates = null;
             if (period.timeRange.End == DateTime.MaxValue)
             {
-                var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{FirstStart.selectedAccount.child.id}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child.id}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return homeworksRequest.SendWebRequest();
                 var result = new FileFormat.JSON(homeworksRequest.downloadHandler.text);
                 if (result.Value<int>("code") != 200)
                 {
                     if (result.Value<string>("message") == "Session expirée !")
                     {
-                        yield return Connect(FirstStart.selectedAccount, null, null);
+                        yield return Connect(Accounts.selectedAccount, null, null);
                         yield return GetHomeworks(period, onComplete);
                     }
                     else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting homeworks, server returned \"" + result.Value<string>("message") + "\"");
@@ -171,7 +172,7 @@ namespace Integrations
             var homeworks = Manager.Data.Homeworks ?? new List<Homework>();
             foreach (var date in dates)
             {
-                var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{FirstStart.selectedAccount.child.id}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child.id}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return request.SendWebRequest();
                 var result = new FileFormat.JSON(request.downloadHandler.text);
                 if (result.Value<int>("code") != 200)
@@ -242,7 +243,7 @@ namespace Integrations
             {
                 if (establishmentResult.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(FirstStart.selectedAccount, null, null);
+                    yield return Connect(Accounts.selectedAccount, null, null);
                     yield return GetPeriods(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(establishmentResult.Value<string>("message"), "Error getting establishment, server returned \"" + establishmentResult.Value<string>("message") + "\"");
@@ -295,14 +296,14 @@ namespace Integrations
         {
             Manager.UpdateLoadingStatus("provider.schedule", "Getting schedule");
 
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{FirstStart.selectedAccount.child.id}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{Accounts.selectedAccount.child.id}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(FirstStart.selectedAccount, null, null);
+                    yield return Connect(Accounts.selectedAccount, null, null);
                     yield return GetSchedule(period, onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting schedule for {period}, server returned \"" + result.Value<string>("message") + "\"");
@@ -338,14 +339,14 @@ namespace Integrations
         public IEnumerator GetMessages(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.messages", "Getting messages");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Accounts.selectedAccount.child.extraData["type"]}/{Accounts.selectedAccount.child.id}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(FirstStart.selectedAccount, null, null);
+                    yield return Connect(Accounts.selectedAccount, null, null);
                     yield return GetMessages(onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting messages, server returned \"" + result.Value<string>("message") + "\"");
@@ -377,14 +378,14 @@ namespace Integrations
             var message = Manager.Data.Messages.FirstOrDefault(m => m.id == messageID);
 
             Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{FirstStart.selectedAccount.child.extraData["type"]}/{FirstStart.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Accounts.selectedAccount.child.extraData["type"]}/{Accounts.selectedAccount.child.id}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
                 {
-                    yield return Connect(FirstStart.selectedAccount, null, null);
+                    yield return Connect(Accounts.selectedAccount, null, null);
                     yield return LoadExtraMessageData(message.id, onComplete);
                 }
                 else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting extra message data, server returned \"{result.Value<string>("message")}\"\nRequest URL: {request.url}\n\nFull server response: {result}");

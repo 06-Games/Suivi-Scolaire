@@ -5,13 +5,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Periods
+namespace Modules
 {
     public class Home : MonoBehaviour, Module
     {
         public Sprite[] periodSprites;
 
-        public void Reset() {}
+        public void Reset() { /* There is nothing to reset */ }
         public void OnEnable()
         {
             StartCoroutine(enumerator());
@@ -19,12 +19,12 @@ namespace Periods
             IEnumerator enumerator()
             {
                 if (!Manager.isReady) { gameObject.SetActive(false); yield break; }
-                if (Manager.Data.Periods == null && Manager.provider.TryGetModule(out Integrations.Periods hM)) yield return hM.GetPeriods();
+                if (Manager.Data.Periods == null && Manager.provider.TryGetModule(out Periods hM)) yield return hM.GetPeriods();
                 if (Manager.Data.Marks == null && Manager.provider.TryGetModule(out Integrations.Marks mM)) yield return mM.GetMarks();
                 if (Manager.Data.Schedule == null)
                 {
                     bool ended = false;
-                    if (!Schedule.Schedule.Initialise(DateTime.Now, (p, s) => ended = true)) ended = true;
+                    if (!Schedule.Initialise(DateTime.Now, (p, s) => ended = true)) ended = true;
                     yield return new WaitUntil(() => ended);
                 }
                 Refresh();

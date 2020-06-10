@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Homeworks
+namespace Modules
 {
     public class Homeworks : MonoBehaviour, Module
     {

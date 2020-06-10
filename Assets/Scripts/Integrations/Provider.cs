@@ -49,7 +49,7 @@ namespace Integrations
         public static T GetModule<T>(this Provider provider)
         {
             var moduleName = typeof(T).ToString().Substring("Integrations.".Length);
-            if (!whiteList.Contains(moduleName) && (!FirstStart.selectedAccount?.child?.modules?.Contains(moduleName) ?? false)) return default;
+            if (!whiteList.Contains(moduleName) && (!Modules.Accounts.selectedAccount?.child?.modules?.Contains(moduleName) ?? false)) return default;
             try { return (T)provider; }
             catch { return default; }
         }

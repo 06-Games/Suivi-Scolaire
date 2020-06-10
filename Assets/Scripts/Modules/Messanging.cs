@@ -1,11 +1,9 @@
 ﻿using Integrations;
 using Integrations.Data;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Messanging
+namespace Modules
 {
     public class Messanging : MonoBehaviour, Module
     {

@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+﻿using Modules;
+using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
     [Header("Modules")]
-    public FirstStart FirstStart;
-    public Periods.Home Home;
+    public Accounts FirstStart;
+    public Home Home;
     public System.Collections.Generic.List<Module> modules = new System.Collections.Generic.List<Module>();
 
     [Header("Others")]
@@ -13,7 +14,7 @@ public class Manager : MonoBehaviour
     public Sprite LoadingError;
 
     public static Integrations.Provider provider { get; set; }
-    public static Integrations.Data.Data Data;
+    public static Integrations.Data.Data Data { get; set; }
     void Start()
     {
         FirstStart.onComplete += (Provider, childs) =>
@@ -22,8 +23,8 @@ public class Manager : MonoBehaviour
             provider = Provider;
             OpenModule(Home.gameObject);
             Menu.sideMenu.handle.SetActive(true);
-            FirstStart.childAccounts = childs;
-            FirstStart.SelectChild();
+            Accounts.childAccounts = childs;
+            Accounts.SelectChild();
         };
         Menu.sideMenu.handle.SetActive(false);
         FirstStart.Initialise();

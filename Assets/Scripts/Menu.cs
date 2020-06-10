@@ -27,7 +27,7 @@ public class Menu : MonoBehaviour
     {
         if (!Manager.isReady) return;
         var modulePanel = transform.Find("Panel").Find("Modules");
-        var modules = FirstStart.selectedAccount.child.modules;
+        var modules = Modules.Accounts.selectedAccount.child.modules;
         foreach (Transform module in modulePanel) module.gameObject.SetActive(module.name == "Home" | modules?.Contains(module.name) ?? false);
     }
 
