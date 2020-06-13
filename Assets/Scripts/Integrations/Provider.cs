@@ -8,7 +8,7 @@ namespace Integrations
     public class Account : IEquatable<Account>
     {
         internal static readonly Dictionary<string, Provider> Providers = new Dictionary<string, Provider> {
-            //{ "Local", new Local() },
+            { "Local", new Local() },
             { "EcoleDirecte", new EcoleDirecte() },
             { "CambridgeKids", new CambridgeKids() }
         };
@@ -18,23 +18,11 @@ namespace Integrations
         public string username;
         public string id;
         public string password;
-        public ChildAccount child;
+        public string child;
 
         public bool Equals(Account other) => provider == other.provider && username == other.username && id == other.id;
         public override bool Equals(object obj) => Equals(obj as Account);
         public override int GetHashCode() => string.Format("{0}-{1}-{2}", provider, username, id).GetHashCode();
-    }
-    public class ChildAccount : IEquatable<ChildAccount>
-    {
-        public string id;
-        public string name;
-        [System.Xml.Serialization.XmlIgnore] public UnityEngine.Sprite image;
-        [System.Xml.Serialization.XmlIgnore] public List<string> modules;
-        [System.Xml.Serialization.XmlIgnore] public Dictionary<string, string> extraData;
-
-        public bool Equals(ChildAccount other) => id == other.id && name == other.name && image == other.image;
-        public override bool Equals(object obj) => Equals(obj as ChildAccount);
-        public override int GetHashCode() => string.Format("{0}-{1}", id, name).GetHashCode();
     }
 
 
@@ -49,7 +37,7 @@ namespace Integrations
         public static T GetModule<T>(this Provider provider)
         {
             var moduleName = typeof(T).ToString().Substring("Integrations.".Length);
-            if (!whiteList.Contains(moduleName) && (!Modules.Accounts.selectedAccount?.child?.modules?.Contains(moduleName) ?? false)) return default;
+            if (!whiteList.Contains(moduleName) && (!Manager.Child.modules?.Contains(moduleName) ?? false)) return default;
             try { return (T)provider; }
             catch { return default; }
         }
@@ -161,11 +149,12 @@ namespace Integrations
         public static string RemoveEmptyLines(string lines) => lines == null ? "" : System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
     }
 
-    public interface Provider { string Name { get; } }
-    public interface Auth : Provider
+    public interface Provider
     {
-        IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError);
+        string Name { get; }
+        IEnumerator Connect(Account account, Action<Data.Data> onComplete, Action<string> onError);
     }
+    public interface Auth : Provider { }
     public interface Periods : Provider { IEnumerator GetPeriods(Action onComplete = null); }
     public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action onComplete = null); }
     public interface Homeworks : Provider

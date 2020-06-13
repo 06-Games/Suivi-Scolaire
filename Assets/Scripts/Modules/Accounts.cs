@@ -10,11 +10,10 @@ namespace Modules
     {
         public Sprite defaultChildImage;
 
-        public System.Action<Provider, List<ChildAccount>> onComplete;
+        public System.Action<Provider> onComplete;
 
         HashSet<Account> accounts;
         public static Account selectedAccount { get; private set; }
-        public static List<ChildAccount> childAccounts { get; set; }
         public void Initialise()
         {
             try
@@ -31,6 +30,7 @@ namespace Modules
             var welcome = transform.Find("Content").Find("Welcome");
             foreach (Transform gO in welcome.parent) gO.gameObject.SetActive(false);
             welcome.gameObject.SetActive(true);
+
             var accountList = welcome.GetChild(0).GetComponent<ScrollRect>().content;
             for (int i = 1; i < accountList.childCount; i++) Destroy(accountList.GetChild(i).gameObject);
             foreach (var account in accounts)
@@ -43,6 +43,7 @@ namespace Modules
                 go.GetComponent<Button>().onClick.AddListener(() => ConnectTo(account));
                 go.gameObject.SetActive(true);
             }
+
             var addList = welcome.Find("Add");
             for (int i = 2; i < addList.childCount; i++) Destroy(addList.GetChild(i).gameObject);
             foreach (var provider in Account.Providers)
@@ -53,36 +54,33 @@ namespace Modules
                 go.GetComponent<Button>().onClick.AddListener(() => { ConnectWith(provider.Key); addList.GetComponent<SimpleSideMenu>().Close(); });
                 go.gameObject.SetActive(true);
             }
+            UnityThread.executeInLateUpdate(() => UnityThread.executeInLateUpdate(addList.GetComponent<SimpleSideMenu>().Setup));
+
             Manager.OpenModule(gameObject);
         }
         void ConnectTo(Account account)
         {
             Manager.provider = null;
             var Provider = account.GetProvider;
-            if (Provider.TryGetModule<Auth>(out var authModule))
-            {
-                UnityThread.executeCoroutine(authModule.Connect(account,
-                    (a, c) =>
-                    {
-                        selectedAccount = a;
-                        accounts.Remove(account);
-                        accounts.Add(a);
-                        accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
-                        Save();
-                        onComplete?.Invoke(Provider, c);
-                    },
-                    (error) =>
+
+            UnityThread.executeCoroutine(Provider.Connect(account,
+                (data) =>
+                {
+                    selectedAccount = account;
+                    Manager.Data = data;
+                    accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
+                    Save();
+                    onComplete?.Invoke(Provider);
+                },
+                (error) =>
+                {
+                    if (Provider.TryGetModule<Auth>(out var authModule))
                     {
                         transform.Find("Content").Find("Auth").Find("Error").GetComponent<Text>().text = error;
                         ConnectWith(account.provider);
                     }
-                ));
-            }
-            else
-            {
-                selectedAccount = account;
-                onComplete?.Invoke(Provider, null);
-            }
+                }
+            ));
         }
 
         public void ConnectWith(string provider)
@@ -108,19 +106,12 @@ namespace Modules
                         id = auth.Find("ID").GetComponent<InputField>().text,
                         password = auth.Find("PASSWORD").GetComponent<InputField>().text
                     };
+                    accounts.Add(account);
                     ConnectTo(account);
                 });
-                auth.Find("PASSWORD").GetComponent<InputField>().onEndEdit.RemoveAllListeners();
-                auth.Find("PASSWORD").GetComponent<InputField>().onEndEdit.AddListener((s) => auth.Find("Connexion").GetComponent<Button>().onClick.Invoke());
                 auth.gameObject.SetActive(true);
             }
-            else
-            {
-                selectedAccount = new Account { provider = provider };
-                accounts.Add(selectedAccount);
-                Save();
-                onComplete?.Invoke(Provider, null);
-            }
+            else ConnectTo(new Account { provider = provider });
         }
         void Save() => PlayerPrefs.SetString("Accounts", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(accounts), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
         public void ShowPassword(InputField pass)
@@ -135,20 +126,18 @@ namespace Modules
             }
         }
 
-        public static void SelectChild() { SelectChild(selectedAccount.child); }
-        public static void SelectChild(ChildAccount selectedChild)
+        public static void SelectChild() { SelectChild(Manager.Child); }
+        public static void SelectChild(Integrations.Data.Child selectedChild)
         {
             var childSelection = Manager.instance.Menu.transform.Find("Panel").Find("Child").Find("Slide");
-            childSelection.gameObject.SetActive(childAccounts != null);
-            if (childAccounts == null) return;
 
             var instance = Manager.instance.FirstStart;
-            selectedAccount.child = selectedChild;
+            selectedAccount.child = selectedChild.id;
             instance.Save();
 
             var list = childSelection.Find("List");
             for (int i = 1; i < list.childCount; i++) Destroy(list.GetChild(i).gameObject);
-            foreach (var child in childAccounts)
+            foreach (var child in Manager.Data.Children)
             {
                 Transform go = null;
                 if (child == selectedChild) go = childSelection.Find("Selected");
@@ -165,12 +154,12 @@ namespace Modules
                         Manager.instance.Menu.UpdateModules();
                     });
                 }
-                go.Find("ImageBG").Find("Image").GetComponent<Image>().sprite = child.image ?? instance.defaultChildImage;
+                go.Find("ImageBG").Find("Image").GetComponent<Image>().sprite = child.sprite ?? instance.defaultChildImage;
                 go.Find("Text").GetComponent<Text>().text = child.name;
                 go.gameObject.SetActive(true);
             }
             var rect = childSelection.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 40 * (childAccounts.Count - 1));
+            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 40 * (Manager.Data.Children.Length - 1));
             childSelection.GetComponent<SimpleSideMenu>().Setup();
             rect.pivot = new Vector2(0.5F, 0);
         }
@@ -189,7 +178,7 @@ namespace Modules
             auth.Find("ID").GetComponent<InputField>().text = "";
             auth.Find("PASSWORD").GetComponent<InputField>().text = "";
         }
-        public void ResetData() { Manager.Data = new Integrations.Data.Data(); foreach (var d in Manager.instance.modules) d?.Reset(); }
+        public void ResetData() { foreach (var d in Manager.instance.modules) d?.Reset(); }
 
         private void Update()
         {

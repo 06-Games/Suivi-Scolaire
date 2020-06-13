@@ -14,7 +14,7 @@ namespace Integrations
         public string Name => "Cambridge Kids";
 
         string sessionId = "";
-        public IEnumerator Connect(Account account, Action<Account, List<ChildAccount>> onComplete, Action<string> onError)
+        public IEnumerator Connect(Account account, Action<Data.Data> onComplete, Action<string> onError)
         {
             Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
             sessionId = $"PHPSESSID={RandomString(26)}";
@@ -58,16 +58,16 @@ namespace Integrations
             var enfants = json.jToken.SelectToken("account_user").Where(obj => obj.Value<string>("type") == "1").Select(enfant =>
             {
                 var name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase($"{enfant.Value<string>("prenom")}{enfant.Value<string>("nom")}".ToLower());
-                return new ChildAccount { name = name, id = enfant.Value<string>("user_id"), modules = new List<string> { "Homeworks" } };
-            }).ToList();
+                return new Child { name = name, id = enfant.Value<string>("user_id"), modules = new List<string> { "Homeworks" } };
+            }).ToArray();
+
             account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(json.Value<string>("account_name").ToLower());
-            account.child = enfants.FirstOrDefault(c => c.id == account.child?.id) ?? enfants.FirstOrDefault();
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(account, enfants);
+            onComplete?.Invoke(new Data.Data { Children = enfants });
         }
         public IEnumerator<Homework.Period> DiaryPeriods()
         {
-            var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={Modules.Accounts.selectedAccount.child.id}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
+            var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={Modules.Accounts.selectedAccount.child}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
             request.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
             request.SetRequestHeader("Cookie", sessionId);
             request.SendWebRequest();
@@ -92,22 +92,22 @@ namespace Integrations
             request.SetRequestHeader("Cookie", sessionId);
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON($"{{\"list\":{request.downloadHandler.text}}}");
-            if (Manager.Data.Subjects == null) Manager.Data.Subjects = new List<Subject>();
-            if (Manager.Data.Homeworks == null) Manager.Data.Homeworks = new List<Homework>();
-            Manager.Data.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
+            if (Manager.Child.Subjects == null) Manager.Child.Subjects = new List<Subject>();
+            if (Manager.Child.Homeworks == null) Manager.Child.Homeworks = new List<Homework>();
+            Manager.Child.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
             {
                 var data = obj.SelectToken("page_section");
                 var docs = obj.SelectToken("link_file").Select(doc => new Request
                 {
                     docName = doc.Value<string>("file_name"),
                     url = $"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.Value<string>("up_file_id")}",
-                    headers = new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
+                    headers = () => new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
                     method = Request.Method.Get
                 });
                 return data.Select(d =>
                 {
-                    if (!Manager.Data.Subjects.Any(s => s.id == d.Value<string>("page_section_id")))
-                        Manager.Data.Subjects.Add(new Subject { id = d.Value<string>("page_section_id"), name = d.Value<string>("sec_title") });
+                    if (!Manager.Child.Subjects.Any(s => s.id == d.Value<string>("page_section_id")))
+                        Manager.Child.Subjects.Add(new Subject { id = d.Value<string>("page_section_id"), name = d.Value<string>("sec_title") });
                     return new Homework
                     {
                         subjectID = d.Value<string>("page_section_id"),

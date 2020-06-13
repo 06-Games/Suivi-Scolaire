@@ -46,9 +46,9 @@ namespace Modules
                     Refresh(homeworks.OrderBy(h => h.forThe), period);
                     Manager.OpenModule(gameObject);
                 };
-                var _homeworks = Manager.Data.Homeworks?.Where(h => h.periodID == period.id).ToList();
+                var _homeworks = Manager.Child.Homeworks?.Where(h => h.periodID == period.id).ToList();
                 if (_homeworks?.Count > 0) action(_homeworks);
-                else StartCoroutine(module.GetHomeworks(period, () => action(Manager.Data.Homeworks.Where(h => h.periodID == period.id).ToList())));
+                else StartCoroutine(module.GetHomeworks(period, () => action(Manager.Child.Homeworks.Where(h => h.periodID == period.id).ToList())));
             }
         }
         bool LoadNext(Action<Homework.Period> onComplete = null)

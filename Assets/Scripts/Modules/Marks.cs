@@ -13,7 +13,7 @@ namespace Modules
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
-            if (Manager.Data.Marks == null) StartCoroutine(module.GetMarks(() => Initialise()));
+            if (Manager.Child.Marks == null || Manager.Child.Marks.Count == 0) StartCoroutine(module.GetMarks(() => Initialise()));
             else Initialise();
             Manager.OpenModule(gameObject);
 
@@ -22,8 +22,8 @@ namespace Modules
                 period.onValueChanged.RemoveAllListeners();
                 period.ClearOptions();
                 period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
-                period.AddOptions(Manager.Data.Trimesters.Select(p => p.name).ToList());
-                period.value = Manager.Data.Trimesters.IndexOf(Manager.Data.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
+                period.AddOptions(Manager.Child.Trimesters.Select(p => p.name).ToList());
+                period.value = Manager.Child.Trimesters.IndexOf(Manager.Child.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
                 Refresh();
             }
         }
@@ -45,7 +45,7 @@ namespace Modules
         public void Refresh() { Refresh(null); }
         public void Refresh(Subject selectedSubject)
         {
-            var marksByS = Manager.Data.Marks.GroupBy(m => m.subject).Where(s => s.Key == selectedSubject || selectedSubject == null).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.trimesterID == Manager.Data.Trimesters[period.value - 1].id).ToList());
+            var marksByS = Manager.Child.Marks.GroupBy(m => m.subject).Where(s => s.Key == selectedSubject || selectedSubject == null).ToDictionary(m => m.Key, _m => _m.Where(m => period.value == 0 || m.trimesterID == Manager.Child.Trimesters[period.value - 1].id).ToList());
             var average = marksByS.ToDictionary(s => s.Key, s =>
             {
                 var _marks = s.Value.Where(m => (m.mark != null || (m.skills?.Any(skill => skill.value.HasValue) ?? false)) && !m.notSignificant);

@@ -1,4 +1,5 @@
 ﻿using Modules;
+using System.Linq;
 using UnityEngine;
 
 public class Manager : MonoBehaviour
@@ -15,21 +16,57 @@ public class Manager : MonoBehaviour
 
     public static Integrations.Provider provider { get; set; }
     public static Integrations.Data.Data Data { get; set; }
+    static Integrations.Data.Child nullChild;
+    public static ref Integrations.Data.Child Child
+    {
+        get
+        {
+            if (Data?.Children == null) return ref nullChild;
+            for (int i = 0; i < Data.Children.Length; i++) { if (Data.Children[i].id == Accounts.selectedAccount.child) return ref Data.Children[i]; }
+            return ref Data.Children[0];
+        }
+    }
+    static System.IO.FileInfo dataFile
+    {
+        get
+        {
+            var dir = new System.IO.DirectoryInfo($"{Application.persistentDataPath}/data/");
+            if (!dir.Exists) dir.Create();
+            return new System.IO.FileInfo($"{dir.FullName}/{Accounts.selectedAccount.provider}_{Accounts.selectedAccount.username}.xml");
+        }
+    }
+    public static void LoadData()
+    {
+        if (provider == null) { Debug.LogError("Provider is null"); return; }
+        var file = dataFile;
+        if (file.Exists) Data = FileFormat.XML.Utils.XMLtoClass<Integrations.Data.Data>(System.IO.File.ReadAllText(file.FullName)) ?? Data;
+        Logging.Log("Data loaded");
+    }
+    public static void SaveData()
+    {
+        if (!isReady) return;
+        System.IO.File.WriteAllText(dataFile.FullName, FileFormat.XML.Utils.ClassToXML(Data, false));
+        Logging.Log("Data saved");
+    }
+    private void OnApplicationFocus(bool hasFocus) { if (!hasFocus) SaveData(); }
+    private void OnApplicationQuit() => SaveData();
+    public static bool isReady => provider != null && Child != null;
+
     void Start()
     {
-        FirstStart.onComplete += (Provider, childs) =>
+        FirstStart.onComplete += (Provider) =>
         {
-            Data = new Integrations.Data.Data();
             provider = Provider;
-            OpenModule(Home.gameObject);
             Menu.sideMenu.handle.SetActive(true);
-            Accounts.childAccounts = childs;
             Accounts.SelectChild();
+            //LoadData();
+            OpenModule(Home.gameObject);
         };
         Menu.sideMenu.handle.SetActive(false);
         FirstStart.Initialise();
         foreach (Transform obj in transform) modules.Add(obj.GetComponent<Module>());
     }
+
 
     internal static Manager instance { get; private set; }
     void Awake()
@@ -74,8 +111,6 @@ public class Manager : MonoBehaviour
         }
     }
     public static void HideLoadingPanel() => instance.Loading.SetActive(false);
-
-    public static bool isReady => provider != null;
 }
 
 public interface Module { void OnEnable(); void Reset(); }

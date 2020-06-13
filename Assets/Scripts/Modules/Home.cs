@@ -19,9 +19,9 @@ namespace Modules
             IEnumerator enumerator()
             {
                 if (!Manager.isReady) { gameObject.SetActive(false); yield break; }
-                if (Manager.Data.Periods == null && Manager.provider.TryGetModule(out Periods hM)) yield return hM.GetPeriods();
-                if (Manager.Data.Marks == null && Manager.provider.TryGetModule(out Integrations.Marks mM)) yield return mM.GetMarks();
-                if (Manager.Data.Schedule == null)
+                if ((Manager.Child.Periods == null || Manager.Child.Periods.Count == 0) && Manager.provider.TryGetModule(out Periods hM)) yield return hM.GetPeriods();
+                if ((Manager.Child.Marks == null || Manager.Child.Marks.Count == 0) && Manager.provider.TryGetModule(out Integrations.Marks mM)) yield return mM.GetMarks();
+                if (Manager.Child.Schedule == null || Manager.Child.Schedule.Count == 0)
                 {
                     bool ended = false;
                     if (!Schedule.Initialise(DateTime.Now, (p, s) => ended = true)) ended = true;
@@ -39,13 +39,13 @@ namespace Modules
             var now = DateTime.Now;
 
             var period = Content.Find("Period");
-            if (Manager.Data.Periods?.Count > 0)
+            if (Manager.Child.Periods?.Count > 0)
             {
-                var actualPeriod = Manager.Data.Periods.FirstOrDefault(p => p.start <= now && p.end >= now);
+                var actualPeriod = Manager.Child.Periods.FirstOrDefault(p => p.start <= now && p.end >= now);
                 period.Find("Img").Find("Image").GetComponent<Image>().sprite = periodSprites[actualPeriod.holiday ? 1 : 0];
                 period.Find("Txt").Find("Period").GetComponent<Text>().text = actualPeriod.name;
 
-                var nextPeriod = Manager.Data.Periods.FirstOrDefault(h => h.start > now);
+                var nextPeriod = Manager.Child.Periods.FirstOrDefault(h => h.start > now);
                 var remaining = nextPeriod == null ? new TimeSpan() : (nextPeriod.start - now);
                 var unit = remaining.TotalDays > 1 ? new[] { "days", "dd" } : (remaining.TotalHours > 1 ? new[] { "hours", "hh" } : new[] { "minutes", "mm" });
                 period.Find("Txt").Find("Desc").GetComponent<Text>().text = LangueAPI.Get(
@@ -64,12 +64,12 @@ namespace Modules
 
 
             var lastMarks = Content.Find("Marks");
-            if (Manager.Data.Marks?.Count >= 3)
+            if (Manager.Child.Marks?.Count >= 3)
             {
                 for (int i = 2; i < lastMarks.childCount; i++) Destroy(lastMarks.GetChild(i).gameObject);
                 for (int i = 1; i <= 3; i++)
                 {
-                    var m = Manager.Data.Marks.ElementAt(Manager.Data.Marks.Count - i);
+                    var m = Manager.Child.Marks.ElementAt(Manager.Child.Marks.Count - i);
                     var go = Instantiate(lastMarks.Find("Template").gameObject, lastMarks).transform;
                     go.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM");
                     go.Find("Subject").GetComponent<Text>().text = m.subject.name;
@@ -87,13 +87,13 @@ namespace Modules
 
             var schedule = Content.Find("Schedule");
             schedule.gameObject.SetActive(false);
-            if (Manager.Data.Schedule?.Count > 0)
+            if (Manager.Child.Schedule?.Count > 0)
             {
                 schedule.Find("Bar").gameObject.SetActive(true);
                 for (int i = 0; i < 2; i++)
                 {
                     var go = schedule.Find(i == 0 ? "Currently" : "Next");
-                    var E = i == 0 ? Manager.Data.Schedule.FirstOrDefault(e => e.start <= now && e.end >= now) : Manager.Data.Schedule.FirstOrDefault(e => e.start > now);
+                    var E = i == 0 ? Manager.Child.Schedule.FirstOrDefault(e => e.start <= now && e.end >= now) : Manager.Child.Schedule.FirstOrDefault(e => e.start > now);
                     if (E == null || E.start.Day != now.Day) { go.gameObject.SetActive(false); schedule.Find("Bar").gameObject.SetActive(false); continue; }
                     else schedule.gameObject.SetActive(true);
                     go.Find("Subject").GetComponent<Text>().text = E.subject.name;

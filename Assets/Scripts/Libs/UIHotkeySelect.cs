@@ -16,6 +16,7 @@ public class UIHotkeySelect : MonoBehaviour
             // Navigate backward when holding shift, else navigate forward.
             HandleHotkeySelect(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
         }
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) HandleHotkeySelect(false);
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             EventSystem.current.SetSelectedGameObject(null, null);

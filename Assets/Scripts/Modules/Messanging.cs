@@ -12,7 +12,7 @@ namespace Modules
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out module)) { gameObject.SetActive(false); return; }
-            if (Manager.Data.Messages == null) StartCoroutine(module.GetMessages(() => Refresh()));
+            if (Manager.Child.Messages == null || Manager.Child.Messages.Count == 0) StartCoroutine(module.GetMessages(() => Refresh()));
             else Refresh();
             Manager.OpenModule(gameObject);
         }
@@ -27,7 +27,7 @@ namespace Modules
             var lContent = list.content;
             for (int i = 1; i < lContent.childCount; i++) Destroy(lContent.GetChild(i).gameObject);
 
-            foreach (var message in Manager.Data.Messages)
+            foreach (var message in Manager.Child.Messages)
             {
                 var go = Instantiate(lContent.GetChild(0).gameObject, lContent).transform;
                 go.Find("Button").GetComponent<Button>().onClick.AddListener(() => OpenMsg(message));
