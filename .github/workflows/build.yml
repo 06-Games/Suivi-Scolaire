@@ -43,7 +43,7 @@ jobs:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
           versioning: Semantic
-          versionCode: 0
+          androidVersionCode: 0
           androidKeystoreName: Suivi-Scolaire.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: suivi-scolaire
