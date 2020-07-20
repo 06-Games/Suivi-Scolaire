@@ -109,7 +109,9 @@ jobs:
           <plist version="1.0">
               <dict>
               <key>method</key>
-              <string>package</string>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string></string>
               <key>uploadSymbols</key>
               <true/>
               </dict>
