@@ -116,7 +116,7 @@ jobs:
           </plist>" > app.plist
           mkdir build/OutputIPA/;
       - name: Create IPA
-        run: set -o pipefail && xcodebuild -exportArchive -exportOptionsPlist app.plist  -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa | xcbeautify -q
+        run: set -o pipefail && xcodebuild -exportArchive -exportOptionsPlist app.plist  -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" | xcbeautify -q
         
       - name: Upload build
         uses: actions/upload-artifact@v1
