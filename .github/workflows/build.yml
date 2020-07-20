@@ -109,7 +109,7 @@ jobs:
           <plist version="1.0">
               <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>ad-hoc</string>
               <key>uploadSymbols</key>
               <true/>
               </dict>
