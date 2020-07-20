@@ -73,6 +73,12 @@ jobs:
       - name: Build Archive
         run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q
 
+      - name: Upload archive
+        uses: actions/upload-artifact@v1
+        with:
+          name: iOS Archive
+          path: build/
+
       - name: Install Homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: Install Dpkg
@@ -89,6 +95,7 @@ jobs:
           Description: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services
           Architecture: iphoneos-arm
           Author: 06Games
+          Maintainer: Evan Galli
           Depends: net.angelxwind.appsyncunified
           " > build/SuiviScolaireapp/DEBIAN/control;
           cp -r build/archive.xcarchive/Products/Applications build/SuiviScolaireapp;
