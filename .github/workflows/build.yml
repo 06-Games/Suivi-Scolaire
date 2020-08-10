@@ -43,7 +43,7 @@ jobs:
           targetPlatform: ${{ matrix.targetPlatform }}
           buildsPath: xcode/iOS/
 
-      - run: chmod -R 777 xcode/iOS/
+      - run: sudo chmod -R 777 xcode/iOS/
       - name: Install xcbuild
         run: |
           sudo apt install libpng-dev libpng16-16 libxml2-dev pkg-config ninja-build
