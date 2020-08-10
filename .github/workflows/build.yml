@@ -36,7 +36,6 @@ jobs:
           key: iosUnityBuild
       - name: Get cached libraries
         uses: actions/cache@v1.1.0
-        if: ${{ [ ! -z "xcode/iOS/" ] }}
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}
@@ -44,79 +43,9 @@ jobs:
             Library-
       - name: Build
         uses: webbertakken/unity-builder@v0.11
-        if: ${{ [ ! -z "xcode/iOS/" ] }}
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
           buildsPath: xcode/iOS/
 
-      - run: sudo chmod -R 777 xcode/iOS/
-      - name: Install xcbuild
-        run: |
-          sudo apt install libpng-dev libpng16-16 libxml2-dev pkg-config ninja-build
-          git clone --depth=1 https://github.com/facebook/xcbuild
-          cd xcbuild
-          git submodule update --init
-          make
-          
-      - name: Build Archive
-        run: |
-          mv xcbuild/build/xcbuild xcbuild
-          ./xcbuild -project xcode/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES"
-      - name: Upload archive
-        uses: actions/upload-artifact@v1
-        with:
-          name: iOS Archive
-          path: build/
-
-      - name: Install Dpkg
-        run: sudo apt install dpkg-deb
-      - name: Create DEB File
-        run: |
-          mkdir -p build/SuiviScolaireapp;
-          mkdir -p build/SuiviScolaireapp/DEBIAN;
-          echo "
-          Package: com.06Games.Suivi-Scolaire
-          Version: 0.2.3
-          Name: Suivi-Scolaire
-          Section: Application
-          Description: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services
-          Architecture: iphoneos-arm
-          Author: 06Games
-          Maintainer: Evan Galli
-          Depends: net.angelxwind.appsyncunified
-          " > build/SuiviScolaireapp/DEBIAN/control;
-          cp -r build/archive.xcarchive/Products/Applications build/SuiviScolaireapp;
-          dpkg-deb -b build/SuiviScolaireapp;
-          mkdir -p build/Output;
-          mv build/SuiviScolaireapp.deb build/Output/SuiviScolaireapp.deb;
-          
-      - name: Upload build
-        uses: actions/upload-artifact@v1
-        with:
-          name: iOS DEB
-          path: build/Output
-      
-      - name: Create exportOptionsPlist
-        run: |
-          echo "<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-              <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string></string>
-              <key>uploadSymbols</key>
-              <true/>
-              </dict>
-          </plist>" > app.plist
-          mkdir build/OutputIPA/;
-      - name: Create IPA
-        run: ./xcbuild -exportArchive -exportOptionsPlist app.plist -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES"
-        
-      - name: Upload build
-        uses: actions/upload-artifact@v1
-        with:
-          name: iOS IPA
-          path: build/OutputIPA
+     
