@@ -62,9 +62,7 @@ jobs:
           
       - name: Build Archive
         run: |
-          pwd
-          echo "------"
-          ls
+          mv xcbuild/build/xcbuild xcbuild
           ./xcbuild -project xcode/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES"
       - name: Upload archive
         uses: actions/upload-artifact@v1
@@ -116,7 +114,7 @@ jobs:
           </plist>" > app.plist
           mkdir build/OutputIPA/;
       - name: Create IPA
-        run: ./build/xcbuild -exportArchive -exportOptionsPlist app.plist -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES"
+        run: ./xcbuild -exportArchive -exportOptionsPlist app.plist -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES"
         
       - name: Upload build
         uses: actions/upload-artifact@v1
