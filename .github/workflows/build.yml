@@ -32,12 +32,20 @@ jobs:
       - name: Get cached libraries
         uses: actions/cache@v1.1.0
         with:
+          path: xcode/iOS/
+          key: iosUnityBuild
+      - run: echo !$(ls -A xcode/iOS/)
+      - name: Get cached libraries
+        uses: actions/cache@v1.1.0
+        if: ${{ !$(ls -A xcode/iOS/) }}
+        with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}
           restore-keys: |
             Library-
       - name: Build
         uses: webbertakken/unity-builder@v0.11
+        if: ${{ !$(ls -A xcode/iOS/) }}
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
