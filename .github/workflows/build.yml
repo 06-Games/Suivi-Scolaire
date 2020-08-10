@@ -34,10 +34,9 @@ jobs:
         with:
           path: xcode/iOS/
           key: iosUnityBuild
-      - run: echo !"$(ls -A xcode/iOS/)"
       - name: Get cached libraries
         uses: actions/cache@v1.1.0
-        if: ${{ !"$(ls -A xcode/iOS/)" }}
+        if: ${{ "$(ls -A xcode/iOS/ 2> /dev/null)" == "" }}
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}
@@ -45,7 +44,7 @@ jobs:
             Library-
       - name: Build
         uses: webbertakken/unity-builder@v0.11
-        if: ${{ !$(ls -A xcode/iOS/) }}
+        if: ${{ "$(ls -A xcode/iOS/ 2> /dev/null)" == "" }}
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
