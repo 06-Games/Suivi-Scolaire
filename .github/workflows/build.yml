@@ -44,7 +44,7 @@ jobs:
           cd xcbuild-master
           git submodule update --init
           make
-          mv xcbuild-master/build/xcbuild xcbuild
+          mv build/xcbuild ../xcbuild
       - name: Install xcbeautify
         uses: Cyberbeni/install-swift-tool@v1
         with:
