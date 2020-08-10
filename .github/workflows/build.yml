@@ -71,7 +71,7 @@ jobs:
 
       - run: chmod -R 777 xcode/iOS/iOS/
       - name: Build Archive
-        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q
+        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="Ad Hoc Code Sign" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q
 
       - name: Upload archive
         uses: actions/upload-artifact@v1
@@ -116,7 +116,7 @@ jobs:
           <plist version="1.0">
               <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>ad-hoc</string>
               <key>teamID</key>
               <string></string>
               <key>uploadSymbols</key>
