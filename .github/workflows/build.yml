@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
-      - name: Get cached libraries
+      - name: Cached libraries
         uses: actions/cache@v1.1.0
         with:
           path: Library
@@ -71,7 +71,7 @@ jobs:
 
       - run: chmod -R 777 xcode/iOS/iOS/
       - name: Build Archive
-        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="Ad Hoc Code Sign" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q
+        run: set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q
 
       - name: Upload archive
         uses: actions/upload-artifact@v1
@@ -79,10 +79,11 @@ jobs:
           name: iOS Archive
           path: build/
 
-      - name: Install Homebrew
-        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-      - name: Install Dpkg
-        run: brew install dpkg
+      - name: Install Dependencies
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)";
+          brew install dpkg;
+          brew install ldid;
       - name: Create DEB File
         run: |
           mkdir -p build/SuiviScolaireapp;
@@ -99,6 +100,7 @@ jobs:
           Depends: net.angelxwind.appsyncunified
           " > build/SuiviScolaireapp/DEBIAN/control;
           cp -r build/archive.xcarchive/Products/Applications build/SuiviScolaireapp;
+          ldid -S build/SuiviScolaireapp/Applications/Suivi-Scolaire.app/Suivi-Scolaire;
           dpkg-deb -b build/SuiviScolaireapp;
           mkdir -p build/Output;
           mv build/SuiviScolaireapp.deb build/Output/SuiviScolaireapp.deb;
@@ -108,27 +110,3 @@ jobs:
         with:
           name: iOS DEB
           path: build/Output
-      
-      - name: Create exportOptionsPlist
-        run: |
-          echo "<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-              <dict>
-              <key>method</key>
-              <string>ad-hoc</string>
-              <key>teamID</key>
-              <string></string>
-              <key>uploadSymbols</key>
-              <true/>
-              </dict>
-          </plist>" > app.plist
-          mkdir build/OutputIPA/;
-      - name: Create IPA
-        run: set -o pipefail && xcodebuild -exportArchive -exportOptionsPlist app.plist -archivePath build/archive.xcarchive -exportPath build/OutputIPA/app.ipa CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q
-        
-      - name: Upload build
-        uses: actions/upload-artifact@v1
-        with:
-          name: iOS IPA
-          path: build/OutputIPA
