@@ -87,7 +87,15 @@ jobs:
         run: |
           mkdir -p build/IPA/Payload;
           mkdir build/IPAOutput;
+          echo "<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+            <dict>
+              <key>com.apple.backboard.client</key>
+              <true/>
+            </dict>
+          </plist>" > entitlements.xml
           cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload/;
+          ldid -Sentitlements.xml build/IPA/Payload/Suivi-Scolaire.app/Suivi-Scolaire;
           zip -r build/IPAOutput/SuiviScolaireapp.ipa build/IPA/Payload;
       - name: Upload IPA
         uses: actions/upload-artifact@v1
@@ -110,8 +118,7 @@ jobs:
           Maintainer: Evan Galli
           Depends: net.angelxwind.appsyncunified
           " > build/SuiviScolaireapp/DEBIAN/control;
-          cp -r build/archive.xcarchive/Products/Applications build/SuiviScolaireapp;
-          ldid -S build/SuiviScolaireapp/Applications/Suivi-Scolaire.app/Suivi-Scolaire;
+          cp -r build/IPA/Payload build/SuiviScolaireapp/Applications/;
           dpkg-deb -b build/SuiviScolaireapp;
           mkdir -p build/Output;
           mv build/SuiviScolaireapp.deb build/Output/SuiviScolaireapp.deb;
