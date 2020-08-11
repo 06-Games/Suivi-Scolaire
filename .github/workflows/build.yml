@@ -85,7 +85,7 @@ jobs:
           brew install ldid;
       - name: Create IPA File
         run: |
-          mkdir build/IPA/Payload;
+          mkdir -p build/IPA/Payload;
           cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload;
           zip -r SuiviScolaireapp.ipa build/IPA/Payload;
       - name: Upload IPA
