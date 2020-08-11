@@ -90,7 +90,7 @@ jobs:
           echo "<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
             <dict>
-              <key>com.apple.backboard.client</key>
+              <key>com.06Games.Suivi-Scolaire</key>
               <true/>
             </dict>
           </plist>" > entitlements.xml
