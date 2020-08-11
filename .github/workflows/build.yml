@@ -86,13 +86,14 @@ jobs:
       - name: Create IPA File
         run: |
           mkdir -p build/IPA/Payload;
-          cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload;
-          zip -r SuiviScolaireapp.ipa build/IPA/Payload;
+          mkdir build/IPAOutput;
+          cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload/;
+          zip -r build/IPAOutput/SuiviScolaireapp.ipa build/IPA/Payload;
       - name: Upload IPA
         uses: actions/upload-artifact@v1
         with:
           name: iOS IPA
-          path: build/IPA
+          path: build/IPAOutput
 
       - name: Create DEB File
         run: |
