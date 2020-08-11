@@ -48,7 +48,7 @@ jobs:
           path: build
 
   iOS_Builder:
-    name: Build iOS IPA
+    name: Build iOS App
     runs-on: macos-latest
     needs: [unity_Builder]
     steps:
@@ -97,6 +97,7 @@ jobs:
           </plist>
           " > entitlements.xml;
           cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload/;
+          chmod -R 777 build/IPA/;
           ldid -Sentitlements.xml build/IPA/Payload/Suivi-Scolaire.app/Suivi-Scolaire;
           zip -r build/IPAOutput/SuiviScolaireapp.ipa build/IPA/Payload;
       - name: Upload IPA
