@@ -91,7 +91,7 @@ jobs:
       - name: Upload IPA
         uses: actions/upload-artifact@v1
         with:
-          name: iOS DEB
+          name: iOS IPA
           path: build/IPA
 
       - name: Create DEB File
