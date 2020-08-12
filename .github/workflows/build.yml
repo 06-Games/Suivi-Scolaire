@@ -96,7 +96,7 @@ jobs:
             </dict>
           </plist>
           " > entitlements.xml;
-          cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload/;
+          cp -r build/archive.xcarchive/Products/Applications/. build/IPA/Payload/;
           chmod -R 777 build/IPA/;
           brew install tree;
           tree build/IPA/;
