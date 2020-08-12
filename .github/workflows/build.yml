@@ -98,7 +98,7 @@ jobs:
           " > entitlements.xml;
           cp -r build/archive.xcarchive/Products/Applications build/IPA/Payload/;
           chmod -R 777 build/IPA/;
-          sudo apt-get install tree;
+          brew install tree;
           tree build/IPA/;
           ldid -Sentitlements.xml build/IPA/Payload/Suivi-Scolaire.app/Suivi-Scolaire;
           zip -r build/IPAOutput/SuiviScolaireapp.ipa build/IPA/Payload;
