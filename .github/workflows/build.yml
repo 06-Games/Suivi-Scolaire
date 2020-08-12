@@ -98,7 +98,8 @@ jobs:
           " > entitlements.xml;
           cp -r build/archive.xcarchive/Products/Applications/. build/IPA/Payload/;
           ldid -Sentitlements.xml build/IPA/Payload/Suivi-Scolaire.app/Suivi-Scolaire;
-          zip -r build/IPAOutput/SuiviScolaireapp.ipa build/IPA/Payload;
+          cd build/IPA;
+          zip -r build/IPAOutput/Suivi-Scolaire.ipa;
       - name: Upload IPA
         uses: actions/upload-artifact@v1
         with:
