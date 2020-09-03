@@ -1,15 +1,23 @@
-[![Build project](https://github.com/06-Games/Suivi-Scolaire/workflows/Build%20project/badge.svg)](https://github.com/06-Games/Suivi-Scolaire/actions?query=workflow%3A%22Build+project%22)  
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ebcfd54191d0408b9b87ccaa85e3e8fb)](https://www.codacy.com/gh/06-Games/Suivi-Scolaire?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=06-Games/Suivi-Scolaire&amp;utm_campaign=Badge_Grade)
+<p align=center>
+  <img src="https://github.com/06-Games/Suivi-Scolaire/raw/master/Assets/Images/Logo/Logo.png" width="250" />
+  <br />
+  <a href="https://github.com/06-Games/Suivi-Scolaire/actions?query=workflow%3A%22Build+project%22">
+    <img src="https://github.com/06-Games/Suivi-Scolaire/workflows/Build%20project/badge.svg" alt="Build status" />
+  </a>
+  <a href="https://www.codacy.com/gh/06-Games/Suivi-Scolaire">
+    <img src="https://app.codacy.com/project/badge/Grade/ebcfd54191d0408b9b87ccaa85e3e8fb" alt="Codacy badge" />
+  </a>
+  <br />
+  Suivi Scolaire is an application for computer and smartphone allowing easy use of the various school life management services
+</p>
   
-Suivi Scolaire is an application for computer and smartphone allowing easy use of the various school life management services.
-
 ## Supported School life services
 
-| Platform                                                | Schedule | Marks | Homeworks |
-|:-------------------------------------------------------:|:--------:|:-----:|:---------:|
-| [EcoleDirecte](https://www.ecoledirecte.com)            | ✅        | ✅    | ✅        |
-| [Cambridge Kids](https://cambridgekids.sophiacloud.com) | ❌        | ❌    | ✅        |
-| [Agora 06](https://www.agora06.fr) (Soon)               | ❌        | ❌    | ❌        |
+| Platform                                                  | Schedule | Marks | Homeworks |
+|:---------------------------------------------------------:|:--------:|:-----:|:---------:|
+| [EcoleDirecte](https://www.ecoledirecte.com)              | ✅       | ✅    | ✅        |
+| [Cambridge Kids](https://cambridgekids.sophiacloud.com)   | ❌       | ❌    | ✅        |
+| [Agora 06](https://www.agora06.fr) (Planned)              | ❌       | ❌    | ❌        |
 
 ## Installation
 Suivi-Scolaire can be used on the following platforms:
