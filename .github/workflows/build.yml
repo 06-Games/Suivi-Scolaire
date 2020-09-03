@@ -24,7 +24,7 @@ jobs:
           - StandaloneWindows64 # Build a Windows 64-bit standalone.
           - StandaloneLinux64 # Build a Linux 64-bit standalone.
           - iOS # Build an iOS player.
-          - Android # Build an Android .apk standalone app.
+          #- Android # Build an Android .apk standalone app.
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
           restore-keys: |
             Library-
       - name: Build
-        uses: webbertakken/unity-builder@196fe8fc5b
+        uses: webbertakken/unity-builder
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
