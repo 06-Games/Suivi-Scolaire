@@ -156,7 +156,7 @@ namespace Integrations
     }
     public interface Auth : Provider { }
     public interface Periods : Provider { IEnumerator GetPeriods(Action onComplete = null); }
-    public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action onComplete = null); }
+    public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<Data.ScheduledEvent>> onComplete = null); }
     public interface Homeworks : Provider
     {
         IEnumerator GetHomeworks(Data.Homework.Period period, Action onComplete);

@@ -46,8 +46,8 @@ namespace Modules
             if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { Manager.instance.transform.Find("Schedule").gameObject.SetActive(false); return false; }
             var dayList = period.DayList();
             var _schedule = Manager.Child.Schedule?.Where(h => dayList.Contains(h.start.Date)).ToList();
-            if (_schedule != null) action(period, _schedule);
-            else UnityThread.executeCoroutine(module.GetSchedule(period, () => action(period, Manager.Child.Schedule.Where(h => dayList.Contains(h.start)).ToList())));
+            if (_schedule?.Count > 0) action(period, _schedule);
+            else UnityThread.executeCoroutine(module.GetSchedule(period, (schedule) => action(period, schedule.ToList())));
             return true;
         }
         Dictionary<string, Color> subjectColor;

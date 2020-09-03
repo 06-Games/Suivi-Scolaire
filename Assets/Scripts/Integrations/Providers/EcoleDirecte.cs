@@ -294,7 +294,7 @@ namespace Integrations
             onComplete?.Invoke();
             Manager.HideLoadingPanel();
         }
-        public IEnumerator GetSchedule(TimeRange period, Action onComplete)
+        public IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<ScheduledEvent>> onComplete)
         {
             Manager.UpdateLoadingStatus("provider.schedule", "Getting schedule");
 
@@ -313,7 +313,7 @@ namespace Integrations
             }
 
             if (Manager.Child.Schedule == null) Manager.Child.Schedule = new List<ScheduledEvent>();
-            Manager.Child.Schedule.AddRange(result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v =>
+            var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v =>
             {
                 if (Manager.Child.Subjects == null) Manager.Child.Subjects = new List<Subject>();
                 if (!Manager.Child.Subjects.Any(s => s.id == v.Value<string>("codeMatiere")))
@@ -334,10 +334,11 @@ namespace Integrations
                     room = v.Value<string>("salle"),
                     canceled = v.Value<bool>("isAnnule")
                 };
-            }));
+            });
+            Manager.Child.Schedule.AddRange(events);
 
             Manager.HideLoadingPanel();
-            onComplete?.Invoke();
+            onComplete?.Invoke(events);
         }
         public IEnumerator GetMessages(Action onComplete)
         {
