@@ -22,8 +22,12 @@ namespace Modules
             var content = transform.Find("Content");
             foreach (Transform go in content) go.gameObject.SetActive(false);
 
+            var isntEmpty = Manager.Child.Messages?.Count != 0;
+
+            if (!isntEmpty) { content.Find("Empty").gameObject.SetActive(true); return; }
+
             var list = content.Find("List").GetComponent<ScrollRect>();
-            list.gameObject.SetActive(true);
+            list.gameObject.SetActive(isntEmpty);
             var lContent = list.content;
             for (int i = 1; i < lContent.childCount; i++) Destroy(lContent.GetChild(i).gameObject);
 

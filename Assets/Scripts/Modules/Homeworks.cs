@@ -78,6 +78,10 @@ namespace Modules
 
             var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
             for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);
+
+            transform.Find("Content").Find("Empty").gameObject.SetActive(!homeworks.Any());
+            if (!homeworks.Any()) return;
+
             var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
             foreach (var Homeworks in homeworks.GroupBy(h => h.forThe))
             {

@@ -45,12 +45,14 @@ marks.average = My average: [0]
 marks.overallAverage = My overall average: [0]
 
 homeworks = My text book
+homeworks.empty = No homework
 homeworks.upcomming = Upcomming
 homeworks.period = from [0] to [1]
 homeworks.added = Added on [0] by [1]
 homeworks.downloading = Downloading: [0]%
 
 messanging = Messanging
+messanging.empty = No message
 
 provider.connecting = Establishing the connection with [0]
 provider.homeworks = Getting homeworks
