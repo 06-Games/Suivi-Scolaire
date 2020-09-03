@@ -104,6 +104,7 @@ namespace Modules
                         subjectColor.Add(Event.subjectID, color);
                         colorPalette.Remove(color);
                     }
+                    else colorPalette.Remove(subjectColor[Event.subjectID]);
 
                     var go = Instantiate(dateContent.GetChild(0).gameObject, dateContent).transform;
                     var goColor = subjectColor.TryGetValue(Event.subjectID ?? "", out var c) ? c : (Color)colorPalette[0];
