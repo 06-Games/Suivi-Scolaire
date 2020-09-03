@@ -121,6 +121,7 @@ namespace Integrations.Data
     {
         public string subjectID;
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
+        public string teacher;
         public DateTime start;
         public DateTime end;
         public string room;

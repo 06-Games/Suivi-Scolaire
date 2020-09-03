@@ -328,6 +328,7 @@ namespace Integrations
                 return new ScheduledEvent
                 {
                     subjectID = v.Value<string>("codeMatiere"),
+                    teacher = v.Value<string>("prof"),
                     start = v.Value<DateTime>("start_date"),
                     end = v.Value<DateTime>("end_date"),
                     room = v.Value<string>("salle"),

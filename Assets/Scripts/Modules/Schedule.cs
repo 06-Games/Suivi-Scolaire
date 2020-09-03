@@ -109,9 +109,11 @@ namespace Modules
                     var goColor = subjectColor.TryGetValue(Event.subjectID ?? "", out var c) ? c : (Color)colorPalette[0];
                     goColor.a = Event.canceled ? 0.4F : 1;
                     go.GetComponent<Image>().color = goColor;
-                    if (Event.subject == null) Debug.LogError(Event.room + " " + Event.start + "\n" + Event.subjectID);
-                    go.Find("Subject").GetComponent<Text>().text = Event.subject?.name ?? Event.subjectID;
+                    var subject = Event.subject;
+                    if (subject == null) Debug.LogError(Event.room + " " + Event.start + "\n" + Event.subjectID);
+                    go.Find("Subject").GetComponent<Text>().text = subject?.name ?? Event.subjectID;
                     go.Find("Room").GetComponent<Text>().text = Event.canceled ? $"<color=#F56E6E>{LangueAPI.Get("schedule.canceled", "Canceled")}</color>" : Event.room;
+                    go.Find("Teacher").GetComponent<Text>().text = Event.teacher ?? string.Join(" / ", subject.teachers);
                     go.Find("Hours").GetComponent<Text>().text = $"{Event.start.ToString("HH:mm")} - {Event.end.ToString("HH:mm")}";
                     ((RectTransform)go).sizeDelta = new Vector2(1, sizePerHour * (float)(Event.end - Event.start).TotalHours);
                     go.gameObject.SetActive(true);
