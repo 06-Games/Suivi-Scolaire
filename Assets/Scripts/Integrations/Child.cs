@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
@@ -40,6 +41,7 @@ namespace Integrations.Data
         public List<Homework> Homeworks;
         public List<ScheduledEvent> Schedule;
         public List<Message> Messages;
+        public List<Book> Books;
     }
 
 
@@ -140,6 +142,18 @@ namespace Integrations.Data
 
         public string content;
         [XmlIgnore] public IEnumerable<Request> documents = new List<Request>();
+    }
+
+    public class Book
+    {
+        public string id;
+        public string[] subjectsID;
+        [XmlIgnore] public IEnumerable<Subject> subjects => Manager.Child.Subjects.Where(s => subjectsID.Contains(s.id));
+
+        public string name;
+        public string editor;
+        public Sprite cover;
+        [XmlIgnore] public IEnumerator url;
     }
     #endregion
 

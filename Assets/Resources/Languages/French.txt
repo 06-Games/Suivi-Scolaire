@@ -10,6 +10,7 @@ menu.schedule = Emploi du temps
 menu.marks = Notes
 menu.homeworks = Cahier de texte
 menu.messanging = Messagerie
+menu.books = Manuels scolaires
 menu.changeAccount = Changer de compte
 menu.logout = Se déconnecter
 
@@ -54,6 +55,8 @@ homeworks.downloading = Téléchargement: [0]%
 messanging = Messagerie
 messanging.empty = Aucun message
 
+books = Manuels scolaires
+
 provider.connecting = Établissement de la connexion avec [0]
 provider.homeworks = Obtention des devoirs
 provider.marks = Obtention des notes
@@ -61,6 +64,8 @@ provider.holidays = Obtention des vacances
 provider.schedule = Obtention de l'emploi du temps
 provider.messages = Obtention des messages
 provider.messages.content = Obtention du contenu du message
+provider.books = Obtention des manuels scolaires
+provider.books.opening = Ouverture du manuel
 
 updateWarn = Une mise à jour est disponible. Souhaitez-vous l'installer?
 updateWarn.yes = Oui

@@ -168,4 +168,5 @@ namespace Integrations
         IEnumerator GetMessages(Action onComplete = null);
         IEnumerator LoadExtraMessageData(uint messageID, Action onComplete = null);
     }
+    public interface Books : Provider { IEnumerator GetBooks(Action onComplete); }
 }

@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 
 namespace Integrations
 {
-    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule, Messanging
+    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule, Messanging, Books
     {
         public string Name => "EcoleDirecte";
 
@@ -62,12 +62,12 @@ namespace Integrations
                     else { Logging.Log("Error getting profile picture, server returned " + profileRequest.error + "\n" + profileRequest.url, LogType.Warning); }
                 }
 
-                var moduleCores = new Dictionary<string, string>
+                var moduleCores = new Dictionary<string, string[]>
                 {
-                    { "NOTES", "Marks" },
-                    { "MESSAGERIE", "Messanging" },
-                    { "EDT", "Schedule" },
-                    { "CAHIER_DE_TEXTES", "Homeworks" }
+                    { "NOTES", new []{ "Marks" } },
+                    { "MESSAGERIE", new []{ "Messanging" } },
+                    { "EDT", new []{ "Schedule" } },
+                    { "CAHIER_DE_TEXTES", new []{ "Homeworks", "Books" } }
                 };
                 child?.Invoke(new Child
                 {
@@ -75,7 +75,7 @@ namespace Integrations
                     id = profile.Value<string>("id"),
                     modules = profile.SelectToken("modules")
                         .Where(m => m.Value<bool>("enable") && moduleCores.ContainsKey(m.Value<string>("code")))
-                        .Select(m => moduleCores[m.Value<string>("code")]).Append("Periods").ToList(),
+                        .SelectMany(m => moduleCores[m.Value<string>("code")]).Append("Periods").ToList(),
                     sprite = picture,
                     extraData = new Dictionary<string, string> { { "type", type } }
                 });
@@ -418,6 +418,66 @@ namespace Integrations
 
             Manager.HideLoadingPanel();
             onComplete.Invoke();
+        }
+        public IEnumerator GetBooks(Action onComplete)
+        {
+            Manager.UpdateLoadingStatus("provider.books", "Getting school books");
+            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            yield return markRequest.SendWebRequest();
+            var result = new FileFormat.JSON(markRequest.downloadHandler.text);
+            if (result.Value<int>("code") != 200)
+            {
+                if (result.Value<string>("message") == "Session expirée !")
+                {
+                    yield return Connect(Accounts.selectedAccount, null, null);
+                    yield return GetBooks(onComplete);
+                }
+                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting school books, server returned \"" + result.Value<string>("message") + "\"");
+                yield break;
+            }
+
+            var books = new List<Book>();
+            foreach (var obj in result.jToken.SelectToken("data")?.Values<JObject>().Where(obj => obj.SelectToken("disciplines").HasValues)) {
+
+                    var cover = UnityWebRequestTexture.GetTexture(obj.Value<string>("urlCouverture"));
+                    yield return cover.SendWebRequest();
+                    var tex = DownloadHandlerTexture.GetContent(cover);
+
+                    books.Add(new Book
+                    {
+                        id = obj.Value<string>("idRessource"),
+                        subjectsID = obj.Value<JArray>("disciplines").Select(s => s.Value<string>()).ToArray(),
+                        name = obj.Value<string>("libelle"),
+                        editor = obj.Value<string>("editeur"),
+                        url = GetBook(new Request()
+                        {
+                            url = obj.Value<string>("url"),
+                            method = Request.Method.Post,
+                            postData = () =>
+                            {
+                                var form = new WWWForm();
+                                form.AddField("token", token);
+                                return form;
+                            }
+                        }),
+                        cover = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f))
+                    });
+            }
+            Manager.Child.Books = books;
+
+            Manager.HideLoadingPanel();
+            onComplete?.Invoke();
+
+
+            IEnumerator GetBook(Request req)
+            {
+                Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
+                var request = req.request;
+                yield return request.SendWebRequest();
+                Manager.HideLoadingPanel();
+                var url = request.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, System.StringSplitOptions.None)[1].Split('"')[0];
+                Application.OpenURL(url);
+            }
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
