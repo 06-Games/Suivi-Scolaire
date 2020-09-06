@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using UnityEngine;
@@ -164,7 +165,7 @@ namespace Integrations.Data
         public Func<Dictionary<string, string>> headers;
         public enum Method { Get, Post }
         public Method method;
-        public Func<UnityEngine.WWWForm> postData;
+        public Func<WWWForm> postData;
 
         public UnityEngine.Networking.UnityWebRequest request
         {
@@ -172,33 +173,38 @@ namespace Integrations.Data
             {
                 UnityEngine.Networking.UnityWebRequest webRequest = null;
                 if (method == Method.Get) webRequest = UnityEngine.Networking.UnityWebRequest.Get(url);
-                else if (method == Method.Post) webRequest = UnityEngine.Networking.UnityWebRequest.Post(url, postData?.Invoke() ?? new UnityEngine.WWWForm());
+                else if (method == Method.Post) webRequest = UnityEngine.Networking.UnityWebRequest.Post(url, postData?.Invoke() ?? new WWWForm());
                 if (headers != null) foreach (var header in headers.Invoke()) webRequest?.SetRequestHeader(header.Key, header.Value);
                 return webRequest;
             }
         }
 
 
-        public System.Collections.IEnumerator GetDoc()
+        public IEnumerator GetDoc()
         {
             var _request = request;
             _request.SendWebRequest();
             while (!_request.isDone)
             {
                 Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", false, (_request.downloadProgress * 100).ToString("0"));
-                yield return new UnityEngine.WaitForEndOfFrame();
+                yield return new WaitForEndOfFrame();
             }
-            Manager.HideLoadingPanel();
+            if (request.error == null) Manager.HideLoadingPanel();
+            else { Manager.FatalErrorDuringLoading("Error downloading file", request.error); yield break; }
 
 #if UNITY_STANDALONE
-            var path = UnityEngine.Application.temporaryCachePath + "/Docs___" + docName;
-            System.IO.File.WriteAllBytes(path, _request.downloadHandler.data);
-            UnityEngine.Application.OpenURL(path);
+            var path = Application.temporaryCachePath + "/Docs___" + docName;
+            File.WriteAllBytes(path, _request.downloadHandler.data);
+            Application.OpenURL(path);
+#elif UNITY_ANDROID
+            var path = "/storage/emulated/0/Download/Suivi-Scolaire/";
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+            File.WriteAllBytes(path + docName, _request.downloadHandler.data);
+            UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path + docName);
 #else
-        var path = "/storage/emulated/0/Download/Suivi-Scolaire/" + docName;
-        if (!System.IO.Directory.Exists(System.IO.Path.GetDirectoryName(path))) System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
-            System.IO.File.WriteAllBytes(path, request.downloadHandler.data);
-        UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path);
+            var path = Application.temporaryCachePath + "/Docs___" + docName;
+            File.WriteAllBytes(path, _request.downloadHandler.data);
+            Manager.FatalErrorDuringLoading("Unsupported plateform", "Unknown plateform, the file can't be openned, it has been saved at " + path);
 #endif
         }
     }
