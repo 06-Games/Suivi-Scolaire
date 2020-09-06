@@ -5,11 +5,7 @@
 *.leu
 *.sln
 *.userprefs
-/Library/*
-!/Library/com.unity.addressables/
-!/Library/PackageCache/
-/Library/PackageCache/com.unity.*
-/Library/PackageCache/nuget.*
+Library/
 Logs/
 obj/
 Temp/

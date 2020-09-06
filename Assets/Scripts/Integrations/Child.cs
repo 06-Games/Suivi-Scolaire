@@ -192,11 +192,8 @@ namespace Integrations.Data
             if (request.error == null) Manager.HideLoadingPanel();
             else { Manager.FatalErrorDuringLoading("Error downloading file", request.error); yield break; }
 
-#if UNITY_STANDALONE
-            var path = Application.temporaryCachePath + "/Docs___" + docName;
-            File.WriteAllBytes(path, _request.downloadHandler.data);
-            Application.OpenURL(path);
-#elif UNITY_ANDROID
+
+#if UNITY_ANDROID && !UNITY_EDITOR
             var path = "/storage/emulated/0/Download/Suivi-Scolaire/";
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             File.WriteAllBytes(path + docName, _request.downloadHandler.data);
@@ -204,7 +201,15 @@ namespace Integrations.Data
 #else
             var path = Application.temporaryCachePath + "/Docs___" + docName;
             File.WriteAllBytes(path, _request.downloadHandler.data);
-            Manager.FatalErrorDuringLoading("Unsupported plateform", "Unknown plateform, the file can't be openned, it has been saved at " + path);
+
+#if UNITY_IOS
+            drstc.DocumentHandler.DocumentHandler.OpenDocument(path);
+#else
+            Application.OpenURL(path);
+#if !UNITY_STANDALONE && !UNITY_EDITOR
+            Debug.LogWarning($"Unsupported plateform ({Application.platform}), we are unable to certify that the opening worked. The file has been saved at \"{path}\"");
+#endif
+#endif
 #endif
         }
     }
