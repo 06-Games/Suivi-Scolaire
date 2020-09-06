@@ -437,31 +437,32 @@ namespace Integrations
             }
 
             var books = new List<Book>();
-            foreach (var obj in result.jToken.SelectToken("data")?.Values<JObject>().Where(obj => obj.SelectToken("disciplines").HasValues)) {
+            foreach (var obj in result.jToken.SelectToken("data")?.Values<JObject>().Where(obj => obj.SelectToken("disciplines").HasValues))
+            {
 
-                    var cover = UnityWebRequestTexture.GetTexture(obj.Value<string>("urlCouverture"));
-                    yield return cover.SendWebRequest();
-                    var tex = DownloadHandlerTexture.GetContent(cover);
+                var cover = UnityWebRequestTexture.GetTexture(obj.Value<string>("urlCouverture"));
+                yield return cover.SendWebRequest();
+                var tex = DownloadHandlerTexture.GetContent(cover);
 
-                    books.Add(new Book
+                books.Add(new Book
+                {
+                    id = obj.Value<string>("idRessource"),
+                    subjectsID = obj.Value<JArray>("disciplines").Select(s => s.Value<string>()).ToArray(),
+                    name = obj.Value<string>("libelle"),
+                    editor = obj.Value<string>("editeur"),
+                    url = GetBook(new Request()
                     {
-                        id = obj.Value<string>("idRessource"),
-                        subjectsID = obj.Value<JArray>("disciplines").Select(s => s.Value<string>()).ToArray(),
-                        name = obj.Value<string>("libelle"),
-                        editor = obj.Value<string>("editeur"),
-                        url = GetBook(new Request()
+                        url = obj.Value<string>("url"),
+                        method = Request.Method.Post,
+                        postData = () =>
                         {
-                            url = obj.Value<string>("url"),
-                            method = Request.Method.Post,
-                            postData = () =>
-                            {
-                                var form = new WWWForm();
-                                form.AddField("token", token);
-                                return form;
-                            }
-                        }),
-                        cover = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f))
-                    });
+                            var form = new WWWForm();
+                            form.AddField("token", token);
+                            return form;
+                        }
+                    }),
+                    cover = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f))
+                });
             }
             Manager.Child.Books = books;
 
@@ -475,7 +476,17 @@ namespace Integrations
                 var request = req.request;
                 yield return request.SendWebRequest();
                 Manager.HideLoadingPanel();
-                var url = request.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, System.StringSplitOptions.None)[1].Split('"')[0];
+                var url = request.url;
+                try
+                {
+                    if (request.uri.Host == "api.ecoledirecte.com")
+                        url = request.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, StringSplitOptions.None)[1].Split('"')[0];
+                }
+                catch
+                {
+                    url = request.url;
+                    Debug.LogError("Unespected content at " + url + "\n\n" + request.downloadHandler.text);
+                }
                 Application.OpenURL(url);
             }
         }

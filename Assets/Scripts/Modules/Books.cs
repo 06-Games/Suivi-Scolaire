@@ -2,7 +2,6 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 public class Books : MonoBehaviour
 {
@@ -15,7 +14,7 @@ public class Books : MonoBehaviour
     public void Initialise()
     {
         if (!Manager.provider.TryGetModule(out Integrations.Books module)) gameObject.SetActive(false);
-        else if (Manager.Child.Books == null) StartCoroutine(module.GetBooks(() => Refresh())); 
+        else if (Manager.Child.Books == null) StartCoroutine(module.GetBooks(() => Refresh()));
         else Refresh();
     }
     void Refresh()
@@ -28,8 +27,9 @@ public class Books : MonoBehaviour
             var go = Instantiate(content.GetChild(0).gameObject, content).transform;
             go.name = go.Find("Title").GetComponent<Text>().text = book.name;
             go.Find("Subject").GetComponent<Text>().text = book.subjects.FirstOrDefault().name;
-            if(book.cover != null) go.Find("Cover").GetComponent<Image>().sprite = book.cover;
-            go.GetComponent<Button>().onClick.AddListener(() => {
+            if (book.cover != null) go.Find("Cover").GetComponent<Image>().sprite = book.cover;
+            go.GetComponent<Button>().onClick.AddListener(() =>
+            {
                 StartCoroutine(book.url);
             });
             go.gameObject.SetActive(true);

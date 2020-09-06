@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Integrations.Data
+﻿namespace Integrations.Data
 {
     public class Data
     {
