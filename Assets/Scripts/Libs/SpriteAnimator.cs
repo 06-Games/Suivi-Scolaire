@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class SpriteAnimator : MonoBehaviour
 {
     public int fps;
-    public UnityEngine.AddressableAssets.AssetReference SpriteSheet;
+    //public UnityEngine.AddressableAssets.AssetReference SpriteSheet;
     Sprite[] frames;
 
     Image spriteRenderer;
@@ -23,12 +23,12 @@ public class SpriteAnimator : MonoBehaviour
     {
         spriteRenderer = GetComponent<Image>();
         spriteRenderer.enabled = false;
-        SpriteSheet.LoadAssetAsync<IList<Sprite>>().Completed += (a) =>
+        /*SpriteSheet.LoadAssetAsync<IList<Sprite>>().Completed += (a) =>
         {
             frames = a.Result?.ToArray();
             loaded = true;
             if (gameObject.activeInHierarchy & playOnEnable) Play();
-        };
+        };*/
     }
     void OnEnable() { if (playOnEnable) Play(); }
     void OnDisable() { Stop(); }
