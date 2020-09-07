@@ -1,5 +1,4 @@
-﻿using Integrations;
-using System.Linq;
+﻿using System.Linq;
 using Tools;
 using UnityEngine;
 
@@ -19,14 +18,17 @@ public class Menu : MonoBehaviour
         sideMenu.onStateUpdate += (state) =>
         {
             if (state == SimpleSideMenu.State.Closed) return;
-            if (!Manager.isReady) return;
-
-            var provider = Manager.provider;
-            var modulePanel = transform.Find("Panel").Find("Modules");
-            var modules = provider.Modules().ToList();
-            foreach (Transform module in modulePanel) module.gameObject.SetActive(module.name == "Home" | modules.Contains(module.name));
+            UpdateModules();
         };
         manager = Manager.instance.transform;
+    }
+
+    public void UpdateModules()
+    {
+        if (!Manager.isReady) return;
+        var modulePanel = transform.Find("Panel").Find("Modules");
+        var modules = Manager.Child.modules;
+        foreach (Transform module in modulePanel) module.gameObject.SetActive(module.name == "Home" | modules?.Contains(module.name) ?? false);
     }
 
     private void Update()

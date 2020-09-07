@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+﻿using Modules;
+using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
     [Header("Modules")]
-    public FirstStart FirstStart;
-    public Periods.Home Home;
+    public Accounts FirstStart;
+    public Home Home;
     public System.Collections.Generic.List<Module> modules = new System.Collections.Generic.List<Module>();
 
     [Header("Others")]
@@ -12,21 +13,61 @@ public class Manager : MonoBehaviour
     public GameObject Loading;
     public Sprite LoadingError;
 
-    public static Integrations.Provider provider;
+    public static Integrations.Provider provider { get; set; }
+    public static Integrations.Data.Data Data { get; set; }
+    static Integrations.Data.Child nullChild;
+    public static ref Integrations.Data.Child Child
+    {
+        get
+        {
+            if (Data?.Children == null) return ref nullChild;
+            for (int i = 0; i < Data.Children.Length; i++) { if (Data.Children[i].id == Accounts.selectedAccount.child) return ref Data.Children[i]; }
+            return ref Data.Children[0];
+        }
+    }
+    static System.IO.FileInfo dataFile
+    {
+        get
+        {
+            var dir = new System.IO.DirectoryInfo($"{Application.persistentDataPath}/data/");
+            if (!dir.Exists) dir.Create();
+            return new System.IO.FileInfo($"{dir.FullName}/{Accounts.selectedAccount.provider}_{Accounts.selectedAccount.username}.xml");
+        }
+    }
+    public static void LoadData()
+    {
+        if (provider == null) { Debug.LogError("Provider is null"); return; }
+        var file = dataFile;
+        if (file.Exists) Data = FileFormat.XML.Utils.XMLtoClass<Integrations.Data.Data>(System.IO.File.ReadAllText(file.FullName)) ?? Data;
+        Logging.Log("Data loaded");
+    }
+    public static void SaveData()
+    {
+        if (!isReady) return;
+        System.IO.File.WriteAllText(dataFile.FullName, FileFormat.XML.Utils.ClassToXML(Data, false));
+        Logging.Log("Data saved");
+    }
+    private void OnApplicationFocus(bool hasFocus) { if (!hasFocus) SaveData(); }
+    private void OnApplicationQuit() => SaveData();
+    public static bool isReady => provider != null && Child != null;
+
     void Start()
     {
         FirstStart.onComplete += (Provider) =>
         {
             provider = Provider;
-            OpenModule(Home.gameObject);
             Menu.sideMenu.handle.SetActive(true);
+            Accounts.SelectChild();
+            //LoadData();
+            OpenModule(Home.gameObject);
         };
         Menu.sideMenu.handle.SetActive(false);
         FirstStart.Initialise();
         foreach (Transform obj in transform) modules.Add(obj.GetComponent<Module>());
     }
 
-    internal static Manager instance;
+
+    internal static Manager instance { get; private set; }
     void Awake()
     {
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
@@ -47,17 +88,17 @@ public class Manager : MonoBehaviour
         if (log) Logging.Log(LangueAPI.Get(null, fallback, args));
         instance.Loading.SetActive(true);
         var img = instance.Loading.transform.GetChild(0);
-        img.GetComponent<UnityEngine.UI.Image>().color = Color.white;
-        img.GetComponent<SpriteAnimator>().Play();
+        img.GetComponent<UnityEngine.UI.RawImage>().color = Color.white;
+        img.GetComponent<VideoRenderer>().Play();
         instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = LangueAPI.Get(id, fallback, args);
     }
     public static void FatalErrorDuringLoading(string txt, string log)
     {
         Logging.Log(log, LogType.Error);
         var img = instance.Loading.transform.GetChild(0);
-        img.GetComponent<SpriteAnimator>().Stop();
-        img.GetComponent<UnityEngine.UI.Image>().sprite = instance.LoadingError;
-        img.GetComponent<UnityEngine.UI.Image>().color = Color.red;
+        img.GetComponent<VideoRenderer>().Stop();
+        img.GetComponent<UnityEngine.UI.RawImage>().texture = instance.LoadingError.texture;
+        img.GetComponent<UnityEngine.UI.RawImage>().color = Color.red;
         instance.Loading.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = $"<color=red>{txt}</color>";
         instance.Loading.SetActive(true);
 
@@ -69,8 +110,6 @@ public class Manager : MonoBehaviour
         }
     }
     public static void HideLoadingPanel() => instance.Loading.SetActive(false);
-
-    public static bool isReady => provider != null;
 }
 
-public interface Module { void Reset(); }
+public interface Module { void OnEnable(); void Reset(); }

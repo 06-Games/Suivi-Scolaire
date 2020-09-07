@@ -1,8 +1,8 @@
 {
   "dependencies": {
+    "com.drstc.documenthandler": "https://github.com/Draudastic26/document-handler.git#upm",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
-    "com.unity.addressables": "1.1.10",
     "com.unity.collab-proxy": "1.2.16",
     "com.unity.ext.nunit": "1.0.0",
     "com.unity.ide.rider": "1.1.4",
@@ -43,5 +43,11 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
+  },
+  "lock": {
+    "com.drstc.documenthandler": {
+      "revision": "upm",
+      "hash": "a97ff76c7ff897ae2d1a6d28346f3fa87d3f0a7a"
+    }
   }
 }

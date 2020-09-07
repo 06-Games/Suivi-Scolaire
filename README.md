@@ -1,20 +1,31 @@
-[![Build project](https://github.com/06-Games/Suivi-Scolaire/workflows/Build%20project/badge.svg)](https://github.com/06-Games/Suivi-Scolaire/actions?query=workflow%3A%22Build+project%22)  
+<p align=center>
+  <img src="https://github.com/06-Games/Suivi-Scolaire/raw/master/Assets/Images/Logo/Logo.png" width="250" />
+  <br />
+  <a href="https://github.com/06-Games/Suivi-Scolaire/actions?query=workflow%3A%22Build+project%22">
+    <img src="https://github.com/06-Games/Suivi-Scolaire/workflows/Build%20project/badge.svg" alt="Build status" />
+  </a>
+  <a href="https://www.codacy.com/gh/06-Games/Suivi-Scolaire">
+    <img src="https://app.codacy.com/project/badge/Grade/ebcfd54191d0408b9b87ccaa85e3e8fb" alt="Codacy badge" />
+  </a>
+  <br />
+  Suivi-Scolaire is an application for computer and smartphone allowing easy use of the various school life management services
+</p>
   
-Suivi Scolaire is a mobile/web application that allows easy use of different school life management services.
-
 ## Supported School life services
 
-| Platform                                                | Schedule | Marks | Homeworks |
-|:-------------------------------------------------------:|:--------:|:-----:|:---------:|
-| [EcoleDirecte](https://www.ecoledirecte.com)            | ✅        | ✅    | ✅        |
-| [Cambridge Kids](https://cambridgekids.sophiacloud.com) | ❌        | ❌    | ✅        |
-| [Agora 06](https://www.agora06.fr) (Soon)               | ❌        | ❌    | ❌        |
+| Platform                                                  | Schedule | Marks | Homeworks |
+|:---------------------------------------------------------:|:--------:|:-----:|:---------:|
+| [EcoleDirecte](https://www.ecoledirecte.com)              | ✅       | ✅    | ✅        |
+| [Cambridge Kids](https://cambridgekids.sophiacloud.com)   | ❌       | ❌    | ✅        |
+| [Agora 06](https://www.agora06.fr) (Planned)              | ❌       | ❌    | ❌        |
 
 ## Installation
-Suivi-Scolaire can be used on the following platforms:
-* [Windows](https://github.com/06-Games/Suivi-Scolaire/releases/latest)
-* [Android](https://play.google.com/store/apps/details?id=com.fr_06Games.SuiviScolaire)
+<a href='https://play.google.com/store/apps/details?id=com.fr_06Games.SuiviScolaire&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
+  <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="250" />
+</a>
+
+Suivi-Scolaire is also available for **Windows**, just download the `.exe` file on the [release page](https://github.com/06-Games/Suivi-Scolaire/releases/latest)
 
 ## Supported languages
-* English
-* Français (French)
+* :uk: English
+* :fr: Français (French)

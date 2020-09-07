@@ -37,10 +37,16 @@ jobs:
           restore-keys: |
             Library-
       - name: Build
-        uses: webbertakken/unity-builder@v0.11
+        uses: webbertakken/unity-builder@master
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
+          versioning: Semantic
+          androidVersionCode: 0
+          androidKeystoreName: Suivi-Scolaire.keystore
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: suivi-scolaire
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
       - name: Upload build
         uses: actions/upload-artifact@v1
         with:

@@ -9,12 +9,17 @@ menu.home = Home
 menu.schedule = Schedule
 menu.marks = Marks
 menu.homeworks = Text book
+menu.messanging = Messanging
+menu.books = School books
 menu.changeAccount = Change account
 menu.logout = Logout
 
 home = Home
-home.holidays.start = <i>[0]</i>\nstart in <b>[1]</b> days
-home.holidays.end = It ends in <b>[1]</b> days
+home.holidays.start = <i>[0]</i>\nstart in [1]
+home.holidays.end = It ends in [1]
+home.holidays.days = <b>[0]</b> days
+home.holidays.hours = <b>[0]</b> hours
+home.holidays.minutes = <b>[0]</b> minutes
 home.marks = Latest Marks
 home.schedule.currently = Currently:
 home.schedule.next = Next:
@@ -41,13 +46,28 @@ marks.average = My average: [0]
 marks.overallAverage = My overall average: [0]
 
 homeworks = My text book
+homeworks.empty = No homework
 homeworks.upcomming = Upcomming
 homeworks.period = from [0] to [1]
 homeworks.added = Added on [0] by [1]
 homeworks.downloading = Downloading: [0]%
+
+messanging = Messanging
+messanging.empty = No message
+
+books = School books
 
 provider.connecting = Establishing the connection with [0]
 provider.homeworks = Getting homeworks
 provider.marks = Getting marks
 provider.holidays = Getting holidays
 provider.schedule = Getting schedule
+provider.messages = Getting messages
+provider.messages.content = Getting message content
+provider.books = Getting school books
+provider.books.opening = School book being opened
+
+updateWarn = An update is available. Would you like to install it ?
+updateWarn.yes = Yes
+updateWarn.no = No
+updateWarn.downloading = Downloading the update...

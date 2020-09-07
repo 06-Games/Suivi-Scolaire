@@ -9,12 +9,17 @@ menu.home = Accueil
 menu.schedule = Emploi du temps
 menu.marks = Notes
 menu.homeworks = Cahier de texte
+menu.messanging = Messagerie
+menu.books = Manuels scolaires
 menu.changeAccount = Changer de compte
 menu.logout = Se déconnecter
 
 home = Accueil
-home.holidays.start = Les <i>[0]</i>\ncommencent dans <b>[1]</b> jours
-home.holidays.end = Elles se terminent dans <b>[1]</b> jours
+home.holidays.start = Les <i>[0]</i>\ncommencent dans [1]
+home.holidays.end = Elles se terminent dans [1]
+home.holidays.days = <b>[0]</b> jours
+home.holidays.hours = <b>[0]</b> heures
+home.holidays.minutes = <b>[0]</b> minutes
 home.marks = Dernières notes
 home.schedule.currently = Actuellement:
 home.schedule.next = Suivant:
@@ -41,14 +46,28 @@ marks.average = Ma moyenne: [0]
 marks.overallAverage = Ma moyenne générale: [0]
 
 homeworks = Mon cahier de texte
+homeworks.empty = Pas de devoirs
 homeworks.upcomming = A Venir
 homeworks.period = du [0] au [1]
 homeworks.added = Ajouté le [0] par [1]
 homeworks.downloading = Téléchargement: [0]%
 
-//Providers
+messanging = Messagerie
+messanging.empty = Aucun message
+
+books = Manuels scolaires
+
 provider.connecting = Établissement de la connexion avec [0]
 provider.homeworks = Obtention des devoirs
 provider.marks = Obtention des notes
 provider.holidays = Obtention des vacances
 provider.schedule = Obtention de l'emploi du temps
+provider.messages = Obtention des messages
+provider.messages.content = Obtention du contenu du message
+provider.books = Obtention des manuels scolaires
+provider.books.opening = Ouverture du manuel
+
+updateWarn = Une mise à jour est disponible. Souhaitez-vous l'installer?
+updateWarn.yes = Oui
+updateWarn.no = Non
+updateWarn.downloading = Téléchargement de la mise à jour...
