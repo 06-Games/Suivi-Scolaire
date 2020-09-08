@@ -41,7 +41,7 @@ jobs:
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
-          versioning: Semantic
+          versioning: None
           androidVersionCode: 0
           androidKeystoreName: Suivi-Scolaire.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
