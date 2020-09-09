@@ -13,18 +13,20 @@
   
 ## Supported School life services
 
-| Platform                                                  | Schedule | Marks | Homeworks |
-|:---------------------------------------------------------:|:--------:|:-----:|:---------:|
-| [EcoleDirecte](https://www.ecoledirecte.com)              | ✅       | ✅    | ✅        |
-| [Cambridge Kids](https://cambridgekids.sophiacloud.com)   | ❌       | ❌    | ✅        |
-| [Agora 06](https://www.agora06.fr) (Planned)              | ❌       | ❌    | ❌        |
+| Platform                                                  | Schedule | Marks | Homeworks | School books | Messanging |
+|:---------------------------------------------------------:|:--------:|:-----:|:---------:|:------------:|:----------:|
+| [EcoleDirecte](https://www.ecoledirecte.com)              | ✅       | ✅    | ✅        |✅           |✅          |
+| [Cambridge Kids](https://cambridgekids.sophiacloud.com)   | ❌       | ❌    | ✅        | ❌          | ❌         |
+| [Agora 06](https://www.agora06.fr) (Planned)              | ❌       | ❌    | ❌        | ❌          | ❌         |
 
 ## Installation
 <a href='https://play.google.com/store/apps/details?id=com.fr_06Games.SuiviScolaire&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
   <img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="250" />
 </a>
 
-Suivi-Scolaire is also available for **Windows**, just download the `.exe` file on the [release page](https://github.com/06-Games/Suivi-Scolaire/releases/latest)
+Suivi-Scolaire is also available for:
+* **Windows:** just download the `.exe` file on the [release page](https://github.com/06-Games/Suivi-Scolaire/releases/latest)
+* **iOS:** add our [AltStore source](https://06games.ddns.net/beta/altstore/install.php) or resign the `.ipa` file available on the [release page](https://github.com/06-Games/Suivi-Scolaire/releases/latest)
 
 ## Supported languages
 * :uk: English
