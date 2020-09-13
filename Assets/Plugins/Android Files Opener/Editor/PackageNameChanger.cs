@@ -28,7 +28,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Core;
 using System;
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_ANDROID
 namespace UnityAndroidOpenUrl.EditorScripts
 {
     /// <summary>
