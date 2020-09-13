@@ -28,10 +28,7 @@ public class Books : MonoBehaviour
             go.name = go.Find("Title").GetComponent<Text>().text = book.name;
             go.Find("Subject").GetComponent<Text>().text = book.subjects.FirstOrDefault().name;
             if (book.cover != null) go.Find("Cover").GetComponent<Image>().sprite = book.cover;
-            go.GetComponent<Button>().onClick.AddListener(() =>
-            {
-                StartCoroutine(book.url);
-            });
+            go.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(book.url));
             go.gameObject.SetActive(true);
         }
     }

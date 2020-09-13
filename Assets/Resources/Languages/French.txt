@@ -11,6 +11,7 @@ menu.marks = Notes
 menu.homeworks = Cahier de texte
 menu.messanging = Messagerie
 menu.books = Manuels scolaires
+menu.documents = Documents
 menu.changeAccount = Changer de compte
 menu.logout = Se déconnecter
 
@@ -57,6 +58,9 @@ messanging.empty = Aucun message
 
 books = Manuels scolaires
 
+documents = Documents
+documents.root = Racine
+
 provider.connecting = Établissement de la connexion avec [0]
 provider.homeworks = Obtention des devoirs
 provider.marks = Obtention des notes
@@ -66,6 +70,7 @@ provider.messages = Obtention des messages
 provider.messages.content = Obtention du contenu du message
 provider.books = Obtention des manuels scolaires
 provider.books.opening = Ouverture du manuel
+provider.documents = Obtention des documents
 
 updateWarn = Une mise à jour est disponible. Souhaitez-vous l'installer?
 updateWarn.yes = Oui

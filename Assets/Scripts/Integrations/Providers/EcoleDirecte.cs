@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 
 namespace Integrations
 {
-    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule, Messanging, Books
+    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule, Messanging, Books, Documents
     {
         public string Name => "EcoleDirecte";
 
@@ -67,7 +67,9 @@ namespace Integrations
                     { "NOTES", new []{ "Marks" } },
                     { "MESSAGERIE", new []{ "Messanging" } },
                     { "EDT", new []{ "Schedule" } },
-                    { "CAHIER_DE_TEXTES", new []{ "Homeworks", "Books" } }
+                    { "CAHIER_DE_TEXTES", new []{ "Homeworks", "Books" } },
+                    { "CLOUD", new[]{ "Documents" } },
+                    { "VIE_DE_LA_CLASSE", new[]{ "Documents" } }
                 };
                 child?.Invoke(new Child
                 {
@@ -77,7 +79,10 @@ namespace Integrations
                         .Where(m => m.Value<bool>("enable") && moduleCores.ContainsKey(m.Value<string>("code")))
                         .SelectMany(m => moduleCores[m.Value<string>("code")]).Append("Periods").ToList(),
                     sprite = picture,
-                    extraData = new Dictionary<string, string> { { "type", type } }
+                    extraData = new Dictionary<string, string> {
+                        { "type", type },
+                        { "edModules", FileFormat.XML.Utils.ClassToXML(profile.SelectToken("modules").Where(m => m.Value<bool>("enable")).Select(m => m.Value<string>("code")).ToList()) }
+                    }
                 });
             }
         }
@@ -422,9 +427,9 @@ namespace Integrations
         public IEnumerator GetBooks(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.books", "Getting school books");
-            var markRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
-            yield return markRequest.SendWebRequest();
-            var result = new FileFormat.JSON(markRequest.downloadHandler.text);
+            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            yield return request.SendWebRequest();
+            var result = new FileFormat.JSON(request.downloadHandler.text);
             if (result.Value<int>("code") != 200)
             {
                 if (result.Value<string>("message") == "Session expirée !")
@@ -473,21 +478,160 @@ namespace Integrations
             IEnumerator GetBook(Request req)
             {
                 Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
-                var request = req.request;
-                yield return request.SendWebRequest();
+                var bookRequest = req.request;
+                yield return bookRequest.SendWebRequest();
                 Manager.HideLoadingPanel();
-                var url = request.url;
+                var url = bookRequest.url;
                 try
                 {
-                    if (request.uri.Host == "api.ecoledirecte.com")
-                        url = request.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, StringSplitOptions.None)[1].Split('"')[0];
+                    if (bookRequest.uri.Host == "api.ecoledirecte.com")
+                        url = bookRequest.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, StringSplitOptions.None)[1].Split('"')[0];
                 }
                 catch
                 {
-                    url = request.url;
-                    Debug.LogError("Unespected content at " + url + "\n\n" + request.downloadHandler.text);
+                    url = bookRequest.url;
+                    Debug.LogError("Unespected content at " + url + "\n\n" + bookRequest.downloadHandler.text);
                 }
                 Application.OpenURL(url);
+            }
+        }
+        public IEnumerator GetDocuments(Action onComplete)
+        {
+            var root = new Folder { id = "root", name = LangueAPI.Get("documents.root", "Root") };
+
+            var type = Manager.Child.extraData["type"];
+            var modules = FileFormat.XML.Utils.XMLtoClass<List<string>>(Manager.Child.extraData["edModules"]);
+
+            if (type == "eleves")
+            {
+                if (modules.Contains("VIE_DE_LA_CLASSE")) //Ressources
+                {
+                    yield return Request($"https://api.ecoledirecte.com/v3/R/189/viedelaclasse.awp?verbe=get&", Result);
+                    IEnumerator Result(JObject result)
+                    {
+                        root.folders.Add(new Folder
+                        {
+                            name = "Ressources",
+                            id = "ressources",
+                            folders = result.SelectToken("data.matieres").Select(m => new Folder
+                            {
+                                id = m.Value<string>("id"),
+                                name = m.Value<string>("libelle"),
+                                documents = m.SelectToken("fichiers").Select(f => new Document
+                                {
+                                    id = m.Value<string>("id"),
+                                    name = f.Value<string>("libelle"),
+                                    size = f.Value<uint>("taille"),
+                                    download = new Request()
+                                    {
+                                        url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
+                                        method = Data.Request.Method.Post,
+                                        docName = f.Value<string>("libelle"),
+                                        postData = () =>
+                                        {
+                                            var form = new WWWForm();
+                                            form.AddField("token", token);
+                                            form.AddField("leTypeDeFichier", f.Value<string>("type"));
+                                            form.AddField("fichierId", f.Value<string>("id"));
+                                            return form;
+                                        }
+                                    }
+                                }).ToList()
+                            }).ToList()
+                        });
+                        yield break;
+                    }
+                }
+
+                if (modules.Contains("CLOUD")) //Cloud
+                {
+                    yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Accounts.selectedAccount.child}.awp?verbe=get&", Result);
+                    IEnumerator Result(JObject result)
+                    {
+                        Folder rootFolder = null;
+                        yield return Analyse(result.SelectToken("data").First, (dir) => rootFolder = dir);
+                        rootFolder.name = "Cloud";
+                        root.folders.Add(rootFolder);
+
+                        IEnumerator Analyse(JToken jToken, Action<Folder> output)
+                        {
+                            if (!jToken.Value<bool>("isLoaded"))
+                            {
+                                var id = jToken.Value<string>("id");
+                                var search = $"\\E\\{Accounts.selectedAccount.child}";
+                                var startIndex = id.IndexOf(search);
+                                var folderID = id.Substring(startIndex == -1 ? 0 : (startIndex + search.Length));
+                                yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Accounts.selectedAccount.child}.awp?verbe=get&idFolder={folderID}", SetJToken);
+                                IEnumerator SetJToken(JObject token) { jToken = token.SelectToken("data").First; yield break; }
+                            }
+
+                            var jFolders = jToken.SelectToken("children")?.Where(c => c.Value<string>("type") == "folder");
+                            List<Folder> folders = new List<Folder>();
+                            foreach (var folder in jFolders) yield return Analyse(folder, (dir) => folders.Add(dir));
+
+                            output(new Folder
+                            {
+                                id = jToken.Value<string>("id"),
+                                name = jToken.Value<string>("libelle"),
+                                folders = folders,
+                                documents = jToken.SelectToken("children").Where(c => c.Value<string>("type") == "file").Select(f => new Document
+                                {
+                                    id = f.Value<string>("id"),
+                                    name = f.Value<string>("libelle"),
+                                    added = f.Value<DateTime>("date"),
+                                    size = f.Value<uint>("taille"),
+                                    download = new Request()
+                                    {
+                                        url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
+                                        method = Data.Request.Method.Post,
+                                        docName = f.Value<string>("libelle"),
+                                        postData = () =>
+                                        {
+                                            var form = new WWWForm();
+                                            form.AddField("token", token);
+                                            form.AddField("leTypeDeFichier", "CLOUD");
+                                            form.AddField("fichierId", f.Value<string>("id"));
+                                            return form;
+                                        }
+                                    }
+                                }).ToList()
+                            });
+                        }
+                    }
+                }
+            }
+            else if (type == "familles" && modules.Contains("DOCUMENTS")) //Documents
+            {
+                yield return Request($"https://api.ecoledirecte.com/v3/familledocuments.awp?verbe=get&", Result);
+                IEnumerator Result(JObject result)
+                {
+                    yield break;
+                }
+            }
+
+            Manager.Child.Documents = root;
+
+            Manager.HideLoadingPanel();
+            onComplete?.Invoke();
+
+
+            IEnumerator Request(string url, Func<JObject, IEnumerator> output)
+            {
+                Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
+                var request = UnityWebRequest.Post(url, $"data={{\"token\": \"{token}\"}}");
+                yield return request.SendWebRequest();
+                var result = new FileFormat.JSON(request.downloadHandler.text);
+                if (result.Value<int>("code") != 200)
+                {
+                    if (result.Value<string>("message") == "Session expirée !")
+                    {
+                        yield return Connect(Accounts.selectedAccount, null, null);
+                        yield return GetBooks(onComplete);
+                    }
+                    else Manager.FatalErrorDuringLoading(result.Value<string>("message"), "Error getting documents, server returned \"" + result.Value<string>("message") + "\"");
+                    yield break;
+                }
+                yield return output(result.jToken);
             }
         }
 

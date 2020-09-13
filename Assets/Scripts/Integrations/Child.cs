@@ -43,6 +43,7 @@ namespace Integrations.Data
         public List<ScheduledEvent> Schedule;
         public List<Message> Messages;
         public List<Book> Books;
+        public Folder Documents;
     }
 
 
@@ -155,6 +156,22 @@ namespace Integrations.Data
         public string editor;
         public Sprite cover;
         [XmlIgnore] public IEnumerator url;
+    }
+
+    public class Folder
+    {
+        public string id;
+        public string name;
+        public List<Folder> folders = new List<Folder>();
+        public List<Document> documents = new List<Document>();
+    }
+    public class Document
+    {
+        public string id;
+        public string name;
+        public DateTime? added;
+        public uint? size;
+        [XmlIgnore] public Request download;
     }
     #endregion
 

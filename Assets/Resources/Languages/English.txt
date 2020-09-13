@@ -11,6 +11,7 @@ menu.marks = Marks
 menu.homeworks = Text book
 menu.messanging = Messanging
 menu.books = School books
+menu.documents = Documents
 menu.changeAccount = Change account
 menu.logout = Logout
 
@@ -57,6 +58,9 @@ messanging.empty = No message
 
 books = School books
 
+documents = Documents
+documents.root = Root
+
 provider.connecting = Establishing the connection with [0]
 provider.homeworks = Getting homeworks
 provider.marks = Getting marks
@@ -66,6 +70,7 @@ provider.messages = Getting messages
 provider.messages.content = Getting message content
 provider.books = Getting school books
 provider.books.opening = School book being opened
+provider.documents = Getting documents
 
 updateWarn = An update is available. Would you like to install it ?
 updateWarn.yes = Yes
