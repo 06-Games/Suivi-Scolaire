@@ -87,17 +87,18 @@ namespace Modules
 
             var schedule = Content.Find("Schedule");
             schedule.gameObject.SetActive(false);
-            if (Manager.Child.Schedule?.Count > 0)
+            var events = Manager.Child.Schedule?.Where(e => e.start.Day == now.Day).OrderBy(e => e.start).ToList();
+            if (events?.Count > 0)
             {
                 schedule.Find("Bar").gameObject.SetActive(true);
                 for (int i = 0; i < 2; i++)
                 {
                     var go = schedule.Find(i == 0 ? "Currently" : "Next");
-                    var E = i == 0 ? Manager.Child.Schedule.FirstOrDefault(e => e.start <= now && e.end >= now) : Manager.Child.Schedule.FirstOrDefault(e => e.start > now);
-                    if (E == null || E.start.Day != now.Day) { go.gameObject.SetActive(false); schedule.Find("Bar").gameObject.SetActive(false); continue; }
+                    var E = i == 0 ? events.FirstOrDefault(e => e.start <= now && e.end >= now) : events.FirstOrDefault(e => e.start > now);
+                    if (E == null) { go.gameObject.SetActive(false); schedule.Find("Bar").gameObject.SetActive(false); continue; }
                     else schedule.gameObject.SetActive(true);
                     go.Find("Subject").GetComponent<Text>().text = E.subject.name;
-                    go.Find("Teacher").GetComponent<Text>().text = string.Join(", ", E.subject.teachers ?? Array.Empty<string>());
+                    go.Find("Teacher").GetComponent<Text>().text = E.teacher;
                     go.Find("Room").GetComponent<Text>().text = E.room;
                     go.Find("Hours").GetComponent<Text>().text = $"{E.start.ToString("HH:mm")} - {E.end.ToString("HH:mm")}";
                     go.gameObject.SetActive(true);
