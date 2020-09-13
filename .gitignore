@@ -11,3 +11,4 @@ obj/
 Temp/
 put
 *.log
+Assets/screen.cs*
