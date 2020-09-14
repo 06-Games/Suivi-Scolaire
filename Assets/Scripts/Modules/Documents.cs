@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class Documents : MonoBehaviour
 {
     Folder CurentFolder;
-    List<Folder> Path = new List<Folder>();
+    List<Folder> Path;
 
     public void OnEnable()
     {
@@ -24,6 +24,9 @@ public class Documents : MonoBehaviour
 
         void refresh()
         {
+            CurentFolder = null;
+            Path = new List<Folder>();
+
             Path.Add(Manager.Child.Documents);
             Refresh(Manager.Child.Documents);
         }
@@ -54,7 +57,7 @@ public class Documents : MonoBehaviour
         {
             var go = Instantiate(content.GetChild(1).gameObject, content).transform;
             go.name = go.Find("Name").GetComponent<Text>().text = file.name;
-            go.Find("Infos").GetComponent<Text>().text = $"{file.added?.ToShortDateString()} - {file.size?.ToString() ?? "?"} B";
+            go.Find("Infos").GetComponent<Text>().text = file.added?.ToShortDateString() + (file.added.HasValue && file.size.HasValue ? " - " : "") + (file.size.HasValue ? $"{file.size?.ToString()} B" : "");
             go.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(file.download.GetDoc()));
             go.gameObject.SetActive(true);
         }
