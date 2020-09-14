@@ -605,6 +605,33 @@ namespace Integrations
                 yield return Request($"https://api.ecoledirecte.com/v3/familledocuments.awp?verbe=get&", Result);
                 IEnumerator Result(JObject result)
                 {
+                    root.folders = result.Value<JObject>("data").Properties().Select(f => new Folder
+                    {
+                        id = f.Name,
+                        name = f.Name,
+                        documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d => {
+                            return new Document
+                            {
+                                id = d.Value<string>("id"),
+                                name = d.Value<string>("libelle"),
+                                added = d.Value<DateTime>("date"),
+                                download = new Request()
+                                {
+                                    url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
+                                    method = Data.Request.Method.Post,
+                                    docName = d.Value<string>("libelle") + ".pdf",
+                                    postData = () =>
+                                    {
+                                        var form = new WWWForm();
+                                        form.AddField("token", token);
+                                        form.AddField("leTypeDeFichier", d.Value<string>("type"));
+                                        form.AddField("fichierId", d.Value<string>("id"));
+                                        return form;
+                                    }
+                                }
+                            };
+                        }).ToList()
+                    }).ToList();
                     yield break;
                 }
             }

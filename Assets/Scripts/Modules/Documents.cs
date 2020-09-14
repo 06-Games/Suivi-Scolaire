@@ -30,8 +30,6 @@ public class Documents : MonoBehaviour
     }
     void Refresh(Folder parentFolder)
     {
-        Debug.Log(string.Join(" / ", Path.Select(p => p.name)));
-
         var parentBtn = transform.Find("Top").Find("Parent").GetComponent<Button>();
         parentBtn.onClick.RemoveAllListeners();
         parentBtn.gameObject.SetActive(Path.Count > 1);
