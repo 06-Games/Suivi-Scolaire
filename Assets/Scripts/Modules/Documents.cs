@@ -15,6 +15,11 @@ public class Documents : MonoBehaviour
         if (!Manager.isReady) { gameObject.SetActive(false); return; }
         Initialise();
     }
+    public void Reset()
+    {
+        CurentFolder = null;
+        Path = new List<Folder>();
+    }
 
     public void Initialise()
     {
@@ -24,9 +29,7 @@ public class Documents : MonoBehaviour
 
         void refresh()
         {
-            CurentFolder = null;
-            Path = new List<Folder>();
-
+            Reset();
             Path.Add(Manager.Child.Documents);
             Refresh(Manager.Child.Documents);
         }
