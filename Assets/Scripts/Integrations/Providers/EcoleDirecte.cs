@@ -377,7 +377,7 @@ namespace Integrations
                         type = m.Value<string>("mtype") == "send" ? Message.Type.sent : Message.Type.received
                     };
                 });
-            }).ToList();
+            }).OrderByDescending(m => m.date).ToList();
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
