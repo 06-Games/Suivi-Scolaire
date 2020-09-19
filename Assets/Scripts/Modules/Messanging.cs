@@ -34,7 +34,7 @@ namespace Modules
             foreach (var message in Manager.Child.Messages)
             {
                 var go = Instantiate(lContent.GetChild(0).gameObject, lContent).transform;
-                go.Find("Button").GetComponent<Button>().onClick.AddListener(() => OpenMsg(message));
+                go.GetComponent<Button>().onClick.AddListener(() => OpenMsg(message));
                 go.gameObject.name = message.id.ToString();
                 var indicator = go.Find("Indicator").GetComponent<Image>();
                 if (!message.read) indicator.color = new Color32(135, 135, 135, 255);

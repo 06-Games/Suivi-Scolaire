@@ -19,7 +19,7 @@ public class Books : MonoBehaviour
     }
     void Refresh()
     {
-        var content = transform.Find("Content");
+        var content = transform.Find("Content").GetComponent<ScrollRect>().content;
         for (int i = 1; i < content.childCount; i++) Destroy(content.GetChild(i).gameObject);
 
         foreach (var book in Manager.Child.Books)

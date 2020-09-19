@@ -609,7 +609,8 @@ namespace Integrations
                     {
                         id = f.Name,
                         name = f.Name,
-                        documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d => {
+                        documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d =>
+                        {
                             return new Document
                             {
                                 id = d.Value<string>("id"),
