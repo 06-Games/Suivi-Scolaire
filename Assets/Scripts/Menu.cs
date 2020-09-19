@@ -26,7 +26,7 @@ public class Menu : MonoBehaviour
     public void UpdateModules()
     {
         if (!Manager.isReady) return;
-        var modulePanel = transform.Find("Panel").Find("Modules");
+        var modulePanel = transform.Find("Panel").Find("Modules").GetComponent<UnityEngine.UI.ScrollRect>().content;
         var modules = Manager.Child.modules;
         foreach (Transform module in modulePanel) module.gameObject.SetActive(module.name == "Home" | modules?.Contains(module.name) ?? false);
     }

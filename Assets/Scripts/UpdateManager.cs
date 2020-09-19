@@ -10,7 +10,7 @@ public class UpdateManager : MonoBehaviour
 {
     private void Awake()
     {
-#if !UNITY_EDITOR && !UNITY_STANDALONE
+#if UNITY_EDITOR || !UNITY_STANDALONE
         gameObject.SetActive(false);
 #endif
         for (int i = 1; i < transform.childCount; i++) transform.GetChild(i).gameObject.SetActive(false);

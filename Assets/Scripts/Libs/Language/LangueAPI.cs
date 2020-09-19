@@ -44,15 +44,17 @@ public class LangueAPI
     }
 
     static Dictionary<string, string> data;
+    public static void ReloadData() { data = null; Load(); }
     public static Dictionary<string, string> Load()
     {
         if (data != null) return data;
 
+        var language = UnityEngine.PlayerPrefs.GetString("settings.language", UnityEngine.Application.systemLanguage.ToString());
         var dic = new Dictionary<string, string>();
-        Logging.Log($"User language is {UnityEngine.Application.systemLanguage.ToString()}");
+        Logging.Log($"User language is {language}");
         for (int i = 0; i < 2; i++)
         {
-            var doc = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Languages/" + (i == 0 ? UnityEngine.Application.systemLanguage.ToString() : "English"));
+            var doc = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Languages/" + (i == 0 ? language : "English"));
             if (doc == null) continue;
             foreach (var line in doc.text.Split('\n'))
             {

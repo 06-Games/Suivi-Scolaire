@@ -76,3 +76,8 @@ updateWarn = Une mise à jour est disponible. Souhaitez-vous l'installer?
 updateWarn.yes = Oui
 updateWarn.no = Non
 updateWarn.downloading = Téléchargement de la mise à jour...
+
+settings = Paramètres
+settings.language = Langue
+settings.size = Taille de l'interface
+settings.infos = [0] (v[1])\nBuild: [2] ([3])
