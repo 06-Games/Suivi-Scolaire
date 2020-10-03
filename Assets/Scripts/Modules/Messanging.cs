@@ -59,24 +59,26 @@ namespace Modules
             void SetData()
             {
                 var detail = content.Find("Detail");
-                detail.gameObject.SetActive(true);
 
                 var top = detail.Find("Top");
-                var info = top.Find("Infos");
-                info.Find("Subject").GetComponent<Text>().text = message.subject;
-                info.Find("Correspondents").GetComponent<Text>().text = string.Join(" / ", message.correspondents);
-                info.Find("Date").GetComponent<Text>().text = message.date.ToString("dd/MM/yyyy HH:mm");
-                detail.Find("Content").GetComponent<ScrollRect>().content.GetComponent<TMPro.TextMeshProUGUI>().text = message.content;
+                top.Find("Subject").GetComponent<Text>().text = message.subject;
+                top.Find("Correspondents").GetComponent<Text>().text = string.Join(" / ", message.correspondents);
+                top.Find("Date").GetComponent<Text>().text = message.date.ToString("dd/MM/yyyy HH:mm");
 
-                var docs = top.Find("Docs");
-                for (int i = 1; i < docs.childCount; i++) Destroy(docs.GetChild(i).gameObject);
+                var contentPanel = detail.Find("Content").GetComponent<ScrollRect>().content;
+                contentPanel.Find("Message Content").GetComponent<TMPro.TMP_InputField>().text = message.content;
+                var docs = contentPanel.Find("Docs");
+                for (int i = 2; i < docs.childCount; i++) Destroy(docs.GetChild(i).gameObject);
                 foreach (var doc in message.documents)
                 {
-                    var docGo = Instantiate(docs.GetChild(0).gameObject, docs).transform;
-                    docGo.GetComponent<Text>().text = $"• {doc.docName}";
+                    var docGo = Instantiate(docs.GetChild(1).gameObject, docs).transform;
+                    docGo.GetComponent<TMPro.TextMeshProUGUI>().text = System.IO.Path.GetFileNameWithoutExtension(doc.docName);
                     docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(doc.GetDoc()));
                     docGo.gameObject.SetActive(true);
                 }
+                docs.gameObject.SetActive(docs.childCount > 2);
+
+                detail.gameObject.SetActive(true);
             }
         }
     }

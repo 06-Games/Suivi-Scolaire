@@ -107,8 +107,9 @@ namespace Modules
                         docGo.gameObject.SetActive(true);
                     }
 
-                    go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().text = homework.content;
-                    if (homework.exam) go.Find("Content").GetComponent<TMPro.TextMeshProUGUI>().color = new Color32(245, 110, 110, 255);
+                    var content = go.Find("Content").GetComponent<TMPro.TMP_InputField>();
+                    content.text = homework.content;
+                    if (homework.exam) content.textComponent.color = new Color32(245, 110, 110, 255);
                     go.gameObject.SetActive(true);
                 }
                 panel.gameObject.SetActive(false);

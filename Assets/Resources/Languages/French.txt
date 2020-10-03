@@ -55,6 +55,7 @@ homeworks.downloading = Téléchargement: [0]%
 
 messanging = Messagerie
 messanging.empty = Aucun message
+messanging.documents = Documents
 
 books = Manuels scolaires
 
