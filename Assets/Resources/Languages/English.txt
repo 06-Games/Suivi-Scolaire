@@ -45,6 +45,7 @@ marks.absent = Abs
 marks.coef = coef [0]
 marks.average = My average: [0]
 marks.overallAverage = My overall average: [0]
+marks.overallClassAverage = Overall class average: [0]
 
 homeworks = My text book
 homeworks.empty = No homework

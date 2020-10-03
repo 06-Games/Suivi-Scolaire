@@ -43,13 +43,13 @@ public class LangueAPI
         else return str;
     }
 
+    public static string language => UnityEngine.PlayerPrefs.GetString("settings.language", UnityEngine.Application.systemLanguage.ToString());
     static Dictionary<string, string> data;
     public static void ReloadData() { data = null; Load(); }
     public static Dictionary<string, string> Load()
     {
         if (data != null) return data;
 
-        var language = UnityEngine.PlayerPrefs.GetString("settings.language", UnityEngine.Application.systemLanguage.ToString());
         var dic = new Dictionary<string, string>();
         Logging.Log($"User language is {language}");
         for (int i = 0; i < 2; i++)

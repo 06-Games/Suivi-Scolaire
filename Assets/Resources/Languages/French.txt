@@ -45,6 +45,7 @@ marks.absent = Abs
 marks.coef = coef [0]
 marks.average = Ma moyenne: [0]
 marks.overallAverage = Ma moyenne générale: [0]
+marks.overallClassAverage = Moyenne générale de la classe: [0]
 
 homeworks = Mon cahier de texte
 homeworks.empty = Pas de devoirs

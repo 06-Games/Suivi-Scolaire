@@ -82,7 +82,7 @@ namespace Modules
             transform.Find("Content").Find("Empty").gameObject.SetActive(!homeworks.Any());
             if (!homeworks.Any()) return;
 
-            var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
+            var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(LangueAPI.language));
             foreach (var Homeworks in homeworks.GroupBy(h => h.forThe))
             {
                 var datePanel = Instantiate(Content.GetChild(0).gameObject, Content).transform;

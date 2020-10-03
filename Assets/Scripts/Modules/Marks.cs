@@ -116,7 +116,7 @@ namespace Modules
             var bottom = transform.Find("Bottom");
             bottom.Find("Average").GetComponent<Text>().text = coef.Values.Sum() > 0 ? LangueAPI.Get(selectedSubject == null ? "marks.overallAverage" : "marks.average", selectedSubject == null ? "My overall average: [0]" : "My average: [0]", $"{(marksByS.Keys.Sum(s => (average[s] ?? 0) * coef[s]) / coef.Values.Sum()).ToString("0.##")}<size=12>/20</size>") : "";
             var _classAverage = marksByS.Keys.Sum(s => (classAverage[s] ?? 0) * s.coef) / coef.Values.Sum();
-            bottom.Find("Class Average").GetComponent<Text>().text = coef.Values.Sum() > 0 && _classAverage > 0 ? $"Moyenne générale de la classe: {_classAverage.ToString("0.##")}<size=12>/20</size>" : "";
+            bottom.Find("Class Average").GetComponent<Text>().text = coef.Values.Sum() > 0 && _classAverage > 0 ? LangueAPI.Get("marks.overallClassAverage", "Overall class average: [0]", $"{_classAverage.ToString("0.##")}<size=12>/20</size>") : "";
         }
     }
 }
