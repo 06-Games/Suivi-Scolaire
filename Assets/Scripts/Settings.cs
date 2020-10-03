@@ -15,7 +15,7 @@ public class Settings : MonoBehaviour
 
         var size = Content.Find("Size").GetComponentInChildren<Slider>();
         size.value = PlayerPrefs.GetInt("settings.size", 300 / Screen.dpi < 300 ? 2 : 3);
-        if (!Content.gameObject.activeInHierarchy) SizeChanged(size);
+        if (!Content.gameObject.activeInHierarchy) ChangeSize(size);
 
         Content.Find("App Infos").GetComponent<Text>().text = LangueAPI.Get(
             "settings.infos", "[0] (v[1])\nBuild: [2] ([3])",
@@ -41,17 +41,19 @@ public class Settings : MonoBehaviour
         {
             var value = slider.value;
             yield return new WaitForSeconds(0.1F);
-            if (value != slider.value) yield break;
+            if (value == slider.value) ChangeSize(slider);
+        }
+    }
+    void ChangeSize(Slider slider)
+    {
+        slider.handleRect.GetComponentInChildren<Text>().text = slider.value.ToString();
+        PlayerPrefs.SetInt("settings.size", (int)slider.value);
 
-            slider.handleRect.GetComponentInChildren<Text>().text = slider.value.ToString();
-            PlayerPrefs.SetInt("settings.size", (int)slider.value);
-
-            var factor = 1.6F - 0.3F * (slider.value - 1);
-            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
-            {
-                var component = root.GetComponent<CanvasScaler>();
-                if (component != null) component.referenceResolution = refResolution * factor;
-            }
+        var factor = 1.6F - 0.3F * (slider.value - 1);
+        foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+        {
+            var component = root.GetComponent<CanvasScaler>();
+            if (component != null) component.referenceResolution = refResolution * factor;
         }
     }
 }
