@@ -22,6 +22,10 @@ public class Settings : MonoBehaviour
             Application.productName, Application.version, //First line
             string.IsNullOrEmpty(Application.buildGUID) ? "<i>Editor</i>" : Application.buildGUID, Application.unityVersion //Second line
         );
+
+#if !UNITY_STANDALONE || !UNITY_EDITOR
+        Content.Find("Logs").gameObject.SetActive(false);
+#endif
     }
 
     public void LanguageChanged(string language)
@@ -56,4 +60,6 @@ public class Settings : MonoBehaviour
             if (component != null) component.referenceResolution = refResolution * factor;
         }
     }
+
+    public void OpenLogs() => Application.OpenURL("file://" + Application.persistentDataPath + "/logs/");
 }
