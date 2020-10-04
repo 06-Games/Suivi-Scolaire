@@ -499,6 +499,7 @@ namespace Integrations
         }
         public IEnumerator GetDocuments(Action onComplete)
         {
+            Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
             var root = new Folder { id = "root", name = LangueAPI.Get("documents.root", "Root") };
 
             var type = Manager.Child.extraData["type"];
@@ -659,7 +660,6 @@ namespace Integrations
 
             IEnumerator Request(string url, Func<JObject, IEnumerator> output)
             {
-                Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
                 var request = UnityWebRequest.Post(url, $"data={{\"token\": \"{token}\"}}");
                 yield return request.SendWebRequest();
                 var result = new FileFormat.JSON(request.downloadHandler.text);
