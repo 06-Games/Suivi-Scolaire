@@ -6,6 +6,7 @@
         public string Label;
         public string Provider;
         public System.DateTime CreationDate;
+        public System.DateTime LastLogin;
 
         public Child[] Children;
     }

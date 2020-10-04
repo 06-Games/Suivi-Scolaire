@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,15 +19,20 @@ public class Settings : MonoBehaviour
         size.value = PlayerPrefs.GetInt("settings.size", 300 / Screen.dpi < 300 ? 2 : 3);
         if (!Content.gameObject.activeInHierarchy) ChangeSize(size);
 
+        var logs = Content.Find("Logs").Find("List");
+#if !UNITY_STANDALONE || !UNITY_EDITOR
+        logs.Find("Open").gameObject.SetActive(false);
+#endif
+        var logsSize = new DirectoryInfo(Application.persistentDataPath + "/logs/").EnumerateFiles().Sum(file => file.Length) / 1000F;
+        logs.Find("Delete").GetChild(0).GetComponent<Text>().text = LangueAPI.Get("settings.logs.delete", "Delete logs ([0] KB)",
+            logsSize.ToString(logsSize < 10 ? "0.#" : "0") //Dir size
+        );
+
         Content.Find("App Infos").GetComponent<Text>().text = LangueAPI.Get(
             "settings.infos", "[0] (v[1])\nBuild: [2] ([3])",
             Application.productName, Application.version, //First line
             string.IsNullOrEmpty(Application.buildGUID) ? "<i>Editor</i>" : Application.buildGUID, Application.unityVersion //Second line
         );
-
-#if !UNITY_STANDALONE || !UNITY_EDITOR
-        Content.Find("Logs").gameObject.SetActive(false);
-#endif
     }
 
     public void LanguageChanged(string language)
@@ -62,4 +69,11 @@ public class Settings : MonoBehaviour
     }
 
     public void OpenLogs() => Application.OpenURL("file://" + Application.persistentDataPath + "/logs/");
+    public void DeleteLogs()
+    {
+        var toDelete = new DirectoryInfo(Application.persistentDataPath + "/logs/").EnumerateFiles().OrderByDescending(f => f.CreationTime).Skip(1).ToList();
+        foreach (var file in toDelete) file.Delete();
+        Logging.Log($"Deleted {toDelete.Count} log files");
+        Refresh();
+    }
 }
