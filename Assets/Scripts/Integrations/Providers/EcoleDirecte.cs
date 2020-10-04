@@ -69,7 +69,9 @@ namespace Integrations
                     { "EDT", new []{ "Schedule" } },
                     { "CAHIER_DE_TEXTES", new []{ "Homeworks", "Books" } },
                     { "CLOUD", new[]{ "Documents" } },
-                    { "VIE_DE_LA_CLASSE", new[]{ "Documents" } }
+                    { "VIE_DE_LA_CLASSE", new[]{ "Documents" } },
+                    { "DOCUMENTS_ELEVE", new[]{ "Documents" } },
+                    { "DOCUMENTS", new[]{ "Documents" } }
                 };
                 child?.Invoke(new Child
                 {
@@ -455,7 +457,7 @@ namespace Integrations
                     subjectsID = obj.Value<JArray>("disciplines").Select(s => s.Value<string>()).ToArray(),
                     name = obj.Value<string>("libelle"),
                     editor = obj.Value<string>("editeur"),
-                    url = GetBook(new Request()
+                    url = GetBook(new Request
                     {
                         url = obj.Value<string>("url"),
                         method = Request.Method.Post,
@@ -507,13 +509,13 @@ namespace Integrations
                 if (modules.Contains("VIE_DE_LA_CLASSE")) //Ressources
                 {
                     yield return Request($"https://api.ecoledirecte.com/v3/R/189/viedelaclasse.awp?verbe=get&", Result);
-                    IEnumerator Result(JObject result)
+                    IEnumerator Result(JObject response)
                     {
                         root.folders.Add(new Folder
                         {
                             name = "Ressources",
                             id = "ressources",
-                            folders = result.SelectToken("data.matieres").Select(m => new Folder
+                            folders = response.SelectToken("data.matieres").Select(m => new Folder
                             {
                                 id = m.Value<string>("id"),
                                 name = m.Value<string>("libelle"),
@@ -522,7 +524,7 @@ namespace Integrations
                                     id = m.Value<string>("id"),
                                     name = f.Value<string>("libelle"),
                                     size = f.Value<uint>("taille"),
-                                    download = new Request()
+                                    download = new Request
                                     {
                                         url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
                                         method = Data.Request.Method.Post,
@@ -546,10 +548,10 @@ namespace Integrations
                 if (modules.Contains("CLOUD")) //Cloud
                 {
                     yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Accounts.selectedAccount.child}.awp?verbe=get&", Result);
-                    IEnumerator Result(JObject result)
+                    IEnumerator Result(JObject response)
                     {
                         Folder rootFolder = null;
-                        yield return Analyse(result.SelectToken("data").First, (dir) => rootFolder = dir);
+                        yield return Analyse(response.SelectToken("data").First, (dir) => rootFolder = dir);
                         rootFolder.name = "Cloud";
                         root.folders.Add(rootFolder);
 
@@ -580,7 +582,7 @@ namespace Integrations
                                     name = f.Value<string>("libelle"),
                                     added = f.Value<DateTime>("date"),
                                     size = f.Value<uint>("taille"),
-                                    download = new Request()
+                                    download = new Request
                                     {
                                         url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
                                         method = Data.Request.Method.Post,
@@ -599,42 +601,54 @@ namespace Integrations
                         }
                     }
                 }
+
+                if (modules.Contains("DOCUMENTS_ELEVE"))
+                {
+                    yield return Request($"https://api.ecoledirecte.com/v3/elevesDocuments.awp?verbe=get&", Result);
+                    IEnumerator Result(JObject response) => Docs(response, (folder) => root.folders.Add(new Folder
+                    {
+                        name = "Documents",
+                        id = "documents",
+                        folders = folder
+                    }));
+                }
             }
             else if (type == "familles" && modules.Contains("DOCUMENTS")) //Documents
             {
                 yield return Request($"https://api.ecoledirecte.com/v3/familledocuments.awp?verbe=get&", Result);
-                IEnumerator Result(JObject result)
+                IEnumerator Result(JObject response) => Docs(response, (folder) => root.folders = folder);
+            }
+            IEnumerator Docs(JObject result, Action<List<Folder>> callback)
+            {
+                callback(result.Value<JObject>("data").Properties().Select(f => new Folder
                 {
-                    root.folders = result.Value<JObject>("data").Properties().Select(f => new Folder
+                    id = f.Name,
+                    name = f.Name,
+                    documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d =>
                     {
-                        id = f.Name,
-                        name = f.Name,
-                        documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d =>
+                        return new Document
                         {
-                            return new Document
+                            id = d.Value<string>("id"),
+                            name = d.Value<string>("libelle"),
+                            added = d.Value<DateTime>("date"),
+                            download = new Request
                             {
-                                id = d.Value<string>("id"),
-                                name = d.Value<string>("libelle"),
-                                added = d.Value<DateTime>("date"),
-                                download = new Request()
+                                url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
+                                method = Data.Request.Method.Post,
+                                docName = d.Value<string>("libelle") + ".pdf",
+                                postData = () =>
                                 {
-                                    url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                                    method = Data.Request.Method.Post,
-                                    docName = d.Value<string>("libelle") + ".pdf",
-                                    postData = () =>
-                                    {
-                                        var form = new WWWForm();
-                                        form.AddField("token", token);
-                                        form.AddField("leTypeDeFichier", d.Value<string>("type"));
-                                        form.AddField("fichierId", d.Value<string>("id"));
-                                        return form;
-                                    }
+                                    var form = new WWWForm();
+                                    form.AddField("token", token);
+                                    form.AddField("leTypeDeFichier", d.Value<string>("type"));
+                                    form.AddField("fichierId", d.Value<string>("id"));
+                                    return form;
                                 }
-                            };
-                        }).ToList()
-                    }).ToList();
-                    yield break;
-                }
+                            }
+                        };
+                    }).ToList()
+                }).ToList());
+                yield break;
             }
 
             Manager.Child.Documents = root;

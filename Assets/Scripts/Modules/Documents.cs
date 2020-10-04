@@ -7,7 +7,6 @@ using UnityEngine.UI;
 
 public class Documents : MonoBehaviour
 {
-    Folder CurentFolder;
     List<Folder> Path;
 
     public void OnEnable()
@@ -15,11 +14,7 @@ public class Documents : MonoBehaviour
         if (!Manager.isReady) { gameObject.SetActive(false); return; }
         Initialise();
     }
-    public void Reset()
-    {
-        CurentFolder = null;
-        Path = new List<Folder>();
-    }
+    public void Reset() => Path = new List<Folder>();
 
     public void Initialise()
     {
@@ -44,7 +39,7 @@ public class Documents : MonoBehaviour
             Path.Remove(Path.Last());
             Refresh(Path.Last());
         });
-        CurentFolder = parentFolder;
+        var CurentFolder = parentFolder;
 
         var content = transform.Find("Content").GetComponent<ScrollRect>().content;
         for (int i = 2; i < content.childCount; i++) Destroy(content.GetChild(i).gameObject);
