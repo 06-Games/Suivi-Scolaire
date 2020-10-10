@@ -3,20 +3,21 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Books : MonoBehaviour
+public class Books : MonoBehaviour, Module
 {
+    public void Reset() { /* There is nothing to reset */ }
     public void OnEnable()
     {
-        if (!Manager.isReady) { gameObject.SetActive(false); return; }
-        Initialise();
+        if (!Manager.isReady) gameObject.SetActive(false);
+        else if (Manager.Child.Books?.Count > 0) Refresh();
+        else Reload();
     }
-
-    public void Initialise()
+    public void Reload()
     {
         if (!Manager.provider.TryGetModule(out Integrations.Books module)) gameObject.SetActive(false);
-        else if (Manager.Child.Books == null) StartCoroutine(module.GetBooks(() => Refresh()));
-        else Refresh();
+        else StartCoroutine(module.GetBooks(() => Refresh()));
     }
+
     void Refresh()
     {
         var content = transform.Find("Content").GetComponent<ScrollRect>().content;

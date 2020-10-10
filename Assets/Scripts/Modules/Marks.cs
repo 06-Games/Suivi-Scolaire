@@ -10,6 +10,11 @@ namespace Modules
     public class Marks : MonoBehaviour, Module
     {
         public void Reset() { /* There is nothing to reset */ }
+        public void Reload()
+        {
+            //To do
+            Refresh();
+        }
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }

@@ -21,6 +21,10 @@ namespace Modules
             periodsMethod = null;
             periodIndex = 0;
         }
+        public void Reload()
+        {
+            //To do
+        }
 
         public void OnEnable()
         {

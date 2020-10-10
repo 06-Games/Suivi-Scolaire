@@ -8,23 +8,23 @@ using UnityEngine;
 
 namespace Integrations.Data
 {
+
     public class Child
     {
+        internal static string GetImage(Sprite sprite) => sprite == null ? null : Convert.ToBase64String(sprite.texture.EncodeToPNG());
+        internal static Sprite SetImage(string value)
+        {
+            if (value == null) return null;
+            var tex = new Texture2D(1, 1);
+            tex.LoadImage(Convert.FromBase64String(value));
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(.5f, .5f));
+        }
+
         //General informations
         public string id;
         public string name;
         [XmlIgnore] public Sprite sprite;
-        public string image
-        {
-            get => sprite == null ? null : Convert.ToBase64String(sprite.texture.EncodeToPNG());
-            set
-            {
-                if (value == null) return;
-                var tex = new Texture2D(1, 1);
-                tex.LoadImage(Convert.FromBase64String(value));
-                sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(.5f, .5f));
-            }
-        }
+        public string image { get => GetImage(sprite); set => sprite = SetImage(value); }
         public List<string> modules;
         [XmlIgnore] public Dictionary<string, string> extraData;
         public List<SerializableKeyValue<string, string>> extraDatas
@@ -154,7 +154,8 @@ namespace Integrations.Data
 
         public string name;
         public string editor;
-        public Sprite cover;
+        [XmlIgnore] public Sprite cover;
+        public string image { get => Child.GetImage(cover); set => cover = Child.SetImage(value); }
         [XmlIgnore] public IEnumerator url;
     }
 

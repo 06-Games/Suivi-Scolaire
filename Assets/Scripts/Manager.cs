@@ -43,7 +43,7 @@ public class Manager : MonoBehaviour
     }
     public static void SaveData()
     {
-        if (!isReady) return;
+        if (!isReady || Data == null) return;
         System.IO.File.WriteAllText(dataFile.FullName, FileFormat.XML.Utils.ClassToXML(Data, false));
         Logging.Log("Data saved");
     }
@@ -58,7 +58,7 @@ public class Manager : MonoBehaviour
             provider = Provider;
             Menu.sideMenu.handle.SetActive(true);
             Accounts.SelectChild();
-            //LoadData();
+            LoadData();
             OpenModule(Home.gameObject);
         };
         Menu.sideMenu.handle.SetActive(false);
@@ -112,4 +112,4 @@ public class Manager : MonoBehaviour
     public static void HideLoadingPanel() => instance.Loading.SetActive(false);
 }
 
-public interface Module { void OnEnable(); void Reset(); }
+public interface Module { void OnEnable(); void Reset(); void Reload(); }

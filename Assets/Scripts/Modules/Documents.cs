@@ -5,30 +5,29 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Documents : MonoBehaviour
+public class Documents : MonoBehaviour, Module
 {
     List<Folder> Path;
 
+    public void Reset() => Path = new List<Folder>();
     public void OnEnable()
     {
         if (!Manager.isReady) { gameObject.SetActive(false); return; }
-        Initialise();
+        else if (Manager.Child.Documents == null) Reload();
+        else Load();
     }
-    public void Reset() => Path = new List<Folder>();
-
-    public void Initialise()
+    public void Reload()
     {
         if (!Manager.provider.TryGetModule(out Integrations.Documents module)) gameObject.SetActive(false);
-        else if (Manager.Child.Documents == null) StartCoroutine(module.GetDocuments(() => refresh()));
-        else refresh();
-
-        void refresh()
-        {
-            Reset();
-            Path.Add(Manager.Child.Documents);
-            Refresh(Manager.Child.Documents);
-        }
+        else StartCoroutine(module.GetDocuments(() => Load()));
     }
+    void Load()
+    {
+        Reset();
+        Path.Add(Manager.Child.Documents);
+        Refresh(Manager.Child.Documents);
+    }
+
     void Refresh(Folder parentFolder)
     {
         var parentBtn = transform.Find("Top").Find("Parent").GetComponent<Button>();

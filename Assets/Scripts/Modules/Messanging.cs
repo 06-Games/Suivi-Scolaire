@@ -8,14 +8,14 @@ namespace Modules
     public class Messanging : MonoBehaviour, Module
     {
         Integrations.Messanging module;
-        public void Reset() { module = null; }
+        public void Reset() => module = null;
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out module)) { gameObject.SetActive(false); return; }
-            if (Manager.Child.Messages == null || Manager.Child.Messages.Count == 0) StartCoroutine(module.GetMessages(() => Refresh()));
-            else Refresh();
-            Manager.OpenModule(gameObject);
+            if (Manager.Child.Messages?.Count > 0) Refresh();
+            else Reload();
         }
+        public void Reload() => StartCoroutine(module.GetMessages(() => Refresh()));
 
         public void Refresh()
         {

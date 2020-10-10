@@ -502,8 +502,8 @@ namespace Integrations
             Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
             var root = new Folder { id = "root", name = LangueAPI.Get("documents.root", "Root") };
 
-            var type = Manager.Child.extraData["type"];
-            var modules = FileFormat.XML.Utils.XMLtoClass<List<string>>(Manager.Child.extraData["edModules"]);
+            Manager.Child.extraData.TryGetValue("type", out var type);
+            var modules = FileFormat.XML.Utils.XMLtoClass<List<string>>(Manager.Child.extraData.TryGetValue("edModules", out var module) ? module : "");
 
             if (type == "eleves")
             {

@@ -12,6 +12,10 @@ namespace Modules
         public Sprite[] periodSprites;
 
         public void Reset() { /* There is nothing to reset */ }
+        public void Reload() {
+            //To do
+            Refresh();
+        }
         public void OnEnable()
         {
             StartCoroutine(enumerator());

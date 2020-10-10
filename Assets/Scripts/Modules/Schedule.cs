@@ -18,6 +18,10 @@ namespace Modules
         Action<TimeRange, List<ScheduledEvent>> defaultAction;
         static DateTime periodStart { get; set; } = DateTime.Now;
         public void Reset() => periodStart = DateTime.Now;
+        public void Reload()
+        {
+            //To do
+        }
 
         void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
         void Awake()
