@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class PullDownToRefresh : MonoBehaviour, IEndDragHandler, IDragHandler
 {
     //Parameters
-    [Range(-300, 0)] float PullPower = 150; //Minimum y position to call the event
-    float MinYPos = 50; //Minimum y position for indicator display
+    [Range(0, 300)] float PullPower = 150; //Minimum y position to call the event
+    [Range(0, 300)] float MinYPos = 50; //Minimum y position for indicator display
     public UnityEngine.Events.UnityEvent Pulled;
 
     //Private variables

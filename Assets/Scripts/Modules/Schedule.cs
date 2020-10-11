@@ -67,7 +67,7 @@ namespace Modules
                 new Color32(112, 162, 136, 255),
                 new Color32(218, 183, 133, 255),
                 new Color32(213, 137, 111, 255),
-                new Color32(255, 188, 10, 255),
+                new Color32(255, 188, 010, 255),
                 new Color32(174, 118, 166, 255),
                 new Color32(204, 214, 235, 255),
                 new Color32(163, 195, 217, 255),

@@ -12,7 +12,7 @@ public class Documents : MonoBehaviour, Module
     public void Reset() => Path = new List<Folder>();
     public void OnEnable()
     {
-        if (!Manager.isReady) { gameObject.SetActive(false); return; }
+        if (!Manager.isReady) gameObject.SetActive(false);
         else if (Manager.Child.Documents == null) Reload();
         else Load();
     }
@@ -54,9 +54,18 @@ public class Documents : MonoBehaviour, Module
         {
             var go = Instantiate(content.GetChild(1).gameObject, content).transform;
             go.name = go.Find("Name").GetComponent<Text>().text = file.name;
-            go.Find("Infos").GetComponent<Text>().text = file.added?.ToShortDateString() + (file.added.HasValue && file.size.HasValue ? " - " : "") + (file.size.HasValue ? $"{file.size?.ToString()} B" : "");
+            go.Find("Infos").GetComponent<Text>().text = file.added?.ToShortDateString() + (file.added.HasValue && file.size.HasValue ? " - " : "") + FileSize(file.size);
             go.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(file.download.GetDoc()));
             go.gameObject.SetActive(true);
         }
+    }
+    string FileSize(uint? size)
+    {
+        if (!size.HasValue) return null;
+        var f = new System.Globalization.NumberFormatInfo { NumberGroupSeparator = " ", NumberDecimalSeparator = "," };
+        var unit = new[] { "B", "KB", "MB" };
+        float s = size.Value;
+        int i; for (i = 0; i < unit.Length && s >= 1000; i++) s /= 1000;
+        return $"{s.ToString("0", f)} {unit[i]}";
     }
 }
