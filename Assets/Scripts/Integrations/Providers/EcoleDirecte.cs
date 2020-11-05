@@ -42,7 +42,7 @@ namespace Integrations
                 foreach (var eleve in eleves) yield return GetChild(eleve, "eleves", (c) => childs.Add(c));
             }
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(new Data.Data { Children = childs.ToArray() });
+            onComplete?.Invoke(new Data.Data { Provider = "EcoleDirecte", Label = account.username, Children = childs.ToArray() });
 
             IEnumerator GetChild(JToken profile, string type, Action<Child> child)
             {
@@ -91,7 +91,7 @@ namespace Integrations
         public IEnumerator GetMarks(Action onComplete)
         {
             FileFormat.JSON result = null;
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{Accounts.selectedAccount.child}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{Accounts.selectedAccount.child}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "marks", (o) => result = o);
 
             Manager.Child.Trimesters = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Trimester
@@ -147,7 +147,7 @@ namespace Integrations
             if (period.timeRange.End == DateTime.MaxValue)
             {
                 FileFormat.JSON result = null;
-                var homeworksRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                Func<UnityWebRequest> homeworksRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return TryConnection(homeworksRequest, "homeworks", (o) => result = o);
                 dates = result.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
@@ -157,7 +157,7 @@ namespace Integrations
             foreach (var date in dates)
             {
                 FileFormat.JSON result = null;
-                var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return TryConnection(request, "homeworks", (o) => result = o, false);
                 if (result.Value<int>("code") != 200)
                 {
@@ -223,7 +223,7 @@ namespace Integrations
         public IEnumerator GetPeriods(Action onComplete)
         {
             FileFormat.JSON establishmentResult = null;
-            var establishmentRequest = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> establishmentRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(establishmentRequest, "holidays", (o) => establishmentResult = o);
             var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
             Logging.Log("The address of the establishment is " + adress);
@@ -271,7 +271,7 @@ namespace Integrations
         public IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<ScheduledEvent>> onComplete)
         {
             FileFormat.JSON result = null;
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{Accounts.selectedAccount.child}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{Accounts.selectedAccount.child}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return TryConnection(request, "schedule", (o) => result = o);
 
             if (Manager.Child.Schedule == null) Manager.Child.Schedule = new List<ScheduledEvent>();
@@ -305,7 +305,7 @@ namespace Integrations
         public IEnumerator GetMessages(Action onComplete)
         {
             FileFormat.JSON result = null;
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.extraData["type"]}/{Accounts.selectedAccount.child}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.GetExtraData("type")}/{Accounts.selectedAccount.child}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "messages", (o) => result = o);
             Manager.Child.Messages = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
             {
@@ -331,20 +331,9 @@ namespace Integrations
         {
             var message = Manager.Child.Messages.FirstOrDefault(m => m.id == messageID);
 
-            Manager.UpdateLoadingStatus("provider.messages.content", "Getting message content");
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.extraData["type"]}/{Accounts.selectedAccount.child}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
-            yield return request.SendWebRequest();
-            var result = new FileFormat.JSON(request.downloadHandler.text);
-            if (result.Value<int>("code") != 200)
-            {
-                if (result.Value<string>("message") == "Session expirée !")
-                {
-                    yield return Connect(Accounts.selectedAccount, null, null);
-                    yield return LoadExtraMessageData(message.id, onComplete);
-                }
-                else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting extra message data, server returned \"{result.Value<string>("message")}\"\nRequest URL: {request.url}\n\nFull server response: {result}");
-                yield break;
-            }
+            FileFormat.JSON result = null;
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.GetExtraData("type")}/{Accounts.selectedAccount.child}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
+            yield return TryConnection(request, "messages.content", (o) => result = o);
 
             var data = result.jToken.SelectToken("data");
             message.content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content"))));
@@ -372,7 +361,7 @@ namespace Integrations
         public IEnumerator GetBooks(Action onComplete)
         {
             FileFormat.JSON result = null;
-            var request = UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "books", (o) => result = o);
 
             var books = new List<Book>();
@@ -434,8 +423,8 @@ namespace Integrations
             Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
             var root = new Folder { id = "root", name = LangueAPI.Get("documents.root", "Root") };
 
-            Manager.Child.extraData.TryGetValue("type", out var type);
-            var modules = FileFormat.XML.Utils.XMLtoClass<List<string>>(Manager.Child.extraData.TryGetValue("edModules", out var module) ? module : "");
+            var type = Manager.Child.GetExtraData("type");
+            var modules = FileFormat.XML.Utils.XMLtoClass<List<string>>(Manager.Child.GetExtraData("edModules") ?? "");
 
             if (type == "eleves")
             {
@@ -593,18 +582,19 @@ namespace Integrations
             IEnumerator Request(string url, Func<JObject, IEnumerator> output)
             {
                 FileFormat.JSON result = null;
-                yield return TryConnection(UnityWebRequest.Post(url, $"data={{\"token\": \"{token}\"}}"), "documents", (o) => result = o);
+                yield return TryConnection(() => UnityWebRequest.Post(url, $"data={{\"token\": \"{token}\"}}"), "documents", (o) => result = o);
                 yield return output(result.jToken);
             }
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
 
-        IEnumerator TryConnection(UnityWebRequest request, string getting, Action<FileFormat.JSON> output, bool manageErrors = true)
+        IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output, bool manageErrors = true)
         {
             Manager.UpdateLoadingStatus($"provider.{getting}", $"Getting {getting}");
-            yield return request.SendWebRequest();
-            var result = new FileFormat.JSON(request.downloadHandler.text);
+            var _request = request();
+            yield return _request.SendWebRequest();
+            var result = new FileFormat.JSON(_request.downloadHandler.text);
             if (result.Value<int>("code") == 200)
             {
                 output?.Invoke(result);
@@ -612,13 +602,14 @@ namespace Integrations
             }
 
             //There is an error
-            if(!manageErrors) yield break;
-            if (result.Value<string>("message") == "Session expirée !")
+            if (!manageErrors) yield break;
+            if (new[] { "Session expirée !", "Token invalide !" }.Contains(result.Value<string>("message")))
             {
                 yield return Connect(Accounts.selectedAccount, null, null);
                 yield return TryConnection(request, getting, output); //Retry connection
             }
-            else Manager.FatalErrorDuringLoading(result.Value<string>("message"), $"Error getting {getting}, server returned \"{result.Value<string>("message")}\"");
+            else Manager.FatalErrorDuringLoading(result.Value<string>("message"),
+                $"Error getting {getting}, server returned \"{result?.Value<string>("message")}\"\nRequest URL: {_request.url}\n\nFull server response: {_request.downloadHandler.text}");
         }
     }
 }

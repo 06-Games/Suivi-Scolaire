@@ -59,6 +59,7 @@ public class Manager : MonoBehaviour
             LoadData();
             Menu.sideMenu.handle.SetActive(true);
             Accounts.SelectChild();
+            Data.LastLogin = System.DateTime.Now;
             OpenModule(Home.gameObject);
         };
         Menu.sideMenu.handle.SetActive(false);

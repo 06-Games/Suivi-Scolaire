@@ -27,11 +27,13 @@ namespace Integrations.Data
         public string image { get => GetImage(sprite); set => sprite = SetImage(value); }
         public List<string> modules;
         [XmlIgnore] public Dictionary<string, string> extraData;
-        public List<SerializableKeyValue<string, string>> extraDatas
+        [XmlArrayItem("Pair")]
+        public SerializableKeyValue<string, string>[] extraDatas
         {
-            get => extraData?.Select(v => new SerializableKeyValue<string, string>(v)).ToList();
+            get => extraData?.Select(v => new SerializableKeyValue<string, string>(v)).ToArray();
             set => extraData = value.ToDictionary(v => v.key, v => v.value);
         }
+        public string GetExtraData(string key) => extraData.TryGetValue(key, out var val) ? val : default;
 
         public List<Period> Periods;
         public List<Subject> Subjects;
@@ -250,9 +252,10 @@ namespace Integrations.Data
     public class SerializableKeyValue<T1, T2>
     {
         [XmlAttribute] public T1 key;
-        [XmlAttribute] public T2 value;
+        [XmlText] public T2 value;
         public SerializableKeyValue() { }
         public SerializableKeyValue(KeyValuePair<T1, T2> pair) { key = pair.Key; value = pair.Value; }
         public KeyValuePair<T1, T2> ToKeyValue() => new KeyValuePair<T1, T2>(key, value);
+        public override string ToString() => $"[{key}, {value}]";
     }
 }

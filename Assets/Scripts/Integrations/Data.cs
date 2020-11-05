@@ -5,8 +5,8 @@
         //Data file information
         public string Label;
         public string Provider;
-        public System.DateTime CreationDate;
-        public System.DateTime LastLogin;
+        public System.DateTime CreationDate = System.DateTime.Now;
+        public System.DateTime LastLogin = System.DateTime.Now;
 
         public Child[] Children;
     }
