@@ -62,6 +62,10 @@ namespace Modules
         {
             Manager.provider = null;
             var Provider = account.GetProvider;
+            selectedAccount = account;
+            accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
+            onComplete?.Invoke(Provider);
+            return;
 
             UnityThread.executeCoroutine(Provider.Connect(account,
                 (data) =>

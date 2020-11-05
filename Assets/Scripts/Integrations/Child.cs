@@ -111,7 +111,7 @@ namespace Integrations.Data
         public string content;
         public bool done;
         public bool exam;
-        [XmlIgnore] public IEnumerable<Request> documents = new List<Request>();
+        public List<Request> documents = new List<Request>();
 
         public class Period
         {
@@ -143,7 +143,7 @@ namespace Integrations.Data
         public List<string> correspondents;
 
         public string content;
-        [XmlIgnore] public IEnumerable<Request> documents = new List<Request>();
+        public List<Request> documents = new List<Request>();
     }
 
     public class Book
@@ -172,7 +172,7 @@ namespace Integrations.Data
         public string name;
         public DateTime? added;
         public uint? size;
-        [XmlIgnore] public Request download;
+        public Request download;
     }
     #endregion
 
@@ -180,11 +180,27 @@ namespace Integrations.Data
     {
         public string docName;
         public string url;
-        public Func<Dictionary<string, string>> headers;
+        [XmlIgnore] public Func<Dictionary<string, string>> headers;
+        public List<SerializableKeyValue<string, string>> requestHeaders
+        {
+            get => headers?.Invoke().Select(v => new SerializableKeyValue<string, string>(v)).ToList();
+            set => headers = () => value.ToDictionary(v => v.key, v => v.value);
+        }
         public enum Method { Get, Post }
         public Method method;
-        public Func<WWWForm> postData;
+        [XmlIgnore] public Func<WWWForm> postData;
+        public List<SerializableKeyValue<string, string>> formData
+        {
+            get => postData?.Invoke().headers.Select(v => new SerializableKeyValue<string, string>(v)).ToList();
+            set
+            {
+                var form = new WWWForm();
+                foreach (var data in value.ToDictionary(v => v.key, v => v.value)) form.AddField(data.Key, data.Value);
+                postData = () => form;
+            }
+        }
 
+        [XmlIgnore]
         public UnityEngine.Networking.UnityWebRequest request
         {
             get
@@ -217,7 +233,7 @@ namespace Integrations.Data
             File.WriteAllBytes(path + docName, _request.downloadHandler.data);
             UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path + docName);
 #else
-            var path = Application.temporaryCachePath + "/Docs___" + docName;
+            var path = Application.temporaryCachePath + docName;
             File.WriteAllBytes(path, _request.downloadHandler.data);
 
 #if UNITY_IOS

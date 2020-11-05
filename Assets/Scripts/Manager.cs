@@ -56,9 +56,9 @@ public class Manager : MonoBehaviour
         FirstStart.onComplete += (Provider) =>
         {
             provider = Provider;
+            LoadData();
             Menu.sideMenu.handle.SetActive(true);
             Accounts.SelectChild();
-            LoadData();
             OpenModule(Home.gameObject);
         };
         Menu.sideMenu.handle.SetActive(false);

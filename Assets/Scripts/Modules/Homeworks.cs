@@ -23,7 +23,9 @@ namespace Modules
         }
         public void Reload()
         {
-            //To do
+            if (!Manager.provider.TryGetModule(out Integrations.Homeworks module)) { gameObject.SetActive(false); return; }
+            var period = periods.ElementAtOrDefault(periodIndex);
+            StartCoroutine(module.GetHomeworks(period, () => Refresh(Manager.Child.Homeworks.Where(h => h.periodID == period.id).OrderBy(h => h.forThe), period)));
         }
 
         public void OnEnable()

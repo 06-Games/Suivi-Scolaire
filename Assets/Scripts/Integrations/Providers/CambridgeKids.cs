@@ -116,7 +116,7 @@ namespace Integrations
                         addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
                         addedThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0),
                         content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(d.Value<string>("text"))),
-                        documents = docs
+                        documents = docs.ToList()
                     };
                 });
             }));
