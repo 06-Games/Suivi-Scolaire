@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-// somewhat based upon the TextMesh Pro example script: TMP_TextSelector_B
 [RequireComponent(typeof(TextMeshProUGUI))]
-public class OpenHyperlinks : MonoBehaviour, IPointerClickHandler
+public class OpenHyperlinks : MonoBehaviour
 {
     public bool doesColorChangeOnHover = true;
     public Color hoverColor = new Color(60f / 255f, 120f / 255f, 1f);
@@ -27,23 +25,19 @@ public class OpenHyperlinks : MonoBehaviour, IPointerClickHandler
         pCanvas = GetComponentInParent<Canvas>();
 
         // Get a reference to the camera if Canvas Render Mode is not ScreenSpace Overlay.
-        if (pCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            pCamera = null;
-        else
-            pCamera = pCanvas.worldCamera;
+        if (pCanvas.renderMode == RenderMode.ScreenSpaceOverlay) pCamera = null;
+        else pCamera = pCanvas.worldCamera;
     }
 
     void LateUpdate()
     {
         // is the cursor in the correct region (above the text area) and furthermore, in the link region?
         var isHoveringOver = TMP_TextUtilities.IsIntersectingRectTransform(pTextMeshPro.rectTransform, Input.mousePosition, pCamera);
-        int linkIndex = isHoveringOver ? TMP_TextUtilities.FindIntersectingLink(pTextMeshPro, Input.mousePosition, pCamera)
-            : -1;
+        int linkIndex = isHoveringOver ? TMP_TextUtilities.FindIntersectingLink(pTextMeshPro, Input.mousePosition, pCamera) : -1;
 
         // Clear previous link selection if one existed.
         if (pCurrentLink != -1 && linkIndex != pCurrentLink)
         {
-            // Debug.Log("Clear old selection");
             SetLinkToColor(pCurrentLink, (linkIdx, vertIdx) => pOriginalVertexColors[linkIdx][vertIdx]);
             pOriginalVertexColors.Clear();
             pCurrentLink = -1;
@@ -52,27 +46,14 @@ public class OpenHyperlinks : MonoBehaviour, IPointerClickHandler
         // Handle new link selection.
         if (linkIndex != -1 && linkIndex != pCurrentLink)
         {
-            // Debug.Log("New selection");
             pCurrentLink = linkIndex;
-            if (doesColorChangeOnHover)
-                pOriginalVertexColors = SetLinkToColor(linkIndex, (_linkIdx, _vertIdx) => hoverColor);
+            if (doesColorChangeOnHover) pOriginalVertexColors = SetLinkToColor(linkIndex, (_linkIdx, _vertIdx) => hoverColor);
         }
 
-        // Debug.Log(string.Format("isHovering: {0}, link: {1}", isHoveringOver, linkIndex));
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        // Debug.Log("Click at POS: " + eventData.position + "  World POS: " + eventData.worldPosition);
-
-        int linkIndex = TMP_TextUtilities.FindIntersectingLink(pTextMeshPro, Input.mousePosition, pCamera);
-        if (linkIndex != -1)
-        { // was a link clicked?
+        if (Input.GetKey(KeyCode.Mouse0) && linkIndex != -1) //Clicked on a link
+        {
             TMP_LinkInfo linkInfo = pTextMeshPro.textInfo.linkInfo[linkIndex];
-
-            // Debug.Log(string.Format("id: {0}, text: {1}", linkInfo.GetLinkID(), linkInfo.GetLinkText()));
-            // open the link id as a url, which is the metadata we added in the text field
-            Application.OpenURL(linkInfo.GetLinkID());
+            Application.OpenURL(linkInfo.GetLinkID()); // open the link id as a url, which is the metadata we added in the text field
         }
     }
 
@@ -82,8 +63,8 @@ public class OpenHyperlinks : MonoBehaviour, IPointerClickHandler
 
         var oldVertColors = new List<Color32[]>(); // store the old character colors
 
-        for (int i = 0; i < linkInfo.linkTextLength; i++)
-        { // for each character in the link string
+        for (int i = 0; i < linkInfo.linkTextLength; i++) // for each character in the link string
+        {
             int characterIndex = linkInfo.linkTextfirstCharacterIndex + i; // the character index into the entire text
             var charInfo = pTextMeshPro.textInfo.characterInfo[characterIndex];
             int meshIndex = charInfo.materialReferenceIndex; // Get the index of the material / sub text object used by this character.
@@ -101,8 +82,7 @@ public class OpenHyperlinks : MonoBehaviour, IPointerClickHandler
             }
         }
 
-        // Update Geometry
-        pTextMeshPro.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        pTextMeshPro.UpdateVertexData(TMP_VertexDataUpdateFlags.All); // Update Geometry
 
         return oldVertColors;
     }

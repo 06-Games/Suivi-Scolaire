@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,63 +45,15 @@ namespace Integrations
 
         public static string HtmlToRichText(string Html)
         {
-            var html = Html.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace("&", "£|µ");
-            try { return AnalyseHTML(); }
-            catch //The HTML isn't well formed
-            {
-                try { FixHTML(); return AnalyseHTML(); } //Try to fix the HTML
-                catch (Exception e)
-                {
-                    UnityEngine.Debug.LogError(e + "\n\n" + html + "\n\n" + Html);
-                    return Html;
-                }
-            }
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(Html);
+            return AnalyseNode(htmlDoc.DocumentNode) ?? "";
 
-            void FixHTML()
-            {
-                //Office generated html
-                html = html.Replace("<?xml:namespace prefix = \"o\" ns = \"urn:schemas-microsoft-com:office:office\" />", "");
-                html = html.Replace("<o:p></o:p>", "");
-
-                html = string.Join("=",
-                    html.Split(Enumerable.Range('a', 'z' - 'a' + 1).Select(l => $"{((char)l).ToString()}=").SelectMany(l => new[] { l, l.ToUpper() }).ToArray(), StringSplitOptions.None)
-                    .Skip(1).Select(p =>
-                    {
-                        var spaceNb = p.Count(x => x == '"');
-                        if (spaceNb != 0 && (spaceNb % 2F) != 0) return p; //We are in a string
-
-                        var end = p.IndexOfAny(new[] { ' ', '>' });
-                        return p.StartsWith("\"") ? p : $"\"{p.Substring(0, end == -1 ? 0 : end)}\"{p.Substring(end == -1 ? 0 : end)}";
-                    })
-                    .Prepend(html.Substring(0, html.IndexOf('=') == -1 ? html.Length : html.IndexOf('=')))
-                );
-                foreach (var t in new[] { "img", "br" }.SelectMany(s => new[] { s, s.ToUpper() }))
-                {
-                    html = string.Join($"<{t}",
-                        html.Split(new[] { $"<{t}" }, StringSplitOptions.RemoveEmptyEntries).Skip(1)
-                        .Select(p =>
-                        {
-                            if (p.Contains($"</{t}>")) return p; //Well formed html
-
-                            var end = p.IndexOfAny(new[] { '>' });
-                            return p[end <= 0 ? 0 : end - 1] == '/' ? p : $"{p.Substring(0, end <= 0 ? 0 : end)}/{p.Substring(end <= 0 ? 0 : end)}";
-                        })
-                        .Prepend(html.Substring(0, html.IndexOf($"<{t}") == -1 ? html.Length : html.IndexOf($"<{t}")))
-                    );
-                }
-            }
-
-            string AnalyseHTML()
-            {
-                var xmlDoc = new System.Xml.XmlDocument();
-                xmlDoc.LoadXml($"<root>{html}</root>");
-                return System.Net.WebUtility.HtmlDecode(AnalyseNode(xmlDoc?.DocumentElement)?.Replace("£|µ", "&") ?? "");
-            }
-            string AnalyseNode(System.Xml.XmlNode node)
+            string AnalyseNode(HtmlNode node)
             {
                 var result = new System.Text.StringBuilder();
-                if (!node.HasChildNodes) return node.Value;
-                foreach (System.Xml.XmlNode item in node)
+                if (!node.HasChildNodes) return System.Net.WebUtility.HtmlDecode(node.InnerText);
+                foreach (var item in node.ChildNodes)
                 {
                     var itemName = item.Name.ToLower();
                     if (itemName == "p" || itemName == "div") result.AppendLine(AnalyseNode(item));
@@ -140,10 +93,11 @@ namespace Integrations
                         }
                         else result.Append(AnalyseNode(item));
                     }
-                    else if (item.NodeType == System.Xml.XmlNodeType.Text) result.Append(AnalyseNode(item));
+                    else if (item.NodeType == HtmlNodeType.Text) result.Append(AnalyseNode(item));
+                    else if (item.NodeType == HtmlNodeType.Comment) return "";
                     else
                     {
-                        Logging.Log("Unknown HTML element: " + itemName + "\nAt: " + item.OuterXml, UnityEngine.LogType.Warning);
+                        Logging.Log("Unknown HTML element: " + itemName + "\nAt: " + item.OuterHtml, UnityEngine.LogType.Warning);
                         result.Append(AnalyseNode(item));
                     }
                 }

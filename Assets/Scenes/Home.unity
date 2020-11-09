@@ -1345,6 +1345,7 @@ GameObject:
   - component: {fileID: 79662640}
   - component: {fileID: 79662642}
   - component: {fileID: 79662641}
+  - component: {fileID: 79662643}
   m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
@@ -1489,6 +1490,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 79662639}
   m_CullTransparentMesh: 0
+--- !u!114 &79662643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79662639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32699da29e2ecf44d99462611581f8b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doesColorChangeOnHover: 1
+  hoverColor: {r: 0.23529412, g: 0.47058824, b: 1, a: 1}
 --- !u!1 &82549727
 GameObject:
   m_ObjectHideFlags: 0
