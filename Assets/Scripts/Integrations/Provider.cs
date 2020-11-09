@@ -58,9 +58,13 @@ namespace Integrations
 
             void FixHTML()
             {
+                //Office generated html
+                html = html.Replace("<?xml:namespace prefix = \"o\" ns = \"urn:schemas-microsoft-com:office:office\" />", "");
+                html = html.Replace("<o:p></o:p>", "");
+
                 html = string.Join("=",
-                    html.Split(new[] { '=' }).Skip(1)
-                    .Select(p =>
+                    html.Split(Enumerable.Range('a', 'z' - 'a' + 1).Select(l => $"{((char)l).ToString()}=").SelectMany(l => new[] { l, l.ToUpper() }).ToArray(), StringSplitOptions.None)
+                    .Skip(1).Select(p =>
                     {
                         var spaceNb = p.Count(x => x == '"');
                         if (spaceNb != 0 && (spaceNb % 2F) != 0) return p; //We are in a string

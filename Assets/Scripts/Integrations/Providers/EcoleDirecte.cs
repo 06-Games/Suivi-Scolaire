@@ -332,7 +332,7 @@ namespace Integrations
             var message = Manager.Child.Messages.FirstOrDefault(m => m.id == messageID);
 
             FileFormat.JSON result = null;
-            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.GetExtraData("type")}/{Accounts.selectedAccount.child}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{ Manager.Child.GetExtraData("type") }/{Accounts.selectedAccount.child}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "messages.content", (o) => result = o);
 
             var data = result.jToken.SelectToken("data");
@@ -591,6 +591,8 @@ namespace Integrations
 
         IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output, bool manageErrors = true)
         {
+            if(token == null) yield return Connect(Accounts.selectedAccount, null, null);
+
             Manager.UpdateLoadingStatus($"provider.{getting}", $"Getting {getting}");
             var _request = request();
             yield return _request.SendWebRequest();

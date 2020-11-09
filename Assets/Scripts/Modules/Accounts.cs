@@ -60,12 +60,16 @@ namespace Modules
         }
         void ConnectTo(Account account)
         {
-            Manager.provider = null;
-            var Provider = account.GetProvider;
+            var Provider = Manager.provider = account.GetProvider;
             selectedAccount = account;
-            accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
-            onComplete?.Invoke(Provider);
-            return;
+            Manager.LoadData();
+
+            if (Manager.Data != null)
+            {
+                accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
+                onComplete?.Invoke(Provider);
+                return;
+            }
 
             UnityThread.executeCoroutine(Provider.Connect(account,
                 (data) =>

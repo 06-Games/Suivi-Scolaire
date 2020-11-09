@@ -33,7 +33,10 @@ namespace Integrations.Data
             get => extraData?.Select(v => new SerializableKeyValue<string, string>(v)).ToArray();
             set => extraData = value.ToDictionary(v => v.key, v => v.value);
         }
-        public string GetExtraData(string key) => extraData.TryGetValue(key, out var val) ? val : default;
+        public string GetExtraData(string key) {
+                if (extraData == null) return "";
+                return extraData.TryGetValue(key, out var v) ? v : "";
+        }
 
         public List<Period> Periods;
         public List<Subject> Subjects;

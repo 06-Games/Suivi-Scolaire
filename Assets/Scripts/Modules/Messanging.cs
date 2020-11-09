@@ -76,7 +76,7 @@ namespace Modules
                     docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(doc.GetDoc()));
                     docGo.gameObject.SetActive(true);
                 }
-                docs.gameObject.SetActive(docs.childCount > 2);
+                docs.gameObject.SetActive(message.documents.Count > 0);
 
                 detail.gameObject.SetActive(true);
             }

@@ -56,7 +56,6 @@ public class Manager : MonoBehaviour
         FirstStart.onComplete += (Provider) =>
         {
             provider = Provider;
-            LoadData();
             Menu.sideMenu.handle.SetActive(true);
             Accounts.SelectChild();
             Data.LastLogin = System.DateTime.Now;
