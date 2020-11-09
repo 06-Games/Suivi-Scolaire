@@ -50,7 +50,7 @@ public class OpenHyperlinks : MonoBehaviour
             if (doesColorChangeOnHover) pOriginalVertexColors = SetLinkToColor(linkIndex, (_linkIdx, _vertIdx) => hoverColor);
         }
 
-        if (Input.GetKey(KeyCode.Mouse0) && linkIndex != -1) //Clicked on a link
+        if (Input.GetKeyDown(KeyCode.Mouse0) && linkIndex != -1) //Clicked on a link
         {
             TMP_LinkInfo linkInfo = pTextMeshPro.textInfo.linkInfo[linkIndex];
             Application.OpenURL(linkInfo.GetLinkID()); // open the link id as a url, which is the metadata we added in the text field
