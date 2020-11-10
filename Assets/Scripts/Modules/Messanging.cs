@@ -1,5 +1,6 @@
 ﻿using Integrations;
 using Integrations.Data;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,15 +8,17 @@ namespace Modules
 {
     public class Messanging : MonoBehaviour, Module
     {
+        uint openedMessage;
         Integrations.Messanging module;
-        public void Reset() => module = null;
-        public void OnEnable()
+        public void Reset() { module = null; openedMessage = 0; }
+            public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out module)) { gameObject.SetActive(false); return; }
             if (Manager.Child.Messages?.Count > 0) Refresh();
             else Reload();
         }
         public void Reload() => StartCoroutine(module.GetMessages(() => Refresh()));
+        public void ReloadMessage() => StartCoroutine(module.LoadExtraMessageData(openedMessage, () => OpenMsg(Manager.Child.Messages.FirstOrDefault(m => m.id == openedMessage))));
 
         public void Refresh()
         {
@@ -49,6 +52,7 @@ namespace Modules
 
         public void OpenMsg(Message message)
         {
+            openedMessage = message.id;
             message.read = true;
             var content = transform.Find("Content");
             foreach (Transform go in content) go.gameObject.SetActive(false);

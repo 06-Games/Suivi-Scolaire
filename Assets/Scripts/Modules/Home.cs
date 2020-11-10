@@ -12,18 +12,19 @@ namespace Modules
         public Sprite[] periodSprites;
 
         public void Reset() { /* There is nothing to reset */ }
-        public void Reload() {
-            //To do
-            Refresh();
+        public void Reload()
+        {
+            if (!Manager.isReady) gameObject.SetActive(false);
+            else if (Manager.provider.TryGetModule(out Periods hM)) hM.GetPeriods(() => Refresh());
+            else Refresh();
         }
         public void OnEnable()
         {
-            StartCoroutine(enumerator());
+            if (Manager.isReady) StartCoroutine(enumerator());
+            else gameObject.SetActive(false);
 
             IEnumerator enumerator()
             {
-                if (!Manager.isReady) { gameObject.SetActive(false); yield break; }
-                if ((Manager.Child.Periods == null || Manager.Child.Periods.Count == 0) && Manager.provider.TryGetModule(out Periods hM)) yield return hM.GetPeriods();
                 if ((Manager.Child.Marks == null || Manager.Child.Marks.Count == 0) && Manager.provider.TryGetModule(out Integrations.Marks mM)) yield return mM.GetMarks();
                 if (Manager.Child.Schedule == null || Manager.Child.Schedule.Count == 0)
                 {
@@ -31,7 +32,8 @@ namespace Modules
                     if (!Schedule.Initialise(DateTime.Now, (p, s) => ended = true)) ended = true;
                     yield return new WaitUntil(() => ended);
                 }
-                Refresh();
+                if ((Manager.Child.Periods == null || Manager.Child.Periods.Count == 0) && Manager.provider.TryGetModule(out Periods hM)) Reload();
+                else Refresh();
             }
         }
 

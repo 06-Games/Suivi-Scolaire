@@ -164,12 +164,14 @@ namespace Integrations
                     Logging.Log($"Error getting homeworks for {date}, server returned \"" + result.Value<string>("message") + "\"", LogType.Error);
                     continue;
                 }
+                DateTime.TryParse(date, out var dateTime);
+                homeworks.RemoveAll(s => s.forThe == dateTime.Date);
 
                 homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
                 {
                     subjectID = v.Value<string>("codeMatiere"),
                     periodID = period.id,
-                    forThe = DateTime.Parse(date),
+                    forThe = dateTime,
                     addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
                     content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
@@ -297,6 +299,7 @@ namespace Integrations
                     canceled = v.Value<bool>("isAnnule")
                 };
             });
+            Manager.Child.Schedule.RemoveAll(s => s.start >= period.Start && s.end <= period.End);
             Manager.Child.Schedule.AddRange(events);
 
             Manager.HideLoadingPanel();

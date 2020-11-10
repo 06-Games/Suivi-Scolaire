@@ -12,25 +12,23 @@ namespace Modules
         public void Reset() { /* There is nothing to reset */ }
         public void Reload()
         {
-            //To do
-            Refresh();
+            if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
+            StartCoroutine(module.GetMarks(() => Initialise()));
         }
         public void OnEnable()
         {
-            if (!Manager.isReady || !Manager.provider.TryGetModule(out Integrations.Marks module)) { gameObject.SetActive(false); return; }
-            if (Manager.Child.Marks == null || Manager.Child.Marks.Count == 0) StartCoroutine(module.GetMarks(() => Initialise()));
+            if (Manager.Child.Marks == null || Manager.Child.Marks.Count == 0) Reload();
             else Initialise();
             Manager.OpenModule(gameObject);
-
-            void Initialise()
-            {
-                period.onValueChanged.RemoveAllListeners();
-                period.ClearOptions();
-                period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
-                period.AddOptions(Manager.Child.Trimesters.Select(p => p.name).ToList());
-                period.value = Manager.Child.Trimesters.IndexOf(Manager.Child.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
-                Refresh();
-            }
+        }
+        void Initialise()
+        {
+            period.onValueChanged.RemoveAllListeners();
+            period.ClearOptions();
+            period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
+            period.AddOptions(Manager.Child.Trimesters.Select(p => p.name).ToList());
+            period.value = Manager.Child.Trimesters.IndexOf(Manager.Child.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
+            Refresh();
         }
 
         public LayoutSwitcher topLayoutSwitcher;

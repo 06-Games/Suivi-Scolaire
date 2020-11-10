@@ -20,7 +20,9 @@ namespace Modules
         public void Reset() => periodStart = DateTime.Now;
         public void Reload()
         {
-            //To do
+            if (!Manager.provider.TryGetModule(out Integrations.Schedule module)) { gameObject.SetActive(false); return; }
+            var period = new TimeRange(periodStart, periodStart + new TimeSpan(6, 0, 0, 0));
+            UnityThread.executeCoroutine(module.GetSchedule(period, (schedule) => defaultAction(period, schedule.ToList())));
         }
 
         void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
