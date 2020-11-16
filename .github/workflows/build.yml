@@ -37,7 +37,7 @@ jobs:
           restore-keys: |
             Library-
       - name: Build
-        uses: webbertakken/unity-builder@master
+        uses: webbertakken/unity-builder@main
         with:
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
@@ -71,9 +71,10 @@ jobs:
           apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
           apple-id-password: ${{ secrets.APPLE_PASSWORD }}
       - name: Install xcbeautify
-        uses: Cyberbeni/install-swift-tool@v1
+        uses: Cyberbeni/install-swift-tool@v2
         with:
           url: https://github.com/thii/xcbeautify
+          version: '*'
       - name: Build Archive
         run: |
           chmod -R 777 xcode/iOS/iOS/;
