@@ -93,6 +93,7 @@ namespace Integrations
             FileFormat.JSON result = null;
             Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{Accounts.selectedAccount.child}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "marks", (o) => result = o);
+            if (result == null) yield break;
 
             Manager.Child.Trimesters = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Trimester
             {
@@ -149,6 +150,7 @@ namespace Integrations
                 FileFormat.JSON result = null;
                 Func<UnityWebRequest> homeworksRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return TryConnection(homeworksRequest, "homeworks", (o) => result = o);
+                if (result == null) yield break;
                 dates = result.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
             else dates = period.timeRange.DayList().Select(d => d.ToString("yyyy-MM-dd"));
@@ -159,6 +161,7 @@ namespace Integrations
                 FileFormat.JSON result = null;
                 Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return TryConnection(request, "homeworks", (o) => result = o, false);
+                if (result == null) yield break;
                 if (result.Value<int>("code") != 200)
                 {
                     Logging.Log($"Error getting homeworks for {date}, server returned \"" + result.Value<string>("message") + "\"", LogType.Error);
@@ -227,6 +230,7 @@ namespace Integrations
             FileFormat.JSON establishmentResult = null;
             Func<UnityWebRequest> establishmentRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(establishmentRequest, "holidays", (o) => establishmentResult = o);
+            if (establishmentResult == null) yield break;
             var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
             Logging.Log("The address of the establishment is " + adress);
 
@@ -275,6 +279,7 @@ namespace Integrations
             FileFormat.JSON result = null;
             Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{Accounts.selectedAccount.child}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return TryConnection(request, "schedule", (o) => result = o);
+            if (result == null) yield break;
 
             if (Manager.Child.Schedule == null) Manager.Child.Schedule = new List<ScheduledEvent>();
             var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v =>
@@ -310,6 +315,7 @@ namespace Integrations
             FileFormat.JSON result = null;
             Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.GetExtraData("type")}/{Accounts.selectedAccount.child}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "messages", (o) => result = o);
+            if (result == null) yield break;
             Manager.Child.Messages = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
             {
                 return t.Select(m =>
@@ -337,6 +343,7 @@ namespace Integrations
             FileFormat.JSON result = null;
             Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{ Manager.Child.GetExtraData("type") }/{Accounts.selectedAccount.child}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "messages.content", (o) => result = o);
+            if (result == null) yield break;
 
             var data = result.jToken.SelectToken("data");
             message.content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content"))));
@@ -366,6 +373,7 @@ namespace Integrations
             FileFormat.JSON result = null;
             Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "books", (o) => result = o);
+            if (result == null) yield break;
 
             var books = new List<Book>();
             foreach (var obj in result.jToken.SelectToken("data")?.Values<JObject>().Where(obj => obj.SelectToken("disciplines").HasValues))
@@ -586,6 +594,7 @@ namespace Integrations
             {
                 FileFormat.JSON result = null;
                 yield return TryConnection(() => UnityWebRequest.Post(url, $"data={{\"token\": \"{token}\"}}"), "documents", (o) => result = o);
+                if (result == null) yield break;
                 yield return output(result.jToken);
             }
         }
