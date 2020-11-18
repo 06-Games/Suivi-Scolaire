@@ -35,8 +35,8 @@ namespace Integrations
                 {
                     var itemName = NodeName(item);
                     if (itemName == "p" || itemName == "div") result.AppendLine(AnalyseNode(item));
-                    else if (itemName == "strong") result.Append($"<b>{AnalyseNode(item)}</b>");
-                    else if (itemName == "em") result.Append($"<i>{AnalyseNode(item)}</i>");
+                    else if (itemName == "strong" || itemName == "b") result.Append($"<b>{AnalyseNode(item)}</b>");
+                    else if (itemName == "em" || itemName == "i") result.Append($"<i>{AnalyseNode(item)}</i>");
                     else if (itemName == "u") result.Append($"<u>{AnalyseNode(item)}</u>");
                     else if (itemName == "a") result.Append($"<link={item.Attributes["href"].Value}>{AnalyseNode(item)}</link>");
                     else if (itemName == "br") result.AppendLine("");
@@ -71,6 +71,50 @@ namespace Integrations
                         }
                         else result.Append(AnalyseNode(item));
                     }
+                    else if (itemName == "table")
+                    {
+                        var ITEM = item.FirstChild;
+                        if (ITEM.Name != "tr") ITEM = ITEM.FirstChild;
+                        var cellNumber = ITEM.ChildNodes.Sum(c => int.TryParse(c.Attributes["colspan"]?.Value, out var colspan) ? colspan : 1);
+
+                        var firstLine = true;
+                        var tableLenght = 150;
+                        var cellSize = (tableLenght - cellNumber - 1) / cellNumber;
+                        tableLenght = cellSize * cellNumber + cellNumber + 1; //Adjust table size
+
+                        result.AppendLine("<font=\"Courier New SDF\"><size=60%>");
+                        result.AppendLine($"┌{new string('─', tableLenght - 2)}┐");
+                        foreach (var child in item.ChildNodes)
+                        {
+                            var childName = NodeName(child);
+                            bool thead = childName == "thead";
+                            foreach (var row in new[] { "thead", "tbody", "tfoot" }.Contains(childName) ? child.ChildNodes : item.ChildNodes)
+                            {
+                                var cells = row.ChildNodes.Select(cell =>
+                                {
+                                    int.TryParse(cell.Attributes["colspan"]?.Value, out var colspan);
+                                    var _cellSize = cellSize * (colspan > 1 ? colspan : 1);
+
+                                    var innerText = System.Net.WebUtility.HtmlDecode(cell.InnerText);
+
+                                    var startWhite = whiteSpaces((_cellSize - innerText.Length) / 2);
+                                    var text = AnalyseNode(cell).Replace("\n", "");
+                                    var endWhite = whiteSpaces(_cellSize - startWhite.Length - innerText.Length);
+
+                                    return $"{startWhite}{(thead ? "<b>" : "")}{text}{(thead ? "</b>" : "")}{endWhite}";
+
+                                    string whiteSpaces(float size) => new string(' ', size < 0 ? 0 : UnityEngine.Mathf.FloorToInt(size));
+                                });
+                                var line = $"│{string.Join("│", cells)}│";
+                                if (!firstLine) result.AppendLine($"├{new string('─', tableLenght - 2)}┤");
+                                result.AppendLine(line);
+                                firstLine = false;
+                            }
+                        }
+                        result.AppendLine($"└{new string('─', tableLenght - 2)}┘");
+                        result.Append("</font><size=100%>");
+                    }
+                    else if (itemName.StartsWith("o:")) result.Append(AnalyseNode(item)); //MS Office related tag
                     else if (item.NodeType == HtmlNodeType.Text) result.Append(AnalyseNode(item));
                     else if (item.NodeType == HtmlNodeType.Comment) return "";
                     else
