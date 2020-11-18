@@ -16,13 +16,10 @@ namespace Modules
         public static Account selectedAccount { get; private set; }
         public void Initialise()
         {
-            try
-            {
-                accounts = FileFormat.XML.Utils.XMLtoClass<HashSet<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new HashSet<Account>();
-                if (accounts?.Count == 1) ConnectTo(accounts.FirstOrDefault());
-            }
-            catch { accounts = new HashSet<Account>(); }
+            try { accounts = FileFormat.XML.Utils.XMLtoClass<HashSet<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts"), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new HashSet<Account>(); }
+            catch (System.Exception e) { Debug.LogError(e); accounts = new HashSet<Account>(); }
             Refresh();
+            if (accounts?.Count == 1) ConnectTo(accounts.FirstOrDefault());
         }
         public void Refresh()
         {

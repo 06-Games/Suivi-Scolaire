@@ -19,7 +19,7 @@ namespace Integrations
         public string password;
         public string child;
 
-        public bool Equals(Account other) => provider == other.provider && username == other.username && id == other.id;
+        public bool Equals(Account other) => other is null ? false : provider == other.provider && username == other.username && id == other.id;
         public override bool Equals(object obj) => Equals(obj as Account);
         public override int GetHashCode() => string.Format("{0}-{1}-{2}", provider, username, id).GetHashCode();
     }
