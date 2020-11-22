@@ -15,7 +15,7 @@ namespace Modules
         public void Reload()
         {
             if (!Manager.isReady) gameObject.SetActive(false);
-            else if (Manager.provider.TryGetModule(out Periods hM)) hM.GetPeriods(() => Refresh());
+            else if (Manager.provider.TryGetModule(out Periods hM)) StartCoroutine(hM.GetPeriods(() => Refresh()));
             else Refresh();
         }
         public void OnEnable()

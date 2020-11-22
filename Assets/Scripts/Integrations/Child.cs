@@ -21,8 +21,8 @@ namespace Integrations.Data
         }
 
         //General informations
-        public string id;
-        public string name;
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string name;
         [XmlIgnore] public Sprite sprite;
         public string image { get => GetImage(sprite); set => sprite = SetImage(value); }
         public List<string> modules;
@@ -33,9 +33,10 @@ namespace Integrations.Data
             get => extraData?.Select(v => new SerializableKeyValue<string, string>(v)).ToArray();
             set => extraData = value.ToDictionary(v => v.key, v => v.value);
         }
-        public string GetExtraData(string key) {
-                if (extraData == null) return "";
-                return extraData.TryGetValue(key, out var v) ? v : "";
+        public string GetExtraData(string key)
+        {
+            if (extraData == null) return "";
+            return extraData.TryGetValue(key, out var v) ? v : "";
         }
 
         public List<Period> Periods;
@@ -55,17 +56,17 @@ namespace Integrations.Data
     #region General informations
     public class Period
     {
-        public string name;
-        public DateTime start;
-        public DateTime end;
-        public bool holiday;
+        [XmlAttribute] public string name;
+        [XmlAttribute] public DateTime start;
+        [XmlAttribute] public DateTime end;
+        [XmlAttribute] public bool holiday;
     }
     public class Subject
     {
-        public string id;
-        public string name;
-        public float coef;
-        public string[] teachers;
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string name;
+        [XmlAttribute] public float coef;
+        [XmlElement("teacher")] public string[] teachers;
     }
     #endregion
 
@@ -73,49 +74,49 @@ namespace Integrations.Data
     public class Mark
     {
         //Date
-        public string trimesterID;
-        public DateTime date;
-        public DateTime dateAdded;
+        [XmlAttribute] public string trimesterID;
+        [XmlAttribute(DataType = "date")] public DateTime date;
+        [XmlAttribute(DataType = "date")] public DateTime dateAdded;
 
         //Infos
-        public string subjectID;
+        [XmlAttribute] public string subjectID;
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
-        public string name;
-        public float coef;
+        [XmlAttribute] public string name;
+        [XmlAttribute] public float coef;
         public float? mark;
-        public float markOutOf;
+        [XmlAttribute] public float markOutOf;
         public Skill[] skills;
         public float? classAverage;
-        public bool notSignificant;
+        [XmlAttribute] public bool notSignificant;
 
         public class Skill
         {
             public uint? id;
-            public string name;
+            [XmlAttribute] public string name;
             public uint? value;
-            public uint categoryID;
-            public string categoryName;
+            [XmlAttribute] public uint categoryID;
+            [XmlAttribute] public string categoryName;
         }
     }
     public class Trimester
     {
-        public string id;
-        public string name;
-        public DateTime start;
-        public DateTime end;
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string name;
+        [XmlAttribute(DataType = "date")] public DateTime start;
+        [XmlAttribute(DataType = "date")] public DateTime end;
     }
 
     public class Homework
     {
-        public string subjectID;
+        [XmlAttribute] public string subjectID;
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
-        public string periodID;
-        public DateTime forThe;
-        public DateTime addedThe;
-        public string addedBy;
+        [XmlAttribute] public string periodID;
+        [XmlAttribute(DataType = "date")] public DateTime forThe;
+        [XmlAttribute(DataType = "date")] public DateTime addedThe;
+        [XmlAttribute] public string addedBy;
         public string content;
-        public bool done;
-        public bool exam;
+        [XmlAttribute] public bool done;
+        [XmlAttribute] public bool exam;
         public List<Request> documents = new List<Request>();
 
         public class Period
@@ -128,23 +129,23 @@ namespace Integrations.Data
 
     public class ScheduledEvent
     {
-        public string subjectID;
+        [XmlAttribute] public string subjectID;
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
-        public string teacher;
-        public DateTime start;
-        public DateTime end;
-        public string room;
-        public bool canceled;
+        [XmlAttribute] public string teacher;
+        [XmlAttribute] public DateTime start;
+        [XmlAttribute] public DateTime end;
+        [XmlAttribute] public string room;
+        [XmlAttribute] public bool canceled;
     }
 
     public class Message
     {
-        public uint id;
-        public string subject;
-        public DateTime date;
-        public bool read;
+        [XmlAttribute] public uint id;
+        [XmlAttribute] public string subject;
+        [XmlAttribute] public DateTime date;
+        [XmlAttribute] public bool read;
         public enum Type { received, sent }
-        public Type type;
+        [XmlAttribute] public Type type;
         public List<string> correspondents;
 
         public string content;
@@ -153,28 +154,29 @@ namespace Integrations.Data
 
     public class Book
     {
-        public string id;
-        public string[] subjectsID;
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string[] subjectsID;
         [XmlIgnore] public IEnumerable<Subject> subjects => Manager.Child.Subjects.Where(s => subjectsID.Contains(s.id));
 
-        public string name;
-        public string editor;
+        [XmlAttribute] public string name;
+        [XmlAttribute] public string editor;
         [XmlIgnore] public Sprite cover;
-        public string image { get => Child.GetImage(cover); set => cover = Child.SetImage(value); }
+        [XmlText] public string image { get => Child.GetImage(cover); set => cover = Child.SetImage(value); }
         [XmlIgnore] public IEnumerator url;
     }
 
+
     public class Folder
     {
-        public string id;
-        public string name;
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string name;
         public List<Folder> folders = new List<Folder>();
         public List<Document> documents = new List<Document>();
     }
     public class Document
     {
-        public string id;
-        public string name;
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string name;
         public DateTime? added;
         public uint? size;
         public Request download;
@@ -183,20 +185,20 @@ namespace Integrations.Data
 
     public class Request
     {
-        public string docName;
-        public string url;
+        [XmlAttribute] public string docName;
+        [XmlAttribute] public string url;
         [XmlIgnore] public Func<Dictionary<string, string>> headers;
-        public List<SerializableKeyValue<string, string>> requestHeaders
+        public SerializableKeyValue<string, string>[] requestHeaders
         {
-            get => headers?.Invoke().Select(v => new SerializableKeyValue<string, string>(v)).ToList();
+            get => headers?.Invoke().Select(v => new SerializableKeyValue<string, string>(v)).ToArray();
             set => headers = () => value.ToDictionary(v => v.key, v => v.value);
         }
         public enum Method { Get, Post }
-        public Method method;
+        [XmlAttribute] public Method method;
         [XmlIgnore] public Func<WWWForm> postData;
-        public List<SerializableKeyValue<string, string>> formData
+        public SerializableKeyValue<string, string>[] formData
         {
-            get => postData?.Invoke().headers.Select(v => new SerializableKeyValue<string, string>(v)).ToList();
+            get => postData?.Invoke().headers.Select(v => new SerializableKeyValue<string, string>(v)).ToArray();
             set
             {
                 var form = new WWWForm();
@@ -246,7 +248,7 @@ namespace Integrations.Data
 #else
             Application.OpenURL(path);
 #if !UNITY_STANDALONE && !UNITY_EDITOR
-            Debug.LogWarning($"Unsupported plateform ({Application.platform}), we are unable to certify that the opening worked. The file has been saved at \"{path}\"");
+            Debug.LogWarning($"Unsupported platform ({Application.platform}), we are unable to certify that the opening worked. The file has been saved at \"{path}\"");
 #endif
 #endif
 #endif

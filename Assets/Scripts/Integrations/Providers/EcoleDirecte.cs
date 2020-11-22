@@ -83,7 +83,7 @@ namespace Integrations
                     sprite = picture,
                     extraData = new Dictionary<string, string> {
                         { "type", type },
-                        { "edModules", FileFormat.XML.Utils.ClassToXML(profile.SelectToken("modules").Where(m => m.Value<bool>("enable")).Select(m => m.Value<string>("code")).ToList()) }
+                        { "edModules", Newtonsoft.Json.JsonConvert.SerializeObject(profile.SelectToken("modules").Where(m => m.Value<bool>("enable")).Select(m => m.Value<string>("code")).ToArray()) }
                     }
                 });
             }
@@ -435,7 +435,7 @@ namespace Integrations
             var root = new Folder { id = "root", name = LangueAPI.Get("documents.root", "Root") };
 
             var type = Manager.Child.GetExtraData("type");
-            var modules = FileFormat.XML.Utils.XMLtoClass<List<string>>(Manager.Child.GetExtraData("edModules") ?? "");
+            var modules = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(Manager.Child.GetExtraData("edModules") ?? "");
 
             if (type == "eleves")
             {
