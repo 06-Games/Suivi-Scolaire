@@ -1,4 +1,5 @@
 ﻿using Modules;
+using System.IO.Compression;
 using UnityEngine;
 
 public class Manager : MonoBehaviour
@@ -31,20 +32,44 @@ public class Manager : MonoBehaviour
         {
             var dir = new System.IO.DirectoryInfo($"{Application.persistentDataPath}/data/");
             if (!dir.Exists) dir.Create();
-            return new System.IO.FileInfo($"{dir.FullName}/{Accounts.selectedAccount.provider}_{Accounts.selectedAccount.username}.xml");
+            return new System.IO.FileInfo($"{dir.FullName}/{Accounts.selectedAccount.provider}_{Accounts.selectedAccount.username}.xml"
+#if !UNITY_EDITOR
+            + ".gz"
+#endif
+            );
         }
     }
     public static void LoadData()
     {
         if (provider == null) { Debug.LogError("Provider is null"); return; }
         var file = dataFile;
-        if (file.Exists) Data = FileFormat.XML.Utils.XMLtoClass<Integrations.Data.Data>(System.IO.File.ReadAllText(file.FullName)) ?? Data;
+        if (file.Exists)
+        {
+            string text;
+#if UNITY_EDITOR
+            text = System.IO.File.ReadAllText(file.FullName);
+#else
+            using (var msi = dataFile.OpenRead())
+            using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+            using (var mso = new System.IO.StreamReader(gs)) text = mso.ReadToEnd();
+#endif
+            Data = FileFormat.XML.Utils.XMLtoClass<Integrations.Data.Data>(text) ?? Data;
+        }
         Logging.Log("Data loaded");
     }
     public static void SaveData()
     {
         if (!isReady || Data == null) return;
-        System.IO.File.WriteAllText(dataFile.FullName, FileFormat.XML.Utils.ClassToXML(Data, false));
+
+        var text = FileFormat.XML.Utils.ClassToXML(Data, false);
+#if UNITY_EDITOR
+        System.IO.File.WriteAllText(dataFile.FullName, text);
+#else
+        using (var msi = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(text)))
+        using (var mso = dataFile.OpenWrite())
+        using (var gs = new GZipStream(mso, CompressionMode.Compress)) msi.CopyTo(gs);
+#endif
+
         Logging.Log("Data saved");
     }
     private void OnApplicationFocus(bool hasFocus) { if (!hasFocus) SaveData(); }
