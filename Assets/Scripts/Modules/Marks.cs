@@ -59,8 +59,8 @@ namespace Modules
             var coef = marksByS.Keys.ToDictionary(s => s, s => average[s] == null ? 0 : s.coef);
             var classAverage = marksByS.ToDictionary(s => s.Key, s =>
             {
-                var _marks = s.Value.Where(m => m.classAverage != null && !m.notSignificant);
-                return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => m.classAverage.Value / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
+                var _marks = s.Value.Where(m => m.classAverage >= 0 && !m.notSignificant);
+                return _marks.Count() == 0 ? (float?)null : _marks.Sum(m => m.classAverage / m.markOutOf * 20F * m.coef) / _marks.Sum(m => m.coef);
             });
 
             var top = topLayoutSwitcher.transform;
@@ -92,7 +92,7 @@ namespace Modules
                         valueField.text = string.Join(" ", m.skills.Select(s => $"<sprite index={s.value}>"));
                         valueField.margin = new Vector4(0, 0, -100, 0);
                     }
-                    btn.Find("Class Average").GetComponent<Text>().text = m.classAverage == null ? "" : (m.notSignificant ? $"<color=#aaa>({m.classAverage}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.classAverage}<size=12>/{m.markOutOf}</size>");
+                    btn.Find("Class Average").GetComponent<Text>().text = m.classAverage < 0 ? "" : (m.notSignificant ? $"<color=#aaa>({m.classAverage}<size=12>/{m.markOutOf}</size>)</color>" : $"{m.classAverage}<size=12>/{m.markOutOf}</size>");
                     btn.Find("Subject").GetComponent<Text>().text = selectedSubject == null ? m.subject.name : "";
                     btn.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM/yyyy");
                     btn.Find("Coef").GetComponent<Text>().text = m.coef == 0 ? "" : LangueAPI.Get("marks.coef", "coef [0]", m.coef);

@@ -108,8 +108,8 @@ namespace Modules
                     foreach (var doc in homework.documents)
                     {
                         var docGo = Instantiate(docs.GetChild(0).gameObject, docs).transform;
-                        docGo.GetComponent<Text>().text = $"• {doc.docName}";
-                        docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(doc.GetDoc()));
+                        docGo.GetComponent<Text>().text = $"• {doc.name}";
+                        docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(Manager.provider.GetModule<Integrations.Homeworks>().OpenHomeworkAttachment(doc)));
                         docGo.gameObject.SetActive(true);
                     }
 

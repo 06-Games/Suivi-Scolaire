@@ -88,6 +88,7 @@ namespace Integrations
                 });
             }
         }
+
         public IEnumerator GetMarks(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -128,19 +129,20 @@ namespace Integrations
                 markOutOf = float.Parse(obj.Value<string>("noteSur").Replace(",", ".")),
                 skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.Skill
                 {
-                    id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : (uint?)null,
+                    id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
                     name = c.Value<string>("descriptif"),
                     value = uint.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : (uint?)null,
                     categoryID = c.Value<uint>("idCompetence"),
                     categoryName = c.Value<string>("libelleCompetence")
                 }).ToArray(),
-                classAverage = float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var m) ? m : (float?)null,
+                classAverage = float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var m) ? m : -1,
                 notSignificant = obj.Value<bool>("nonSignificatif")
             }).ToList();
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
         }
+
         public IEnumerator GetHomeworks(Homework.Period period, Action onComplete)
         {
 
@@ -182,19 +184,11 @@ namespace Integrations
                     exam = v.Value<bool>("interrogation"),
                     documents = v.SelectToken("aFaire.documents").Select(doc =>
                     {
-                        return new Request
+                        return new Document
                         {
-                            docName = doc.Value<string>("libelle"),
-                            url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                            method = Request.Method.Post,
-                            postData = () =>
-                            {
-                                var form = new WWWForm();
-                                form.AddField("token", token);
-                                form.AddField("leTypeDeFichier", doc.Value<string>("type"));
-                                form.AddField("fichierId", doc.Value<string>("id"));
-                                return form;
-                            }
+                            name = doc.Value<string>("libelle"),
+                            id = doc.Value<string>("id"),
+                            type = doc.Value<string>("type")
                         };
                     }).ToList()
                 }));
@@ -204,6 +198,8 @@ namespace Integrations
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
         }
+        public IEnumerator OpenHomeworkAttachment(Document doc) => OpenDocument(doc);
+
         public IEnumerator<Homework.Period> DiaryPeriods()
         {
             DateTime start = DateTime.Now;
@@ -274,6 +270,7 @@ namespace Integrations
             onComplete?.Invoke();
             Manager.HideLoadingPanel();
         }
+
         public IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<ScheduledEvent>> onComplete)
         {
             FileFormat.JSON result = null;
@@ -310,6 +307,7 @@ namespace Integrations
             Manager.HideLoadingPanel();
             onComplete?.Invoke(events);
         }
+        
         public IEnumerator GetMessages(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -349,25 +347,19 @@ namespace Integrations
             message.content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content"))));
             message.documents = data.SelectToken("files").Select(doc =>
                  {
-                     return new Request
+                     return new Document
                      {
-                         docName = doc.Value<string>("libelle"),
-                         url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                         method = Request.Method.Post,
-                         postData = () =>
-                         {
-                             var form = new WWWForm();
-                             form.AddField("token", token);
-                             form.AddField("leTypeDeFichier", doc.Value<string>("type"));
-                             form.AddField("fichierId", doc.Value<string>("id"));
-                             return form;
-                         }
+                         id = doc.Value<string>("id"),
+                         name = doc.Value<string>("libelle"),
+                         type = doc.Value<string>("type")
                      };
                  }).ToList();
 
             Manager.HideLoadingPanel();
             onComplete.Invoke();
         }
+        public IEnumerator OpenMessageAttachment(Document doc) => OpenDocument(doc);
+
         public IEnumerator GetBooks(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -389,17 +381,7 @@ namespace Integrations
                     subjectsID = obj.Value<JArray>("disciplines").Select(s => s.Value<string>()).ToArray(),
                     name = obj.Value<string>("libelle"),
                     editor = obj.Value<string>("editeur"),
-                    url = GetBook(new Request
-                    {
-                        url = obj.Value<string>("url"),
-                        method = Request.Method.Post,
-                        postData = () =>
-                        {
-                            var form = new WWWForm();
-                            form.AddField("token", token);
-                            return form;
-                        }
-                    }),
+                    url = obj.Value<string>("url"),
                     cover = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f))
                 });
             }
@@ -407,28 +389,28 @@ namespace Integrations
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
-
-
-            IEnumerator GetBook(Request req)
-            {
-                Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
-                var bookRequest = req.request;
-                yield return bookRequest.SendWebRequest();
-                Manager.HideLoadingPanel();
-                var url = bookRequest.url;
-                try
-                {
-                    if (bookRequest.uri.Host == "api.ecoledirecte.com")
-                        url = bookRequest.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, StringSplitOptions.None)[1].Split('"')[0];
-                }
-                catch
-                {
-                    url = bookRequest.url;
-                    Debug.LogError("Unespected content at " + url + "\n\n" + bookRequest.downloadHandler.text);
-                }
-                Application.OpenURL(url);
-            }
         }
+        public IEnumerator OpenBook(Book book)
+        {
+            Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
+            var bookRequest = UnityWebRequest.Post(book.url, new Dictionary<string, string> { { "token", token } });
+            yield return bookRequest.SendWebRequest();
+            Manager.HideLoadingPanel();
+
+            var url = bookRequest.url;
+            try
+            {
+                if (bookRequest.uri.Host == "api.ecoledirecte.com")
+                    url = bookRequest.downloadHandler.text.Split(new[] { "<meta http-equiv=\"refresh\" content=\"1;url=" }, StringSplitOptions.None)[1].Split('"')[0];
+            }
+            catch
+            {
+                url = bookRequest.url;
+                Debug.LogError("Unespected content at " + url + "\n\n" + bookRequest.downloadHandler.text);
+            }
+            Application.OpenURL(url);
+        }
+
         public IEnumerator GetDocuments(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
@@ -454,23 +436,10 @@ namespace Integrations
                                 name = m.Value<string>("libelle"),
                                 documents = m.SelectToken("fichiers").Select(f => new Document
                                 {
-                                    id = m.Value<string>("id"),
+                                    id = f.Value<string>("id"),
                                     name = f.Value<string>("libelle"),
                                     size = f.Value<uint>("taille"),
-                                    download = new Request
-                                    {
-                                        url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                                        method = Data.Request.Method.Post,
-                                        docName = f.Value<string>("libelle"),
-                                        postData = () =>
-                                        {
-                                            var form = new WWWForm();
-                                            form.AddField("token", token);
-                                            form.AddField("leTypeDeFichier", f.Value<string>("type"));
-                                            form.AddField("fichierId", f.Value<string>("id"));
-                                            return form;
-                                        }
-                                    }
+                                    type = f.Value<string>("type")
                                 }).ToList()
                             }).ToList()
                         });
@@ -515,20 +484,7 @@ namespace Integrations
                                     name = f.Value<string>("libelle"),
                                     added = f.Value<DateTime>("date"),
                                     size = f.Value<uint>("taille"),
-                                    download = new Request
-                                    {
-                                        url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                                        method = Data.Request.Method.Post,
-                                        docName = f.Value<string>("libelle"),
-                                        postData = () =>
-                                        {
-                                            var form = new WWWForm();
-                                            form.AddField("token", token);
-                                            form.AddField("leTypeDeFichier", "CLOUD");
-                                            form.AddField("fichierId", f.Value<string>("id"));
-                                            return form;
-                                        }
-                                    }
+                                    type = "CLOUD"
                                 }).ToList()
                             });
                         }
@@ -562,22 +518,9 @@ namespace Integrations
                         return new Document
                         {
                             id = d.Value<string>("id"),
-                            name = d.Value<string>("libelle"),
+                            name = d.Value<string>("libelle") + ".pdf",
                             added = d.Value<DateTime>("date"),
-                            download = new Request
-                            {
-                                url = "https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get",
-                                method = Data.Request.Method.Post,
-                                docName = d.Value<string>("libelle") + ".pdf",
-                                postData = () =>
-                                {
-                                    var form = new WWWForm();
-                                    form.AddField("token", token);
-                                    form.AddField("leTypeDeFichier", d.Value<string>("type"));
-                                    form.AddField("fichierId", d.Value<string>("id"));
-                                    return form;
-                                }
-                            }
+                            type = d.Value<string>("type")
                         };
                     }).ToList()
                 }).ToList());
@@ -598,12 +541,21 @@ namespace Integrations
                 yield return output(result.jToken);
             }
         }
+        public IEnumerator OpenDocument(Document doc)
+        {
+            if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
+            UnityWebRequest webRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", new Dictionary<string, string> {
+                { "token", token },
+                { "leTypeDeFichier", doc.type },
+                { "fichierId", doc.id }
+            });
+            yield return ProviderExtension.DownloadDoc(webRequest, doc);
+        }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
-
         IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output, bool manageErrors = true)
         {
-            if(token == null) yield return Connect(Accounts.selectedAccount, null, null);
+            if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
 
             Manager.UpdateLoadingStatus($"provider.{getting}", $"Getting {getting}");
             var _request = request();

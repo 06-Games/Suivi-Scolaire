@@ -73,46 +73,54 @@ namespace Integrations
                     }
                     else if (itemName == "table")
                     {
-                        var ITEM = item.FirstChild;
-                        if (ITEM.Name != "tr") ITEM = ITEM.FirstChild;
-                        var cellNumber = ITEM.ChildNodes.Sum(c => int.TryParse(c.Attributes["colspan"]?.Value, out var colspan) ? colspan : 1);
-
-                        var firstLine = true;
-                        var tableLenght = 150;
-                        var cellSize = (tableLenght - cellNumber - 1) / cellNumber;
-                        tableLenght = cellSize * cellNumber + cellNumber + 1; //Adjust table size
-
-                        result.AppendLine("<font=\"Courier New SDF\"><size=60%>");
-                        result.AppendLine($"┌{new string('─', tableLenght - 2)}┐");
-                        foreach (var child in item.ChildNodes)
+                        try
                         {
-                            var childName = NodeName(child);
-                            bool thead = childName == "thead";
-                            foreach (var row in new[] { "thead", "tbody", "tfoot" }.Contains(childName) ? child.ChildNodes : item.ChildNodes)
+                            var ITEM = item.FirstChild;
+                            if (ITEM.Name != "tr") ITEM = ITEM.FirstChild;
+                            var cellNumber = ITEM.ChildNodes.Sum(c => int.TryParse(c.Attributes["colspan"]?.Value, out var colspan) ? colspan : 1);
+
+                            var firstLine = true;
+                            var tableLenght = 150;
+                            var cellSize = (tableLenght - cellNumber - 1) / cellNumber;
+                            tableLenght = cellSize * cellNumber + cellNumber + 1; //Adjust table size
+
+                            result.AppendLine("<font=\"Courier New SDF\"><size=60%>");
+                            result.AppendLine($"┌{new string('─', tableLenght - 2)}┐");
+                            foreach (var child in item.ChildNodes)
                             {
-                                var cells = row.ChildNodes.Select(cell =>
+                                var childName = NodeName(child);
+                                bool thead = childName == "thead";
+                                foreach (var row in new[] { "thead", "tbody", "tfoot" }.Contains(childName) ? child.ChildNodes : item.ChildNodes)
                                 {
-                                    int.TryParse(cell.Attributes["colspan"]?.Value, out var colspan);
-                                    var _cellSize = cellSize * (colspan > 1 ? colspan : 1);
+                                    var cells = row.ChildNodes.Select(cell =>
+                                    {
+                                        int.TryParse(cell.Attributes["colspan"]?.Value, out var colspan);
+                                        var _cellSize = cellSize * (colspan > 1 ? colspan : 1);
 
-                                    var innerText = System.Net.WebUtility.HtmlDecode(cell.InnerText);
+                                        var innerText = System.Net.WebUtility.HtmlDecode(cell.InnerText);
 
-                                    var startWhite = whiteSpaces((_cellSize - innerText.Length) / 2);
-                                    var text = AnalyseNode(cell).Replace("\n", "");
-                                    var endWhite = whiteSpaces(_cellSize - startWhite.Length - innerText.Length);
+                                        var startWhite = whiteSpaces((_cellSize - innerText.Length) / 2);
+                                        var text = AnalyseNode(cell).Replace("\n", "");
+                                        var endWhite = whiteSpaces(_cellSize - startWhite.Length - innerText.Length);
 
-                                    return $"{startWhite}{(thead ? "<b>" : "")}{text}{(thead ? "</b>" : "")}{endWhite}";
+                                        return $"{startWhite}{(thead ? "<b>" : "")}{text}{(thead ? "</b>" : "")}{endWhite}";
 
-                                    string whiteSpaces(float size) => new string(' ', size < 0 ? 0 : UnityEngine.Mathf.FloorToInt(size));
-                                });
-                                var line = $"│{string.Join("│", cells)}│";
-                                if (!firstLine) result.AppendLine($"├{new string('─', tableLenght - 2)}┤");
-                                result.AppendLine(line);
-                                firstLine = false;
+                                        string whiteSpaces(float size) => new string(' ', size < 0 ? 0 : UnityEngine.Mathf.FloorToInt(size));
+                                    });
+                                    var line = $"│{string.Join("│", cells)}│";
+                                    if (!firstLine) result.AppendLine($"├{new string('─', tableLenght - 2)}┤");
+                                    result.AppendLine(line);
+                                    firstLine = false;
+                                }
                             }
+                            result.AppendLine($"└{new string('─', tableLenght - 2)}┘");
+                            result.Append("</font><size=100%>");
                         }
-                        result.AppendLine($"└{new string('─', tableLenght - 2)}┘");
-                        result.Append("</font><size=100%>");
+                        catch (System.Exception e)
+                        {
+                            Logging.Log("Experimental display of tables failed with the following error\n\n" + e + "\n\n At: " + item.OuterHtml, UnityEngine.LogType.Error);
+                            result.Append(AnalyseNode(item));
+                        }
                     }
                     else if (itemName.StartsWith("o:")) result.Append(AnalyseNode(item)); //MS Office related tag
                     else if (item.NodeType == HtmlNodeType.Text) result.Append(AnalyseNode(item));
@@ -127,5 +135,41 @@ namespace Integrations
             }
         }
         public static string RemoveEmptyLines(string lines) => lines == null ? "" : System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
+
+
+        public static System.Collections.IEnumerator DownloadDoc(UnityEngine.Networking.UnityWebRequest request, Data.Document doc)
+        {
+            request.SendWebRequest();
+            while (!request.isDone)
+            {
+                Manager.UpdateLoadingStatus("homeworks.downloading", "Downloading: [0]%", false, (request.downloadProgress * 100).ToString("0"));
+                yield return new UnityEngine.WaitForEndOfFrame();
+            }
+            if (request.error == null) Manager.HideLoadingPanel();
+            else { Manager.FatalErrorDuringLoading("Error downloading file", request.error); yield break; }
+            OpenDoc(request.downloadHandler.data, doc);
+        }
+
+        public static void OpenDoc(byte[] data, Data.Document doc)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            var path = "/storage/emulated/0/Download/Suivi-Scolaire/";
+            if (!System.IO.Directory.Exists(path)) System.IO.Directory.CreateDirectory(path);
+            System.IO.File.WriteAllBytes(path + doc.name, data);
+            UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path + doc.name);
+#else
+            var path = UnityEngine.Application.temporaryCachePath + "/" + doc.name;
+            System.IO.File.WriteAllBytes(path, data);
+
+#if UNITY_IOS
+            drstc.DocumentHandler.DocumentHandler.OpenDocument(path);
+#else
+            UnityEngine.Application.OpenURL(path);
+#if !UNITY_STANDALONE && !UNITY_EDITOR
+            UnityEngine.Debug.LogWarning($"Unsupported platform ({UnityEngine.Application.platform}), we are unable to certify that the opening worked. The file has been saved at \"{path}\"");
+#endif
+#endif
+#endif
+        }
     }
 }

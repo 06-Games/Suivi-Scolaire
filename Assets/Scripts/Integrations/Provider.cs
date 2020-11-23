@@ -36,13 +36,15 @@ namespace Integrations
     {
         IEnumerator GetHomeworks(Data.Homework.Period period, Action onComplete);
         IEnumerator<Data.Homework.Period> DiaryPeriods();
+        IEnumerator OpenHomeworkAttachment(Data.Document document);
     }
     public interface Marks : Provider { IEnumerator GetMarks(Action onComplete = null); }
     public interface Messanging : Provider
     {
         IEnumerator GetMessages(Action onComplete = null);
         IEnumerator LoadExtraMessageData(uint messageID, Action onComplete = null);
+        IEnumerator OpenMessageAttachment(Data.Document document);
     }
-    public interface Books : Provider { IEnumerator GetBooks(Action onComplete); }
-    public interface Documents : Provider { IEnumerator GetDocuments(Action onComplete); }
+    public interface Books : Provider { IEnumerator GetBooks(Action onComplete); IEnumerator OpenBook(Data.Book book); }
+    public interface Documents : Provider { IEnumerator GetDocuments(Action onComplete); IEnumerator OpenDocument(Data.Document document); }
 }

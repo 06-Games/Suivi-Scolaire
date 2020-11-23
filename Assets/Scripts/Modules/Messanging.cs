@@ -76,8 +76,8 @@ namespace Modules
                 foreach (var doc in message.documents)
                 {
                     var docGo = Instantiate(docs.GetChild(1).gameObject, docs).transform;
-                    docGo.GetComponent<TMPro.TextMeshProUGUI>().text = System.IO.Path.GetFileNameWithoutExtension(doc.docName);
-                    docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(doc.GetDoc()));
+                    docGo.GetComponent<TMPro.TextMeshProUGUI>().text = System.IO.Path.GetFileNameWithoutExtension(doc.name);
+                    docGo.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(module.OpenMessageAttachment(doc)));
                     docGo.gameObject.SetActive(true);
                 }
                 docs.gameObject.SetActive(message.documents.Count > 0);

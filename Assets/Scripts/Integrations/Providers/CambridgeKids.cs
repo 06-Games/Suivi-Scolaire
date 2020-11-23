@@ -97,12 +97,10 @@ namespace Integrations
             Manager.Child.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
             {
                 var data = obj.SelectToken("page_section");
-                var docs = obj.SelectToken("link_file").Select(doc => new Request
+                var docs = obj.SelectToken("link_file").Select(doc => new Document
                 {
-                    docName = doc.Value<string>("file_name"),
-                    url = $"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.Value<string>("up_file_id")}",
-                    headers = () => new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } },
-                    method = Request.Method.Get
+                    id = doc.Value<string>("up_file_id"),
+                    name = doc.Value<string>("file_name")
                 });
                 return data.Select(d =>
                 {
@@ -124,6 +122,13 @@ namespace Integrations
             onComplete?.Invoke();
             Manager.HideLoadingPanel();
         }
+        public IEnumerator OpenHomeworkAttachment(Document doc)
+        {
+            UnityWebRequest webRequest = UnityWebRequest.Post($"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.id}", 
+                new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } });
+            yield return ProviderExtension.DownloadDoc(webRequest, doc);
+        }
+
 
         private static Random random = new Random();
         static string RandomString(int length)
