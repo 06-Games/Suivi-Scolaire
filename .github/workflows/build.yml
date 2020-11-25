@@ -52,11 +52,12 @@ jobs:
         with:
           name: ${{ matrix.targetPlatform }}
           path: build
-
+  
   iOS_Builder:
     name: Build iOS App
     runs-on: macos-latest
     needs: [unity_Builder]
+    timeout-minutes: 30
     steps:
       - name: Download XCode Project
         uses: actions/download-artifact@v1.0.0
@@ -64,76 +65,28 @@ jobs:
           name: iOS
           path: xcode
 
-      - name: Install XCode
-        uses: sinoru/actions-setup-xcode@v1.1
+      - name: "Select Xcode 12.0.0"
+        uses: devbotsxyz/xcode-select@master
         with:
-          xcode-version: '11.4' # Exact version of a Xcode version to use
-          apple-id: ${{ secrets.APPLE_EMAIL }} # Apple ID to download from Apple Developer when Xcode not available in local
-          apple-id-password: ${{ secrets.APPLE_PASSWORD }}
-      - name: Install xcbeautify
-        uses: Cyberbeni/install-swift-tool@v1
-        with:
-          url: https://github.com/thii/xcbeautify
-      - name: Build Archive
-        run: |
-          chmod -R 777 xcode/iOS/iOS/;
-          set -o pipefail && xcodebuild -project xcode/iOS/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -parallelizeTargets -quiet -archivePath build/archive.xcarchive clean archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" AD_HOC_CODE_SIGNING_ALLOWED="YES" | xcbeautify -q;
-      - name: Upload archive
-        uses: actions/upload-artifact@v1
-        with:
-          name: iOS Archive
-          path: build/
+          version: "12.0.0"
 
-      - name: Install Dependencies
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)";
-          brew install dpkg;
-          brew install ldid;
-      - name: Create IPA File
-        run: |
-          mkdir -p build/IPA/Payload;
-          mkdir build/IPAOutput;
-          echo "
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-            <dict>
-              <key>com.06Games.Suivi-Scolaire</key>
-              <true/>
-            </dict>
-          </plist>
-          " > entitlements.xml;
-          cp -r build/archive.xcarchive/Products/Applications/. build/IPA/Payload/;
-          ldid -Sentitlements.xml build/IPA/Payload/Suivi-Scolaire.app/Suivi-Scolaire;
-          cd build/IPA;
-          zip -0 -y -r ../IPAOutput/Suivi-Scolaire.ipa Payload/;
+      - name: "Import Certificate"
+        uses: devbotsxyz/import-signing-certificate@main
+        with:
+          certificate-data: ${{ secrets.APPLE_CERTIFICATE_DATA }}
+          certificate-passphrase: ${{ secrets.APPLE_CERTIFICATE_PASSPHRASE }}
+          keychain-password: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+
+      # First we do a developer build that we archive into an .xcarchive.
+      - name: "Archive"
+        uses: devbotsxyz/xcode-archive@v1
+
+      # Next ask Xcode to export the product from the archived build we just created. This will also re-sign the application with the "Developer ID" certificate.
+      - name: "Export & Sign Release Build"
+        uses: devbotsxyz/xcode-export-archive@master
+  
       - name: Upload IPA
         uses: actions/upload-artifact@v1
         with:
-          name: iOS IPA
-          path: build/IPAOutput
-
-      - name: Create DEB File
-        run: |
-          mkdir -p build/SuiviScolaireapp;
-          mkdir -p build/SuiviScolaireapp/DEBIAN;
-          echo "
-          Package: com.06Games.Suivi-Scolaire
-          Version: 0.2.3
-          Name: Suivi-Scolaire
-          Section: Application
-          Description: Suivi Scolaire is a mobile/web application that allows easy use of different school life management services
-          Architecture: iphoneos-arm
-          Author: 06Games
-          Maintainer: Evan Galli
-          Depends: net.angelxwind.appsyncunified
-          " > build/SuiviScolaireapp/DEBIAN/control;
-          cp -r build/IPA/Payload build/SuiviScolaireapp/Applications/;
-          dpkg-deb -b build/SuiviScolaireapp;
-          mkdir -p build/Output;
-          mv build/SuiviScolaireapp.deb build/Output/SuiviScolaireapp.deb;
-          
-      - name: Upload DEB
-        uses: actions/upload-artifact@v1
-        with:
-          name: iOS DEB
-          path: build/Output
+          name: iOS Export
+          path: Export
