@@ -13,7 +13,6 @@
 |:---------------------------------------------------------:|:---------:|:--------:|:-----:|:------------:|:----------:|:---------:|
 | [EcoleDirecte](https://www.ecoledirecte.com)              | ✅       | ✅       | ✅    | ✅           | ✅         | ✅       |
 | [Cambridge Kids](https://cambridgekids.sophiacloud.com)   | ✅       | ❌       | ❌    | ❌           | ❌         | ❌       |
-| [Agora 06](https://www.agora06.fr) (Planned)              | ❌       | ❌       | ❌    | ❌           | ❌         | ❌       |
 
 ## Installation
 <a href="https://play.google.com/apps/testing/com.fr_06Games.SuiviScolaire">
