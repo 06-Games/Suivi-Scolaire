@@ -84,6 +84,8 @@ jobs:
       # Next ask Xcode to export the product from the archived build we just created. This will also re-sign the application with the "Developer ID" certificate.
       - name: "Export & Sign Release Build"
         uses: devbotsxyz/xcode-export-archive@main
+        with:
+          export-method: development
   
       - name: Upload IPA
         uses: actions/upload-artifact@v1
