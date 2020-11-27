@@ -23,7 +23,7 @@ jobs:
           - StandaloneWindows64 # Build a Windows 64-bit standalone.
           - StandaloneLinux64 # Build a Linux 64-bit standalone.
           - iOS # Build an iOS player.
-          - Android # Build an Android .apk standalone app.
+          #- Android # Build an Android .apk standalone app.
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
@@ -59,11 +59,13 @@ jobs:
     needs: [unity_Builder]
     timeout-minutes: 30
     steps:
-      - name: Download XCode Project
+      - name: "Download XCode Project"
         uses: actions/download-artifact@v1.0.0
         with:
           name: iOS
-          path: xcode
+          path: xcode   
+      - name: "Permissions"
+        run: chmod -R 777 xcode/iOS/iOS/
 
       - name: "Download XCode"
         uses: devbotsxyz/xcode-select@main
