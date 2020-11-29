@@ -392,6 +392,7 @@ namespace Integrations
         }
         public IEnumerator OpenBook(Book book)
         {
+            if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
             Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
             var bookRequest = UnityWebRequest.Post(book.url, new Dictionary<string, string> { { "token", token } });
             yield return bookRequest.SendWebRequest();

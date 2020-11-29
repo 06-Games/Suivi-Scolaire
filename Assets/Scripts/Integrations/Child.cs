@@ -85,7 +85,7 @@ namespace Integrations.Data
         public float? mark;
         [XmlAttribute] public float markOutOf;
         public Skill[] skills;
-        [XmlAttribute] public float classAverage;
+        [XmlAttribute] public float classAverage = -1;
         [XmlAttribute] public bool notSignificant;
 
         public class Skill
