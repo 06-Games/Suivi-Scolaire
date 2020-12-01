@@ -45,7 +45,7 @@ namespace HtmlAgilityPack
             XPathNodeIterator it = nav.Select(xpath);
             while (it.MoveNext())
             {
-                HtmlNodeNavigator n = (HtmlNodeNavigator) it.Current;
+                HtmlNodeNavigator n = (HtmlNodeNavigator)it.Current;
                 list.Add(n.CurrentNode, false);
             }
 
@@ -63,14 +63,14 @@ namespace HtmlAgilityPack
         /// <param name="xpath">The XPath expression.</param>
         /// <returns>An <see cref="HtmlNodeCollection"/> containing a collection of nodes matching the <see cref="XPath"/> query, or <c>null</c> if no node matched the XPath expression.</returns>
         public HtmlNodeCollection SelectNodes(XPathExpression xpath)
-        { 
+        {
             HtmlNodeCollection list = new HtmlNodeCollection(null);
 
             HtmlNodeNavigator nav = new HtmlNodeNavigator(OwnerDocument, this);
             XPathNodeIterator it = nav.Select(xpath);
             while (it.MoveNext())
             {
-                HtmlNodeNavigator n = (HtmlNodeNavigator) it.Current;
+                HtmlNodeNavigator n = (HtmlNodeNavigator)it.Current;
                 list.Add(n.CurrentNode, false);
             }
 
@@ -80,7 +80,7 @@ namespace HtmlAgilityPack
             }
 
             return list;
-        } 
+        }
 
         /// <summary>
         /// Selects the first XmlNode that matches the XPath expression.
@@ -101,7 +101,7 @@ namespace HtmlAgilityPack
                 return null;
             }
 
-            HtmlNodeNavigator node = (HtmlNodeNavigator) it.Current;
+            HtmlNodeNavigator node = (HtmlNodeNavigator)it.Current;
             return node.CurrentNode;
         }
 

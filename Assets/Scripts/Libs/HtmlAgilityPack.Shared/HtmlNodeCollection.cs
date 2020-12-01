@@ -1,9 +1,9 @@
-// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
+﻿// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
 // Website & Documentation: http://html-agility-pack.net
 // Forum & Issues: https://github.com/zzzprojects/html-agility-pack
 // License: https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE
 // More projects: http://www.zzzprojects.com/
-// Copyright � ZZZ Projects Inc. 2014 - 2017. All rights reserved.
+// Copyright © ZZZ Projects Inc. 2014 - 2017. All rights reserved.
 
 using System;
 using System.Collections;
@@ -220,9 +220,9 @@ namespace HtmlAgilityPack
             if (next == node)
                 throw new InvalidProgramException("Unexpected error.");
 
-            node._nextnode = next; 
-			node.SetParent(_parentnode);
-		}
+            node._nextnode = next;
+            node.SetParent(_parentnode);
+        }
 
         /// <summary>
         /// Remove node
@@ -315,8 +315,8 @@ namespace HtmlAgilityPack
             _items.Add(node);
             node._prevnode = last;
             node._nextnode = null;
-	        node.SetParent(_parentnode);
-			if (last == null) return;
+            node.SetParent(_parentnode);
+            if (last == null) return;
             if (last == node)
                 throw new InvalidProgramException("Unexpected error.");
 
@@ -363,9 +363,9 @@ namespace HtmlAgilityPack
                 throw new InvalidProgramException("Unexpected error.");
             node._nextnode = first;
             node._prevnode = null;
-	        node.SetParent(_parentnode);
+            node.SetParent(_parentnode);
 
-			if (first != null)
+            if (first != null)
                 first._prevnode = node;
         }
 
@@ -415,9 +415,9 @@ namespace HtmlAgilityPack
                 throw new InvalidProgramException("Unexpected error.");
 
             node._nextnode = next;
-	        node.SetParent(_parentnode);
+            node.SetParent(_parentnode);
 
-			oldnode._prevnode = null;
+            oldnode._prevnode = null;
             oldnode._nextnode = null;
             oldnode._parentnode = null;
         }
@@ -433,8 +433,8 @@ namespace HtmlAgilityPack
         public IEnumerable<HtmlNode> Descendants()
         {
             foreach (HtmlNode item in _items)
-            foreach (HtmlNode n in item.Descendants())
-                yield return n;
+                foreach (HtmlNode n in item.Descendants())
+                    yield return n;
         }
 
         /// <summary>
@@ -444,8 +444,8 @@ namespace HtmlAgilityPack
         public IEnumerable<HtmlNode> Descendants(string name)
         {
             foreach (HtmlNode item in _items)
-            foreach (HtmlNode n in item.Descendants(name))
-                yield return n;
+                foreach (HtmlNode n in item.Descendants(name))
+                    yield return n;
         }
 
         /// <summary>
@@ -455,8 +455,8 @@ namespace HtmlAgilityPack
         public IEnumerable<HtmlNode> Elements()
         {
             foreach (HtmlNode item in _items)
-            foreach (HtmlNode n in item.ChildNodes)
-                yield return n;
+                foreach (HtmlNode n in item.ChildNodes)
+                    yield return n;
         }
 
         /// <summary>
@@ -467,8 +467,8 @@ namespace HtmlAgilityPack
         public IEnumerable<HtmlNode> Elements(string name)
         {
             foreach (HtmlNode item in _items)
-            foreach (HtmlNode n in item.Elements(name))
-                yield return n;
+                foreach (HtmlNode n in item.Elements(name))
+                    yield return n;
         }
 
         /// <summary>
@@ -478,8 +478,8 @@ namespace HtmlAgilityPack
         public IEnumerable<HtmlNode> Nodes()
         {
             foreach (HtmlNode item in _items)
-            foreach (HtmlNode n in item.ChildNodes)
-                yield return n;
+                foreach (HtmlNode n in item.ChildNodes)
+                    yield return n;
         }
 
         #endregion

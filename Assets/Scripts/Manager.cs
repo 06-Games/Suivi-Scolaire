@@ -1,5 +1,4 @@
 ﻿using Modules;
-using System.IO.Compression;
 using UnityEngine;
 
 public class Manager : MonoBehaviour

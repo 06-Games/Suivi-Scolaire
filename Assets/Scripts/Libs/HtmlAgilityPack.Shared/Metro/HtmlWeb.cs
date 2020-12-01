@@ -18,7 +18,7 @@ namespace HtmlAgilityPack
         /// </summary>
         public Action<HtmlDocument> PreHandleDocument { get; set; }
 
-        #region Instance Methods
+#region Instance Methods
 
         /// <summary>
         /// Begins the process of downloading an internet resource
@@ -137,7 +137,7 @@ namespace HtmlAgilityPack
             throw new Exception("Error downloading html");
         }
 
-        #endregion
+#endregion
     }
 }
 #endif

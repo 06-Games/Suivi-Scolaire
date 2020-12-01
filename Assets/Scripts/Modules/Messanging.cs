@@ -11,7 +11,7 @@ namespace Modules
         uint openedMessage;
         Integrations.Messanging module;
         public void Reset() { module = null; openedMessage = 0; }
-            public void OnEnable()
+        public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out module)) { gameObject.SetActive(false); return; }
             if (Manager.Child.Messages?.Count > 0) Refresh();

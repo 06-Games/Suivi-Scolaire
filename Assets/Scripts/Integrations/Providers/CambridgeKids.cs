@@ -124,7 +124,7 @@ namespace Integrations
         }
         public IEnumerator OpenHomeworkAttachment(Document doc)
         {
-            UnityWebRequest webRequest = UnityWebRequest.Post($"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.id}", 
+            UnityWebRequest webRequest = UnityWebRequest.Post($"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.id}",
                 new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } });
             yield return ProviderExtension.DownloadDoc(webRequest, doc);
         }

@@ -5,7 +5,6 @@
 // More projects: http://www.zzzprojects.com/
 // Copyright © ZZZ Projects Inc. 2014 - 2017. All rights reserved.
 
-using System;
 using System.Collections.Generic;
 
 namespace HtmlAgilityPack

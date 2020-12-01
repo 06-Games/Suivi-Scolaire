@@ -1,9 +1,9 @@
-// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
+﻿// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
 // Website & Documentation: http://html-agility-pack.net
 // Forum & Issues: https://github.com/zzzprojects/html-agility-pack
 // License: https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE
 // More projects: http://www.zzzprojects.com/
-// Copyright � ZZZ Projects Inc. 2014 - 2017. All rights reserved.
+// Copyright © ZZZ Projects Inc. 2014 - 2017. All rights reserved.
 
 using System;
 using System.Collections;
@@ -61,7 +61,7 @@ namespace HtmlAgilityPack
             set
             {
                 var oldValue = items[index];
-               
+
                 items[index] = value;
 
                 if (oldValue.Name != value.Name)
@@ -101,7 +101,7 @@ namespace HtmlAgilityPack
                 }
                 else
                 {
-	                this[items.IndexOf(currentValue)] = value;
+                    this[items.IndexOf(currentValue)] = value;
                 }
             }
         }
@@ -130,27 +130,27 @@ namespace HtmlAgilityPack
         /// <summary>Adds a range supplied items to collection.</summary>
         /// <param name="items">An IEnumerable&lt;HtmlAttribute&gt; of items to append to this.</param>
         public void AddRange(IEnumerable<HtmlAttribute> items)
-	    {
-		    foreach (var item in items)
-		    { 
-				Append(item);
-			}
-	    }
+        {
+            foreach (var item in items)
+            {
+                Append(item);
+            }
+        }
 
         /// <summary>Adds a range supplied items to collection using a dictionary.</summary>
         /// <param name="items">A Dictionary&lt;string,string&gt; of items to append to this.</param>
         public void AddRange(Dictionary<string, string> items)
-	    {
-		    foreach (var item in items)
+        {
+            foreach (var item in items)
             {
                 Add(item.Key, item.Value);
             }
-	    }
+        }
 
-		/// <summary>
-		/// Explicit clear
-		/// </summary>
-		void ICollection<HtmlAttribute>.Clear()
+        /// <summary>
+        /// Explicit clear
+        /// </summary>
+        void ICollection<HtmlAttribute>.Clear()
         {
             items.Clear();
         }
@@ -256,12 +256,12 @@ namespace HtmlAgilityPack
         /// <returns>The appended attribute.</returns>
         public HtmlAttribute Append(HtmlAttribute newAttribute)
         {
-	        if (_ownernode.NodeType == HtmlNodeType.Text || _ownernode.NodeType == HtmlNodeType.Comment)
-	        {
-				throw new Exception("A Text or Comment node cannot have attributes.");
-	        }
-				  
-			if (newAttribute == null)
+            if (_ownernode.NodeType == HtmlNodeType.Text || _ownernode.NodeType == HtmlNodeType.Comment)
+            {
+                throw new Exception("A Text or Comment node cannot have attributes.");
+            }
+
+            if (newAttribute == null)
             {
                 throw new ArgumentNullException("newAttribute");
             }

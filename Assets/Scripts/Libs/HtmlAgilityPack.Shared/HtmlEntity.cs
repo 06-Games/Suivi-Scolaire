@@ -1,12 +1,11 @@
-// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
+﻿// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
 // Website & Documentation: http://html-agility-pack.net
 // Forum & Issues: https://github.com/zzzprojects/html-agility-pack
 // License: https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE
 // More projects: http://www.zzzprojects.com/
-// Copyright � ZZZ Projects Inc. 2014 - 2017. All rights reserved.
+// Copyright © ZZZ Projects Inc. 2014 - 2017. All rights reserved.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -734,7 +733,7 @@ namespace HtmlAgilityPack
             {
                 if (result.NodeType == HtmlNodeType.Text)
                 {
-                    ((HtmlTextNode) result).Text = Entitize(((HtmlTextNode) result).Text, true, true);
+                    ((HtmlTextNode)result).Text = Entitize(((HtmlTextNode)result).Text, true, true);
                 }
             }
 
@@ -771,14 +770,14 @@ namespace HtmlAgilityPack
         /// <param name="entitizeQuotAmpAndLtGt">If set to true, the [quote], [ampersand], [lower than] and [greather than] characters will be entitized.</param>
         /// <returns>The result text</returns>
         public static string Entitize(string text, bool useNames, bool entitizeQuotAmpAndLtGt)
-//        _entityValue.Add("quot", 34);    // quotation mark = APL quote, U+0022 ISOnum 
-//        _entityName.Add(34, "quot");
-//        _entityValue.Add("amp", 38);    // ampersand, U+0026 ISOnum 
-//        _entityName.Add(38, "amp");
-//        _entityValue.Add("lt", 60);    // less-than sign, U+003C ISOnum 
-//        _entityName.Add(60, "lt");
-//        _entityValue.Add("gt", 62);    // greater-than sign, U+003E ISOnum 
-//        _entityName.Add(62, "gt");
+        //        _entityValue.Add("quot", 34);    // quotation mark = APL quote, U+0022 ISOnum 
+        //        _entityName.Add(34, "quot");
+        //        _entityValue.Add("amp", 38);    // ampersand, U+0026 ISOnum 
+        //        _entityName.Add(38, "amp");
+        //        _entityValue.Add("lt", 60);    // less-than sign, U+003C ISOnum 
+        //        _entityName.Add(60, "lt");
+        //        _entityValue.Add("gt", 62);    // greater-than sign, U+003E ISOnum 
+        //        _entityName.Add(62, "gt");
         {
             if (text == null)
                 return null;
@@ -866,7 +865,7 @@ namespace HtmlAgilityPack
                 {
                     if (node.NodeType == HtmlNodeType.Text)
                     {
-                        ((HtmlTextNode) node).Text = Entitize(((HtmlTextNode) node).Text, true, true);
+                        ((HtmlTextNode)node).Text = Entitize(((HtmlTextNode)node).Text, true, true);
                     }
                 }
             }

@@ -1,27 +1,23 @@
-// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
+ï»¿// Description: Html Agility Pack - HTML Parsers, selectors, traversors, manupulators.
 // Website & Documentation: http://html-agility-pack.net
 // Forum & Issues: https://github.com/zzzprojects/html-agility-pack
 // License: https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE
 // More projects: http://www.zzzprojects.com/
-// Copyright © ZZZ Projects Inc. 2014 - 2017. All rights reserved.
+// Copyright Â© ZZZ Projects Inc. 2014 - 2017. All rights reserved.
 
 #if !METRO
 
 #region
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Security;
 #if !NETSTANDARD
-using System.Security.Permissions;
 #else
 using System.Linq;
 #endif
 using System.Text;
 using System.Xml;
-using Microsoft.Win32;
 #if FX45 || NETSTANDARD
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -945,19 +941,19 @@ namespace HtmlAgilityPack
             }
 
             string contentType = "";
-	        if (!extension.StartsWith("."))
-	        {
-		        extension = "." + extension;
-	        }
+            if (!extension.StartsWith("."))
+            {
+                extension = "." + extension;
+            }
 
-			if (!MimeTypeMap.Mappings.TryGetValue(extension, out contentType))
-	        {
-		        contentType = def;
-	        }
+            if (!MimeTypeMap.Mappings.TryGetValue(extension, out contentType))
+            {
+                contentType = def;
+            }
 
 
 
-			return contentType;
+            return contentType;
         }
 
         /// <summary>
@@ -973,19 +969,19 @@ namespace HtmlAgilityPack
                 return def;
             }
 
-	        if (contentType.StartsWith("."))
-	        {
-		        throw new ArgumentException("Requested mime type is not valid: " + contentType);
-	        }
+            if (contentType.StartsWith("."))
+            {
+                throw new ArgumentException("Requested mime type is not valid: " + contentType);
+            }
 
-			string ext = "";
+            string ext = "";
 
-	        if (!MimeTypeMap.Mappings.TryGetValue(contentType, out ext))
-	        {
-		        ext = def;
-	        }
+            if (!MimeTypeMap.Mappings.TryGetValue(contentType, out ext))
+            {
+                ext = def;
+            }
 
-			return ext;
+            return ext;
         }
 
 
@@ -1005,12 +1001,12 @@ namespace HtmlAgilityPack
 #endif
 
 
-                /// <summary>
-                /// Gets an HTML document from an Internet resource and saves it to the specified file.
-                /// </summary>
-                /// <param name="url">The requested URL, such as "http://Myserver/Mypath/Myfile.asp".</param>
-                /// <param name="path">The location of the file where you want to save the document.</param>
-                public void Get(string url, string path)
+        /// <summary>
+        /// Gets an HTML document from an Internet resource and saves it to the specified file.
+        /// </summary>
+        /// <param name="url">The requested URL, such as "http://Myserver/Mypath/Myfile.asp".</param>
+        /// <param name="path">The location of the file where you want to save the document.</param>
+        public void Get(string url, string path)
         {
             Get(url, path, "GET");
         }
@@ -1139,7 +1135,7 @@ namespace HtmlAgilityPack
                 throw new HtmlWebException("Cache is not enabled. Set UsingCache to true first.");
             }
 
-			string cachePath;
+            string cachePath;
             if (uri.AbsolutePath == "/")
             {
                 cachePath = Path.Combine(_cachePath, ".htm");
@@ -1147,16 +1143,16 @@ namespace HtmlAgilityPack
             else
             {
 
-	            string absolutePathWithoutBadChar = uri.AbsolutePath;
+                string absolutePathWithoutBadChar = uri.AbsolutePath;
 
-	            string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+                string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
 
-	            foreach (char c in invalid)
-	            {
-		            absolutePathWithoutBadChar = absolutePathWithoutBadChar.Replace(c.ToString(), "");
-	            }
+                foreach (char c in invalid)
+                {
+                    absolutePathWithoutBadChar = absolutePathWithoutBadChar.Replace(c.ToString(), "");
+                }
 
-				if (uri.AbsolutePath[uri.AbsolutePath.Length - 1] == Path.AltDirectorySeparatorChar)
+                if (uri.AbsolutePath[uri.AbsolutePath.Length - 1] == Path.AltDirectorySeparatorChar)
                 {
                     cachePath = Path.Combine(_cachePath, (uri.Host + absolutePathWithoutBadChar.TrimEnd(Path.AltDirectorySeparatorChar)).Replace('/', '\\') + ".htm");
                 }
@@ -1510,7 +1506,7 @@ namespace HtmlAgilityPack
 
         // ReSharper disable UnusedMethodReturnValue.Local
         private static long SaveStream(Stream stream, string path, DateTime touchDate, int streamBufferSize)
-            // ReSharper restore UnusedMethodReturnValue.Local
+        // ReSharper restore UnusedMethodReturnValue.Local
         {
             FilePreparePath(path);
 
@@ -1587,7 +1583,7 @@ namespace HtmlAgilityPack
                     oldFile = true;
                 }
             }
-            
+
             if (_cacheOnly || _usingCacheIfExists)
             {
                 if (File.Exists(cachePath))
@@ -1641,7 +1637,7 @@ namespace HtmlAgilityPack
             catch (WebException we)
             {
                 _requestDuration = Environment.TickCount - tc;
-                resp = (HttpWebResponse) we.Response;
+                resp = (HttpWebResponse)we.Response;
                 if (resp == null)
                 {
                     if (oldFile)
@@ -1677,16 +1673,16 @@ namespace HtmlAgilityPack
             bool html = IsHtmlContent(resp.ContentType);
             bool isUnknown = string.IsNullOrEmpty(resp.ContentType);
 
-			// keep old code because logic on  ReadDocumentEncoding(HtmlNode node), now use resp.CharacterSet here.
-			// for futur maybe harmonise.
-			//Encoding respenc = !string.IsNullOrEmpty(resp.ContentEncoding)
-			// ? Encoding.GetEncoding(resp.ContentEncoding)
-			// : null;
+            // keep old code because logic on  ReadDocumentEncoding(HtmlNode node), now use resp.CharacterSet here.
+            // for futur maybe harmonise.
+            //Encoding respenc = !string.IsNullOrEmpty(resp.ContentEncoding)
+            // ? Encoding.GetEncoding(resp.ContentEncoding)
+            // : null;
 
-			Encoding respenc = !string.IsNullOrEmpty(html ? resp.CharacterSet : resp.ContentEncoding)
-				? Encoding.GetEncoding(html ? resp.CharacterSet : resp.ContentEncoding)
-				: null;
-			if (OverrideEncoding != null)
+            Encoding respenc = !string.IsNullOrEmpty(html ? resp.CharacterSet : resp.ContentEncoding)
+                ? Encoding.GetEncoding(html ? resp.CharacterSet : resp.ContentEncoding)
+                : null;
+            if (OverrideEncoding != null)
                 respenc = OverrideEncoding;
 
             if (CaptureRedirect)
@@ -1780,7 +1776,7 @@ namespace HtmlAgilityPack
                         }
                         catch
                         {
-                            // That’s fine, the content type was unknown so probably not HTML
+                            // Thatâ€™s fine, the content type was unknown so probably not HTML
                             // Perhaps trying to figure if the content contains some HTML before would be a better idea.
                         }
                     }
@@ -2006,7 +2002,7 @@ namespace HtmlAgilityPack
                             }
                             catch
                             {
-                                // That’s fine, the content type was unknown so probably not HTML
+                                // Thatâ€™s fine, the content type was unknown so probably not HTML
                                 // Perhaps trying to figure if the content contains some HTML before would be a better idea.
                             }
                         }
