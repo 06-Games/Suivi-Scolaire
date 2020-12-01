@@ -10,10 +10,12 @@ using UnityEngine.Networking;
 
 namespace Integrations
 {
-    public class EcoleDirecte : Provider, Auth, Periods, Homeworks, Marks, Schedule, Messanging, Books, Documents
+    public class EcoleDirecte : Provider, Auth, Marks, Homeworks, Periods, Schedule, Messanging, Books, Documents
     {
+        // Provider
         public string Name => "EcoleDirecte";
 
+        // Auth
         string token;
         public IEnumerator Connect(Account account, Action<Data.Data> onComplete, Action<string> onError)
         {
@@ -89,6 +91,7 @@ namespace Integrations
             }
         }
 
+        // Marks
         public IEnumerator GetMarks(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -143,6 +146,7 @@ namespace Integrations
             onComplete?.Invoke();
         }
 
+        // Homeworks
         public IEnumerator GetHomeworks(Homework.Period period, Action onComplete)
         {
 
@@ -174,6 +178,7 @@ namespace Integrations
 
                 homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
                 {
+                    id = v.Value<string>("id"),
                     subjectID = v.Value<string>("codeMatiere"),
                     periodID = period.id,
                     forThe = dateTime,
@@ -199,7 +204,7 @@ namespace Integrations
             onComplete?.Invoke();
         }
         public IEnumerator OpenHomeworkAttachment(Document doc) => OpenDocument(doc);
-
+        public IEnumerator HomeworkDoneStatus(Homework homework) => TryConnection(() => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/8579/cahierdetexte.awp?verbe=put&", $"data={{\"{(homework.done ? "idDevoirsEffectues" : "idDevoirsNonEffectues")}\": [{homework.id}],\"token\": \"{token}\"}}"), "marks.done");
         public IEnumerator<Homework.Period> DiaryPeriods()
         {
             DateTime start = DateTime.Now;
@@ -221,6 +226,8 @@ namespace Integrations
                 name = pEnd == DateTime.MaxValue ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", pStart.ToString("dd/MM"), pEnd.ToString("dd/MM"))
             };
         }
+
+        // Periods
         public IEnumerator GetPeriods(Action onComplete)
         {
             FileFormat.JSON establishmentResult = null;
@@ -271,6 +278,7 @@ namespace Integrations
             Manager.HideLoadingPanel();
         }
 
+        // Schedule
         public IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<ScheduledEvent>> onComplete)
         {
             FileFormat.JSON result = null;
@@ -308,6 +316,7 @@ namespace Integrations
             onComplete?.Invoke(events);
         }
 
+        // Messanging
         public IEnumerator GetMessages(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -360,6 +369,7 @@ namespace Integrations
         }
         public IEnumerator OpenMessageAttachment(Document doc) => OpenDocument(doc);
 
+        // Books
         public IEnumerator GetBooks(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -412,6 +422,7 @@ namespace Integrations
             Application.OpenURL(url);
         }
 
+        // Documents
         public IEnumerator GetDocuments(Action onComplete)
         {
             Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
@@ -555,9 +566,11 @@ namespace Integrations
             yield return ProviderExtension.DownloadDoc(webRequest, path);
         }
 
+        // Utils
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
-        IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output, bool manageErrors = true)
+        IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output = null, bool manageErrors = true)
         {
+            if (output == null) output = (_) => Manager.HideLoadingPanel();
             if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
 
             Manager.UpdateLoadingStatus($"provider.{getting}", $"Getting {getting}");

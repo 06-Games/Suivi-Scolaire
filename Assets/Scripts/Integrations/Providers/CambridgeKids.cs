@@ -128,6 +128,7 @@ namespace Integrations
                 new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } });
             yield return ProviderExtension.DownloadDoc(webRequest, doc);
         }
+        public IEnumerator HomeworkDoneStatus(Homework homework) { yield break; }
 
 
         private static Random random = new Random();

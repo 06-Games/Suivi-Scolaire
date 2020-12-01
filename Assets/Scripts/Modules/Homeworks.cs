@@ -12,6 +12,11 @@ namespace Modules
 {
     public class Homeworks : MonoBehaviour, Module
     {
+        readonly Color32 colorExam = new Color32(200, 000, 030, 255);
+        readonly Color32 colorToDo = new Color32(175, 175, 175, 255);
+        readonly Color32 colorDone = new Color32(050, 050, 050, 255);
+
+
         List<Homework.Period> periods = new List<Homework.Period>();
         IEnumerator<Homework.Period> periodsMethod;
         int periodIndex;
@@ -101,6 +106,11 @@ namespace Modules
                     var go = Instantiate(panel.GetChild(0).gameObject, panel).transform;
                     go.GetComponent<LayoutSwitcher>().Switch(Screen.width > Screen.height ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
 
+                    // Set to subect color
+                    SetColor(go.GetComponent<Image>(), homework.subject?.color ?? new Color());
+                    SetColor(go.Find("Tint").GetComponent<Image>(), homework.subject?.color ?? new Color());
+
+                    // Infos
                     var infos = go.Find("Infos");
                     infos.Find("Subject").GetComponent<Text>().text = homework.subject?.name;
                     infos.Find("Extra").GetComponent<Text>().text = LangueAPI.Get("homeworks.added", "Added on [0] by [1]", homework.addedThe.ToString("dd/MM"), homework.addedBy);
@@ -113,15 +123,27 @@ namespace Modules
                         docGo.gameObject.SetActive(true);
                     }
 
-                    var content = go.Find("Content").GetComponent<TMPro.TMP_InputField>();
-                    content.text = homework.content;
-                    if (homework.exam) content.textComponent.color = new Color32(245, 110, 110, 255);
+                    // Content
+                    go.Find("Content").GetComponent<TMPro.TMP_InputField>().text = homework.content;
+
+                    // Indicator
+                    var indicator = go.Find("Indicator");
+                    SetIndicator();
+                    if (!homework.exam) indicator.GetComponent<Button>().onClick.AddListener(() =>
+                    {
+                        homework.done = !homework.done;
+                        UnityThread.executeCoroutine(Manager.provider.GetModule<Integrations.Homeworks>().HomeworkDoneStatus(homework));
+                        SetIndicator();
+                    });
+                    void SetIndicator() => indicator.GetComponentInChildren<Image>().color = homework.exam ? colorExam : (homework.done ? colorDone : colorToDo);
+
                     go.gameObject.SetActive(true);
                 }
                 panel.gameObject.SetActive(false);
                 datePanel.gameObject.SetActive(true);
             }
         }
+        void SetColor(Image img, Color color) => img.color = new Color(color.r, color.g, color.b, img.color.a);
 
         public void ChangePeriod(bool next)
         {

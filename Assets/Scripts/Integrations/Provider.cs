@@ -34,9 +34,10 @@ namespace Integrations
     public interface Schedule : Provider { IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<Data.ScheduledEvent>> onComplete = null); }
     public interface Homeworks : Provider
     {
-        IEnumerator GetHomeworks(Data.Homework.Period period, Action onComplete);
         IEnumerator<Data.Homework.Period> DiaryPeriods();
+        IEnumerator GetHomeworks(Data.Homework.Period period, Action onComplete);
         IEnumerator OpenHomeworkAttachment(Data.Document document);
+        IEnumerator HomeworkDoneStatus(Data.Homework homework);
     }
     public interface Marks : Provider { IEnumerator GetMarks(Action onComplete = null); }
     public interface Messanging : Provider
