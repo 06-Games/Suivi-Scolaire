@@ -25,10 +25,8 @@ namespace Modules
             UnityThread.executeCoroutine(module.GetSchedule(period, (schedule) => defaultAction(period, schedule.ToList())));
         }
 
-        void OnDisable() { PlayerPrefs.SetString("scheduleColors", Utils.ClassToXML(subjectColor.Select(c => (c.Key, c.Value)).ToList())); }
         void Awake()
         {
-            subjectColor = Utils.XMLtoClass<List<(string, Color)>>(PlayerPrefs.GetString("scheduleColors"))?.ToDictionary(s => s.Item1, s => s.Item2) ?? new Dictionary<string, Color>();
             defaultAction = (period, schedule) =>
             {
                 Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
@@ -56,7 +54,6 @@ namespace Modules
             else UnityThread.executeCoroutine(module.GetSchedule(period, (schedule) => action(period, schedule.ToList())));
             return true;
         }
-        Dictionary<string, Color> subjectColor;
         void Refresh(IEnumerable<ScheduledEvent> schedule, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
@@ -103,17 +100,16 @@ namespace Modules
                         hole.transform.SetParent(dateContent);
                         hole.AddComponent<RectTransform>().sizeDelta = new Vector2(1, sizePerHour * (float)(Event.start.TimeOfDay - lastTime).TotalHours);
                     }
-                    if (!subjectColor.ContainsKey(Event.subjectID))
+                    if (Event.subject.color == default)
                     {
                         var index = rnd.Next(colorPalette.Count);
-                        var color = index < colorPalette.Count ? colorPalette[index] : new Color32();
-                        subjectColor.Add(Event.subjectID, color);
-                        colorPalette.Remove(color);
+                        Event.subject.color = index < colorPalette.Count ? colorPalette[index] : new Color32(100, 140, 200, 255);
+                        colorPalette.Remove(Event.subject.color);
                     }
-                    else colorPalette.Remove(subjectColor[Event.subjectID]);
+                    else colorPalette.Remove(Event.subject.color);
 
                     var go = Instantiate(dateContent.GetChild(0).gameObject, dateContent).transform;
-                    var goColor = subjectColor.TryGetValue(Event.subjectID ?? "", out var c) ? c : (Color)colorPalette[0];
+                    var goColor = Event.subject.color;
                     goColor.a = Event.canceled ? 0.4F : 1;
                     go.GetComponent<Image>().color = goColor;
                     var subject = Event.subject;

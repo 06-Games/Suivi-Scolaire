@@ -63,6 +63,8 @@ namespace Integrations.Data
         [XmlAttribute] public string id;
         [XmlAttribute] public string name;
         [XmlAttribute] public float coef;
+        [XmlIgnore] public Color color;
+        [XmlAttribute("color")] public string _color { get => $"#{ColorUtility.ToHtmlStringRGB(color)}"; set => ColorUtility.TryParseHtmlString(value, out color); }
         [XmlElement("teacher")] public string[] teachers;
     }
     #endregion
@@ -105,6 +107,7 @@ namespace Integrations.Data
 
     public class Homework
     {
+        [XmlAttribute] public string id;
         [XmlAttribute] public string subjectID;
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
         [XmlAttribute] public string periodID;
@@ -179,6 +182,7 @@ namespace Integrations.Data
         public uint? size;
     }
     #endregion
+
     public class SerializableKeyValue<T1, T2>
     {
         [XmlAttribute] public T1 key;
