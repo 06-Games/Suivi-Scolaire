@@ -307,7 +307,7 @@ namespace Integrations
             Manager.HideLoadingPanel();
             onComplete?.Invoke(events);
         }
-        
+
         public IEnumerator GetMessages(Action onComplete)
         {
             FileFormat.JSON result = null;
@@ -544,13 +544,15 @@ namespace Integrations
         }
         public IEnumerator OpenDocument(Document doc)
         {
+            var path = ProviderExtension.DocPath(doc);
+            if (path.Exists) { ProviderExtension.OpenDoc(path); yield break; }
             if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
             UnityWebRequest webRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", new Dictionary<string, string> {
                 { "token", token },
                 { "leTypeDeFichier", doc.type },
                 { "fichierId", doc.id }
             });
-            yield return ProviderExtension.DownloadDoc(webRequest, doc);
+            yield return ProviderExtension.DownloadDoc(webRequest, path);
         }
 
         string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));

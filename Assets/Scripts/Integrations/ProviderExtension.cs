@@ -1,5 +1,5 @@
 ﻿using HtmlAgilityPack;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Integrations
@@ -137,7 +137,8 @@ namespace Integrations
         public static string RemoveEmptyLines(string lines) => lines == null ? "" : System.Text.RegularExpressions.Regex.Replace(lines, @"^\s*$\n|\r", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
 
 
-        public static System.Collections.IEnumerator DownloadDoc(UnityEngine.Networking.UnityWebRequest request, Data.Document doc)
+        public static System.Collections.IEnumerator DownloadDoc(UnityEngine.Networking.UnityWebRequest request, Data.Document doc) => DownloadDoc(request, DocPath(doc));
+        public static System.Collections.IEnumerator DownloadDoc(UnityEngine.Networking.UnityWebRequest request, FileInfo path)
         {
             request.SendWebRequest();
             while (!request.isDone)
@@ -147,27 +148,30 @@ namespace Integrations
             }
             if (request.error == null) Manager.HideLoadingPanel();
             else { Manager.FatalErrorDuringLoading("Error downloading file", request.error); yield break; }
-            OpenDoc(request.downloadHandler.data, doc);
-        }
 
-        public static void OpenDoc(byte[] data, Data.Document doc)
+            File.WriteAllBytes(path.FullName, request.downloadHandler.data);
+            OpenDoc(path);
+        }
+        public static FileInfo DocPath(Data.Document doc)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
             var path = "/storage/emulated/0/Download/Suivi-Scolaire/";
-            if (!System.IO.Directory.Exists(path)) System.IO.Directory.CreateDirectory(path);
-            System.IO.File.WriteAllBytes(path + doc.name, data);
-            UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path + doc.name);
 #else
-            var path = UnityEngine.Application.temporaryCachePath + "/" + doc.name;
-            System.IO.File.WriteAllBytes(path, data);
-
-#if UNITY_IOS
-            drstc.DocumentHandler.DocumentHandler.OpenDocument(path);
-#else
-            UnityEngine.Application.OpenURL(path);
-#if !UNITY_STANDALONE && !UNITY_EDITOR
-            UnityEngine.Debug.LogWarning($"Unsupported platform ({UnityEngine.Application.platform}), we are unable to certify that the opening worked. The file has been saved at \"{path}\"");
+            var path = UnityEngine.Application.temporaryCachePath + Path.DirectorySeparatorChar;
 #endif
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+            return new FileInfo(path + doc.name);
+        }
+        public static void OpenDoc(FileInfo path)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            UnityAndroidOpenUrl.AndroidOpenUrl.OpenFile(path.FullName);
+#elif UNITY_IOS && !UNITY_EDITOR
+            drstc.DocumentHandler.DocumentHandler.OpenDocument(path.FullName);
+#else
+            UnityEngine.Application.OpenURL(path.FullName);
+#if !UNITY_STANDALONE && !UNITY_EDITOR
+            UnityEngine.Debug.LogWarning($"Unsupported platform ({UnityEngine.Application.platform}), we are unable to certify that the opening worked. The file has been saved at \"{path.FullName}\"");
 #endif
 #endif
         }
