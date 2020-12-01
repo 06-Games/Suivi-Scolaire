@@ -103,7 +103,7 @@ namespace Modules
                     var E = i == 0 ? events.FirstOrDefault(e => e.start <= now && e.end >= now) : events.FirstOrDefault(e => e.start > now);
                     if (E == null) { go.gameObject.SetActive(false); schedule.Find("Bar").gameObject.SetActive(false); continue; }
                     else schedule.gameObject.SetActive(true);
-                    go.Find("Subject").GetComponent<Text>().text = E.subject.name;
+                    go.Find("Subject").GetComponent<Text>().text = E.subject?.name ?? E.subjectID;
                     go.Find("Teacher").GetComponent<Text>().text = E.teacher;
                     go.Find("Room").GetComponent<Text>().text = E.room;
                     go.Find("Hours").GetComponent<Text>().text = $"{E.start.ToString("HH:mm")} - {E.end.ToString("HH:mm")}";

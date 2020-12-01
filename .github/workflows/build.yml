@@ -4,19 +4,52 @@ on:
   pull_request: {}
   push: { branches: [master] }
 
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_VERSION: 2019.3.3f1
+  
 jobs:
-  unity_Builder:
-    name: Build for ${{ matrix.targetPlatform }} on version ${{ matrix.unityVersion }}
+
+  # License
+  checklicense:
+    name: check if UNITY_LICENSE is set in github secrets
     runs-on: ubuntu-latest
-    env:
-      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+    outputs:
+      is_unity_license_set: ${{ steps.checklicense_job.outputs.is_unity_license_set }}
+    steps:
+      - name: Check whether unity activation requests should be done
+        id: checklicense_job
+        run: |
+            echo "Skip activation job: ${{ env.UNITY_LICENSE != '' }}"
+            echo "::set-output name=is_unity_license_set::${{ env.UNITY_LICENSE != '' }}"
+  activation:
+    needs: [checklicense]
+    if: needs.checklicense.outputs.is_unity_license_set == 'false'
+    name: Request activation file 🔑
+    runs-on: ubuntu-latest
+    steps:
+      # Request manual activation file
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: webbertakken/unity-request-manual-activation-file@v1.x
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+      # Upload artifact
+      - name: Expose as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+
+  # Build
+  unity_Builder:
+    needs: [checklicense]
+    if: needs.checklicense.outputs.is_unity_license_set == 'true'
+    name: Build for ${{ matrix.targetPlatform }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        unityVersion:
-          - 2019.3.3f1
         targetPlatform:
           - StandaloneOSX # Build a macOS standalone (Intel 64-bit).
           - StandaloneWindows # Build a Windows standalone.
@@ -39,9 +72,12 @@ jobs:
       - name: Build
         uses: webbertakken/unity-builder@v1.x
         with:
-          unityVersion: ${{ matrix.unityVersion }}
+          # Global
+          unityVersion: ${{ env.UNITY_VERSION }}
           targetPlatform: ${{ matrix.targetPlatform }}
           versioning: None
+          
+          # Android
           androidVersionCode: 0
           androidKeystoreName: Suivi-Scolaire.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
@@ -53,6 +89,7 @@ jobs:
           name: ${{ matrix.targetPlatform }}
           path: build
 
+  # XCode build
   iOS_Builder:
     name: Build iOS App
     runs-on: macos-latest
