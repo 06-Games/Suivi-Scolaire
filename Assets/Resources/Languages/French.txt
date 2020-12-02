@@ -65,6 +65,7 @@ documents.root = Racine
 
 provider.connecting = Établissement de la connexion avec [0]
 provider.homeworks = Obtention des devoirs
+provider.homeworks.done = Synchronisation de l'état du devoir avec le serveur
 provider.marks = Obtention des notes
 provider.holidays = Obtention des vacances
 provider.schedule = Obtention de l'emploi du temps

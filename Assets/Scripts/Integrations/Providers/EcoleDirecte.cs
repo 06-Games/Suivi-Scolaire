@@ -204,7 +204,7 @@ namespace Integrations
             onComplete?.Invoke();
         }
         public IEnumerator OpenHomeworkAttachment(Document doc) => OpenDocument(doc);
-        public IEnumerator HomeworkDoneStatus(Homework homework) => TryConnection(() => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/8579/cahierdetexte.awp?verbe=put&", $"data={{\"{(homework.done ? "idDevoirsEffectues" : "idDevoirsNonEffectues")}\": [{homework.id}],\"token\": \"{token}\"}}"), "marks.done");
+        public IEnumerator HomeworkDoneStatus(Homework homework) => TryConnection(() => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/8579/cahierdetexte.awp?verbe=put&", $"data={{\"{(homework.done ? "idDevoirsEffectues" : "idDevoirsNonEffectues")}\": [{homework.id}],\"token\": \"{token}\"}}"), "homeworks.done");
         public IEnumerator<Homework.Period> DiaryPeriods()
         {
             DateTime start = DateTime.Now;

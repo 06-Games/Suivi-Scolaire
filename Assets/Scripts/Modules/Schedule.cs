@@ -1,5 +1,4 @@
-﻿using FileFormat.XML;
-using Integrations;
+﻿using Integrations;
 using Integrations.Data;
 using System;
 using System.Collections;
@@ -25,8 +24,11 @@ namespace Modules
             UnityThread.executeCoroutine(module.GetSchedule(period, (schedule) => defaultAction(period, schedule.ToList())));
         }
 
+        Transform content;
+        CultureInfo language;
         void Awake()
         {
+            content = transform.Find("Content").GetComponent<ScrollRect>().content;
             defaultAction = (period, schedule) =>
             {
                 Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
@@ -34,6 +36,7 @@ namespace Modules
         }
         public void OnEnable()
         {
+            language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
             StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
             Initialise(periodStart, defaultAction);
@@ -54,6 +57,7 @@ namespace Modules
             else UnityThread.executeCoroutine(module.GetSchedule(period, (schedule) => action(period, schedule.ToList())));
             return true;
         }
+        TimeSpan min;
         void Refresh(IEnumerable<ScheduledEvent> schedule, TimeRange period)
         {
             var WeekSwitcher = transform.Find("Top").Find("Week");
@@ -82,14 +86,13 @@ namespace Modules
             transform.Find("Empty").gameObject.SetActive(!(schedule?.Count() > 0));
             if (schedule == null || schedule.Count() == 0) return;
 
-            var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
-            for (int i = 1; i < Content.childCount; i++) Destroy(Content.GetChild(i).gameObject);
-            var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
-            var min = schedule.Min(s => s.start.TimeOfDay);
+            for (int i = 1; i < content.childCount; i++) Destroy(content.GetChild(i).gameObject);
+            min = schedule.Min(s => s.start.TimeOfDay);
             foreach (var Schedule in schedule.GroupBy(e => e.start.Date))
             {
-                var datePanel = Instantiate(Content.GetChild(0).gameObject, Content).transform;
+                var datePanel = Instantiate(content.GetChild(0).gameObject, content).transform;
                 datePanel.Find("Day").GetComponentInChildren<Text>().text = Schedule.Key.ToString("dddd", language);
+                datePanel.name = Schedule.Key.ToString("yyyy-MM-dd");
                 var dateContent = datePanel.Find("Content");
                 var lastTime = min;
                 foreach (var Event in Schedule)
@@ -154,6 +157,16 @@ namespace Modules
             var panel = go.Find("Panel").gameObject;
             panel.SetActive(!panel.activeInHierarchy);
             go.Find("Head").Find("Arrow").transform.rotation = Quaternion.Euler(0, 0, panel.activeInHierarchy ? 0 : 180);
+        }
+
+        void Update()
+        {
+            var now = DateTime.Now;
+            var time = content.Find(now.ToString("yyyy-MM-dd"))?.Find("Actual time").GetComponent<RectTransform>();
+            if (time == null) return;
+            time.gameObject.SetActive(true);
+            time.anchoredPosition = new Vector2(0, (float)(now.TimeOfDay - min).TotalHours * sizePerHour * -1 - 50);
+            time.GetComponentInChildren<Text>().text = now.ToString("HH:mm");
         }
     }
 }

@@ -1,5 +1,8 @@
 ﻿using Modules;
 using UnityEngine;
+#if !UNITY_EDITOR
+using System.IO.Compression;
+#endif
 
 public class Manager : MonoBehaviour
 {

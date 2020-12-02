@@ -65,6 +65,7 @@ documents.root = Root
 
 provider.connecting = Establishing the connection with [0]
 provider.homeworks = Getting homeworks
+provider.homeworks.done = Synchronization of assignment status with the server
 provider.marks = Getting marks
 provider.holidays = Getting holidays
 provider.schedule = Getting schedule
