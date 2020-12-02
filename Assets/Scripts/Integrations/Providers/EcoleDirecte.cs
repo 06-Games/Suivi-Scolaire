@@ -401,9 +401,9 @@ namespace Integrations
         }
         public IEnumerator OpenBook(Book book)
         {
-            if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
+            yield return GetBooks(() => { }); // Refresh the URL of the book as it won't work if the token hasn't been regenerated
             Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
-            var bookRequest = UnityWebRequest.Post(book.url, new Dictionary<string, string> { { "token", token } });
+            var bookRequest = UnityWebRequest.Post(Manager.Child.Books.FirstOrDefault(b => b.id == book.id).url, new Dictionary<string, string> { { "token", token } });
             yield return bookRequest.SendWebRequest();
             Manager.HideLoadingPanel();
 
