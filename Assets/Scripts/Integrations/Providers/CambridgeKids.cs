@@ -109,7 +109,6 @@ namespace Integrations
                     return new Homework
                     {
                         subjectID = d.Value<string>("page_section_id"),
-                        periodID = period.id,
                         forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),
                         addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
                         addedThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0),

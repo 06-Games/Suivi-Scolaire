@@ -180,7 +180,6 @@ namespace Integrations
                 {
                     id = v.Value<string>("id"),
                     subjectID = v.Value<string>("codeMatiere"),
-                    periodID = period.id,
                     forThe = dateTime,
                     addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),

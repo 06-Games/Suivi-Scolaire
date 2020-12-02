@@ -110,7 +110,6 @@ namespace Integrations.Data
         [XmlAttribute] public string id;
         [XmlAttribute] public string subjectID;
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
-        [XmlAttribute] public string periodID;
         [XmlAttribute(DataType = "date")] public DateTime forThe;
         [XmlAttribute(DataType = "date")] public DateTime addedThe;
         [XmlAttribute] public string addedBy;

@@ -12,6 +12,7 @@ public class TimeRange
     public override string ToString() => $"{Start} - {End}";
     public string ToString(string arg) => $"{Start.ToString(arg)} - {End.ToString(arg)}";
 
+    public bool Contains(DateTime dateTime) => Start <= dateTime && dateTime <= End;
     public IEnumerable<DateTime> DayList()
     {
         for (var day = Start.Date; day.Date <= End.Date; day = day.AddDays(1)) yield return day;
