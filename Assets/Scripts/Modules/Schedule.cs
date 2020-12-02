@@ -60,27 +60,9 @@ namespace Modules
         TimeSpan min;
         void Refresh(IEnumerable<ScheduledEvent> schedule, TimeRange period)
         {
+            ProviderExtension.GenerateSubjectColors();
             var WeekSwitcher = transform.Find("Top").Find("Week");
             WeekSwitcher.Find("Text").GetComponent<Text>().text = Screen.width > Screen.height ? LangueAPI.Get("schedule.period", "from [0] to [1]", period.Start.ToString("dd/MM"), period.End.ToString("dd/MM")) : period.Start.ToString("dd/MM");
-
-            var rnd = new System.Random();
-            var colorPalette = new List<Color32> {
-                new Color32(100, 140, 200, 255),
-                new Color32(165, 170, 190, 255),
-                new Color32(112, 162, 136, 255),
-                new Color32(218, 183, 133, 255),
-                new Color32(213, 137, 111, 255),
-                new Color32(255, 188, 010, 255),
-                new Color32(174, 118, 166, 255),
-                new Color32(204, 214, 235, 255),
-                new Color32(163, 195, 217, 255),
-                new Color32(170, 229, 153, 255),
-                new Color32(223, 229, 192, 255),
-                new Color32(202, 175, 234, 255),
-                new Color32(249, 215, 194, 255),
-                new Color32(217, 244, 146, 255),
-                new Color32(241, 227, 243, 255)
-            };
 
             transform.Find("Content").gameObject.SetActive(schedule?.Count() > 0);
             transform.Find("Empty").gameObject.SetActive(!(schedule?.Count() > 0));
@@ -103,13 +85,6 @@ namespace Modules
                         hole.transform.SetParent(dateContent);
                         hole.AddComponent<RectTransform>().sizeDelta = new Vector2(1, sizePerHour * (float)(Event.start.TimeOfDay - lastTime).TotalHours);
                     }
-                    if (Event.subject.color == default)
-                    {
-                        var index = rnd.Next(colorPalette.Count);
-                        Event.subject.color = index < colorPalette.Count ? colorPalette[index] : new Color32(100, 140, 200, 255);
-                        colorPalette.Remove(Event.subject.color);
-                    }
-                    else colorPalette.Remove(Event.subject.color);
 
                     var go = Instantiate(dateContent.GetChild(0).gameObject, dateContent).transform;
                     var goColor = Event.subject.color;

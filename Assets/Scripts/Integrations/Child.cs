@@ -63,7 +63,7 @@ namespace Integrations.Data
         [XmlAttribute] public string id;
         [XmlAttribute] public string name;
         [XmlAttribute] public float coef;
-        [XmlIgnore] public Color color;
+        [XmlIgnore] public Color color = Color.black;
         [XmlAttribute("color")] public string _color { get => $"#{ColorUtility.ToHtmlStringRGB(color)}"; set => ColorUtility.TryParseHtmlString(value, out color); }
         [XmlElement("teacher")] public string[] teachers;
     }

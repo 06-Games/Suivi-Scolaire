@@ -54,6 +54,7 @@ namespace Modules
             {
                 Action<List<Homework>> action = (homeworks) =>
                 {
+                    ProviderExtension.GenerateSubjectColors();
                     Refresh(homeworks.OrderBy(h => h.forThe), period);
                     Manager.OpenModule(gameObject);
                 };
