@@ -6,7 +6,7 @@ on:
 
 env:
   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-  UNITY_VERSION: 2019.3.3f1
+  UNITY_VERSION: 2020.1.16f1
   
 jobs:
 
@@ -70,7 +70,7 @@ jobs:
           restore-keys: |
             Library-
       - name: Build
-        uses: webbertakken/unity-builder@v1.x
+        uses: webbertakken/unity-builder@v2.0-aplha-5
         with:
           # Global
           unityVersion: ${{ env.UNITY_VERSION }}
