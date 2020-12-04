@@ -31,7 +31,7 @@ jobs:
       # Request manual activation file
       - name: Request manual activation file
         id: getManualLicenseFile
-        uses: webbertakken/unity-request-manual-activation-file@v1.x
+        uses: webbertakken/unity-request-activation-file@v2.0-alpha-1
         with:
           unityVersion: ${{ env.UNITY_VERSION }}
       # Upload artifact
