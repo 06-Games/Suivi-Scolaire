@@ -53,7 +53,7 @@ namespace UnityAndroidOpenUrl.EditorScripts
         static PackageNameChanger()
         {
             pathToPluginsFolder = Path.Combine(Application.dataPath, PLUGINS_DIR);
-            if(!Directory.Exists(pathToPluginsFolder))
+            if (!Directory.Exists(pathToPluginsFolder))
             {
                 Debug.LogError("Plugins folder not found. Please re-import asset. See README.md for details...");
                 return;
@@ -84,7 +84,7 @@ namespace UnityAndroidOpenUrl.EditorScripts
         private static void TryUpdatePackageName()
         {
             FileInfo fileInfo = new FileInfo(pathToBinary);
-            if(!IsFileAlreadyOpen(fileInfo))
+            if (!IsFileAlreadyOpen(fileInfo))
             {
                 RepackBinary();
             }
@@ -169,14 +169,22 @@ namespace UnityAndroidOpenUrl.EditorScripts
         private static void ChangePackageName()
         {
             string manifestPath = Path.Combine(pathToTempFolder, MANIFEST_NAME);
-            string manifestText = File.ReadAllText(manifestPath);
-
-            int manifestPackageNameStartIndex = manifestText.IndexOf("package=\"") + 9;
-            int manifestPackageNameEndIndex = manifestText.IndexOf("\">", manifestPackageNameStartIndex);
-            string manifestPackageName = manifestText.Substring(manifestPackageNameStartIndex, manifestPackageNameEndIndex - manifestPackageNameStartIndex);
-
-            manifestText = manifestText.Replace("package=\"" + manifestPackageName, "package=\"" + PlayerSettings.applicationIdentifier);
-            manifestText = manifestText.Replace("android:authorities=\"" + manifestPackageName, "android:authorities=\"" + PlayerSettings.applicationIdentifier);
+            string manifestText = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                + $"\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"{PlayerSettings.applicationIdentifier}\">"
+                + $"\n	<application>"
+                + $"\n    <provider"
+                + $"\n        android:name=\"android.support.v4.content.FileProvider\""
+                + $"\n        android:authorities=\"{PlayerSettings.applicationIdentifier}.fileprovider\""
+                + $"\n        android:exported=\"false\""
+                + $"\n        android:grantUriPermissions=\"true\" >"
+                + $"\n      <meta-data"
+                + $"\n          android:name=\"android.support.FILE_PROVIDER_PATHS\""
+                + $"\n          android:resource=\"@xml/filepaths\" />"
+                + $"\n    </provider>"
+                + $"\n	</application>"
+                + $"\n  <uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\" />"
+                + $"\n  <uses-sdk android:minSdkVersion=\"16\" android:targetSdkVersion=\"29\" />"
+                + $"\n</manifest>";
             File.WriteAllText(manifestPath, manifestText);
 
             string filepathsPath = Path.Combine(pathToTempFolder, PROVIDER_PATHS_NAME);

@@ -25,8 +25,9 @@ public class AutoRotationLock : MonoBehaviour
 
             return rotationOn == 1;
         }
-#endif
+#else
         return true;
+#endif
     }
 
 }
