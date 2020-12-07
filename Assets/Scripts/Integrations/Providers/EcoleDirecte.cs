@@ -121,6 +121,19 @@ namespace Integrations
             {
                 var outOf = float.Parse(obj.Value<string>("noteSur").Replace(",", "."));
                 if(!float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var classAverage)) classAverage = -1;
+                var mark = new Mark.MarkData
+                {
+                    mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : -1,
+                    markOutOf = outOf > 0 ? outOf : 20,
+                    skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.MarkData.Skill
+                    {
+                        id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
+                        name = c.Value<string>("descriptif"),
+                        value = int.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : -1,
+                        categoryID = c.Value<string>("idCompetence"),
+                        categoryName = c.Value<string>("libelleCompetence")
+                    }).ToArray()
+                };
                 return new Mark
                 {
                     //Date
@@ -132,19 +145,8 @@ namespace Integrations
                     subjectID = obj.Value<string>("codeMatiere"),
                     name = obj.Value<string>("devoir"),
                     coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
-                    mark = new Mark.MarkData
-                    {
-                        mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : -1,
-                        markOutOf = outOf > 0 ? outOf : 20,
-                        skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.MarkData.Skill
-                        {
-                            id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
-                            name = c.Value<string>("descriptif"),
-                            value = int.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : -1,
-                            categoryID = c.Value<string>("idCompetence"),
-                            categoryName = c.Value<string>("libelleCompetence")
-                        }).ToArray()
-                    },
+                    absent = mark.mark < 0 && !mark.skills.Any(s => s.value >= 0),
+                    mark = mark,
                     classAverage = classAverage < 0 ? null : new Mark.MarkData { mark = classAverage, markOutOf = outOf == 0 ? 20 : outOf },
                     notSignificant = obj.Value<bool>("nonSignificatif")
                 };
