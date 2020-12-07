@@ -135,7 +135,7 @@ namespace Integrations
                     mark = new Mark.MarkData
                     {
                         mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : -1,
-                        markOutOf = outOf == 0 ? 20 : outOf,
+                        markOutOf = outOf > 0 ? outOf : 20,
                         skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.MarkData.Skill
                         {
                             id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
@@ -145,7 +145,7 @@ namespace Integrations
                             categoryName = c.Value<string>("libelleCompetence")
                         }).ToArray()
                     },
-                    classAverage = classAverage == -1 ? null : new Mark.MarkData { mark = classAverage, markOutOf = outOf == 0 ? 20 : outOf },
+                    classAverage = classAverage < 0 ? null : new Mark.MarkData { mark = classAverage, markOutOf = outOf == 0 ? 20 : outOf },
                     notSignificant = obj.Value<bool>("nonSignificatif")
                 };
             }).ToList();

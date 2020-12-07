@@ -102,7 +102,7 @@ namespace Integrations.Data
                 [XmlAttribute] public string categoryName;
             }
 
-            [XmlIgnore] public float GetMark => (mark == -1 ? skills?.Sum(skill => (skill.value + 1) / 4F * markOutOf) / skills?.Length : mark) ?? -1;
+            [XmlIgnore] public float GetMark => (mark < 0 ? skills?.Sum(skill => (skill.value + 1) / 4F * markOutOf) / skills?.Length : mark) ?? -1;
         }
     }
     public class Trimester
