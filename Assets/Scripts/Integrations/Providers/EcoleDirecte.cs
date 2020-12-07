@@ -117,29 +117,37 @@ namespace Integrations
                     teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
                 }).ToList();
 
-            Manager.Child.Marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj => new Mark
+            Manager.Child.Marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj =>
             {
-                //Date
-                trimesterID = obj.Value<string>("codePeriode"),
-                date = obj.Value<DateTime>("date"),
-                dateAdded = obj.Value<DateTime>("dateSaisie"),
-
-                //Infos
-                subjectID = obj.Value<string>("codeMatiere"),
-                name = obj.Value<string>("devoir"),
-                coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
-                mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : (float?)null,
-                markOutOf = float.Parse(obj.Value<string>("noteSur").Replace(",", ".")),
-                skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.Skill
+                var outOf = float.Parse(obj.Value<string>("noteSur").Replace(",", "."));
+                if(!float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var classAverage)) classAverage = -1;
+                return new Mark
                 {
-                    id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
-                    name = c.Value<string>("descriptif"),
-                    value = uint.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : (uint?)null,
-                    categoryID = c.Value<uint>("idCompetence"),
-                    categoryName = c.Value<string>("libelleCompetence")
-                }).ToArray(),
-                classAverage = float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var m) ? m : -1,
-                notSignificant = obj.Value<bool>("nonSignificatif")
+                    //Date
+                    trimesterID = obj.Value<string>("codePeriode"),
+                    date = obj.Value<DateTime>("date"),
+                    dateAdded = obj.Value<DateTime>("dateSaisie"),
+
+                    //Infos
+                    subjectID = obj.Value<string>("codeMatiere"),
+                    name = obj.Value<string>("devoir"),
+                    coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
+                    mark = new Mark.MarkData
+                    {
+                        mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : -1,
+                        markOutOf = outOf == 0 ? 20 : outOf,
+                        skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.MarkData.Skill
+                        {
+                            id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
+                            name = c.Value<string>("descriptif"),
+                            value = int.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : -1,
+                            categoryID = c.Value<string>("idCompetence"),
+                            categoryName = c.Value<string>("libelleCompetence")
+                        }).ToArray()
+                    },
+                    classAverage = classAverage == -1 ? null : new Mark.MarkData { mark = classAverage, markOutOf = outOf == 0 ? 20 : outOf },
+                    notSignificant = obj.Value<bool>("nonSignificatif")
+                };
             }).ToList();
 
             Manager.HideLoadingPanel();

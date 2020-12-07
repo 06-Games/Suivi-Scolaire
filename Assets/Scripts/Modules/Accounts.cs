@@ -16,7 +16,7 @@ namespace Modules
         public static Account selectedAccount { get; private set; }
         public void Initialise()
         {
-            try { accounts = Newtonsoft.Json.JsonConvert.DeserializeObject<HashSet<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts") ?? "", "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new HashSet<Account>(); }
+            try { accounts = FileFormat.XML.Utils.XMLtoClass<HashSet<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts") ?? "", "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new HashSet<Account>(); }
             catch (System.Exception e) { Debug.LogError(e); accounts = new HashSet<Account>(); }
             Refresh();
             if (accounts?.Count == 1) ConnectTo(accounts.FirstOrDefault());
@@ -118,7 +118,7 @@ namespace Modules
             }
             else ConnectTo(new Account { provider = provider });
         }
-        void Save() { try { PlayerPrefs.SetString("Accounts", Security.Encrypting.Encrypt(Newtonsoft.Json.JsonConvert.SerializeObject(accounts.ToList()), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")); } catch { } }
+        void Save() => PlayerPrefs.SetString("Accounts", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(accounts.ToList()), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
         public void ShowPassword(InputField pass)
         {
             pass.contentType = pass.contentType == InputField.ContentType.Password ? InputField.ContentType.Standard : InputField.ContentType.Password;

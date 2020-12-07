@@ -74,6 +74,7 @@ namespace Integrations.Data
     {
         //Date
         [XmlAttribute] public string trimesterID;
+        [XmlIgnore] public Trimester trimester => Manager.Child.Trimesters.FirstOrDefault(s => s.id == trimesterID);
         [XmlAttribute(DataType = "date")] public DateTime date;
         [XmlAttribute(DataType = "date")] public DateTime dateAdded;
 
@@ -82,19 +83,26 @@ namespace Integrations.Data
         [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
         [XmlAttribute] public string name;
         [XmlAttribute] public float coef;
-        public float? mark;
-        [XmlAttribute] public float markOutOf;
-        public Skill[] skills;
-        [XmlAttribute] public float classAverage = -1;
         [XmlAttribute] public bool notSignificant;
+        [XmlAttribute] public bool absent;
+        public MarkData mark;
+        public MarkData classAverage;
 
-        public class Skill
+        public class MarkData
         {
-            [XmlAttribute] public uint id;
-            [XmlAttribute] public string name;
-            public uint? value;
-            [XmlAttribute] public uint categoryID;
-            [XmlAttribute] public string categoryName;
+            [XmlAttribute] public float mark;
+            [XmlAttribute] public float markOutOf = 20;
+            [XmlElement("skill")] public Skill[] skills;
+            public class Skill
+            {
+                [XmlAttribute] public uint id;
+                [XmlAttribute] public string name;
+                [XmlAttribute] public int value;
+                [XmlAttribute] public string categoryID;
+                [XmlAttribute] public string categoryName;
+            }
+
+            [XmlIgnore] public float GetMark => (mark == -1 ? skills?.Sum(skill => (skill.value + 1) / 4F * markOutOf) / skills?.Length : mark) ?? -1;
         }
     }
     public class Trimester
