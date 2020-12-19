@@ -1,13 +1,10 @@
 ﻿using Modules;
 using UnityEngine;
-#if !UNITY_EDITOR
-using System.IO.Compression;
-#endif
 
 public class Manager : MonoBehaviour
 {
     [Header("Modules")]
-    public Accounts FirstStart;
+    public Accounts Account;
     public Home Home;
     public System.Collections.Generic.List<Module> modules = new System.Collections.Generic.List<Module>();
 
@@ -18,84 +15,10 @@ public class Manager : MonoBehaviour
 
     public static Integrations.Provider provider { get; set; }
     public static Integrations.Data.Data Data { get; set; }
-    static Integrations.Data.Child nullChild;
-    public static ref Integrations.Data.Child Child
-    {
-        get
-        {
-            if (Data?.Children == null) return ref nullChild;
-            for (int i = 0; i < Data.Children.Length; i++) { if (Data.Children[i].id == Accounts.selectedAccount.child) return ref Data.Children[i]; }
-            return ref Data.Children[0];
-        }
-    }
-    static System.IO.FileInfo dataFile
-    {
-        get
-        {
-            var dir = new System.IO.DirectoryInfo($"{Application.persistentDataPath}/data/");
-            if (!dir.Exists) dir.Create();
-            return new System.IO.FileInfo($"{dir.FullName}/{Accounts.selectedAccount.provider}_{Accounts.selectedAccount.username}.xml"
-#if !UNITY_EDITOR
-            + ".gz"
-#endif
-            );
-        }
-    }
-    public static void LoadData()
-    {
-        if (provider == null) { Debug.LogError("Provider is null"); return; }
-        var file = dataFile;
-        if (file.Exists)
-        {
-            string text;
-#if UNITY_EDITOR
-            text = System.IO.File.ReadAllText(file.FullName);
-#else
-            using (var msi = dataFile.OpenRead())
-            using (var gs = new GZipStream(msi, CompressionMode.Decompress))
-            using (var mso = new System.IO.StreamReader(gs)) text = mso.ReadToEnd();
-#endif
-            Data = FileFormat.XML.Utils.XMLtoClass<Integrations.Data.Data>(text) ?? Data;
-        }
-        Logging.Log("Data loaded");
-    }
-    public static void SaveData()
-    {
-        if (!isReady || Data == null) return;
-
-        var text = FileFormat.XML.Utils.ClassToXML(Data, false);
-#if UNITY_EDITOR
-        System.IO.File.WriteAllText(dataFile.FullName, text);
-#else
-        using (var msi = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(text)))
-        using (var mso = new System.IO.MemoryStream())
-        {
-            using (var gs = new GZipStream(mso, CompressionMode.Compress)) msi.CopyTo(gs);
-            System.IO.File.WriteAllBytes(dataFile.FullName, mso.ToArray());
-        }
-#endif
-
-        Logging.Log("Data saved");
-    }
-    private void OnApplicationFocus(bool hasFocus) { if (!hasFocus) SaveData(); }
-    private void OnApplicationQuit() => SaveData();
-    public static bool isReady => provider != null && Child != null;
-
-    void Start()
-    {
-        FirstStart.onComplete += (Provider) =>
-        {
-            provider = Provider;
-            Menu.sideMenu.handle.SetActive(true);
-            Accounts.SelectChild();
-            Data.LastLogin = System.DateTime.Now;
-            OpenModule(Home.gameObject);
-        };
-        Menu.sideMenu.handle.SetActive(false);
-        FirstStart.Initialise();
-        foreach (Transform obj in transform) modules.Add(obj.GetComponent<Module>());
-    }
-
+    public void Reset() { provider = null; Data = null; }
+    private void OnApplicationFocus(bool hasFocus) { if (!hasFocus) Integrations.Saving.SaveData(); }
+    private void OnApplicationQuit() => Integrations.Saving.SaveData();
+    public static bool isReady => provider != null && Data != null;
 
     internal static Manager instance { get; private set; }
     void Awake()
@@ -105,6 +28,14 @@ public class Manager : MonoBehaviour
         Logging.Initialise();
         instance = this;
         for (int i = 0; i < instance.transform.childCount; i++) instance.transform.GetChild(i).gameObject.SetActive(false); //Close all modules
+    }
+
+
+    void Start()
+    {
+        Menu.sideMenu.handle.SetActive(false);
+        Account.gameObject.SetActive(true);
+        foreach (Transform obj in transform) modules.Add(obj.GetComponent<Module>());
     }
 
     public void OpenModuleEditor(GameObject module) => OpenModule(module);

@@ -13,7 +13,7 @@ public class Documents : MonoBehaviour, Module
     public void OnEnable()
     {
         if (!Manager.isReady) gameObject.SetActive(false);
-        else if (Manager.Child.Documents == null) Reload();
+        else if (Manager.Data.ActiveChild.Documents == null) Reload();
         else Load();
     }
     public void Reload()
@@ -24,8 +24,8 @@ public class Documents : MonoBehaviour, Module
     void Load()
     {
         Reset();
-        Path.Add(Manager.Child.Documents);
-        Refresh(Manager.Child.Documents);
+        Path.Add(Manager.Data.ActiveChild.Documents);
+        Refresh(Manager.Data.ActiveChild.Documents);
     }
 
     void Refresh(Folder parentFolder)

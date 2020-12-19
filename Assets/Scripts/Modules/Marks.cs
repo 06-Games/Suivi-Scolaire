@@ -18,7 +18,7 @@ namespace Modules
         public void OnEnable()
         {
             if (!Manager.isReady) return;
-            if (Manager.Child.Marks == null || Manager.Child.Marks.Count == 0) Reload();
+            if (Manager.Data.ActiveChild.Marks == null || Manager.Data.ActiveChild.Marks.Count == 0) Reload();
             else Initialise();
             Manager.OpenModule(gameObject);
         }
@@ -29,8 +29,8 @@ namespace Modules
             period.onValueChanged.RemoveAllListeners();
             period.ClearOptions();
             period.AddOptions(new List<string> { LangueAPI.Get("marks.displayedPeriod.all", "All") });
-            period.AddOptions(Manager.Child.Trimesters.Select(p => p.name).ToList());
-            period.value = Manager.Child.Trimesters.IndexOf(Manager.Child.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
+            period.AddOptions(Manager.Data.ActiveChild.Trimesters.Select(p => p.name).ToList());
+            period.value = Manager.Data.ActiveChild.Trimesters.IndexOf(Manager.Data.ActiveChild.Trimesters.FirstOrDefault(p => p.start <= System.DateTime.Now && p.end >= System.DateTime.Now)) + 1;
             Refresh();
         }
 
@@ -38,9 +38,9 @@ namespace Modules
         public void Refresh()
         {
             //Variables
-            var trimester = period.value == 0 ? null : Manager.Child.Trimesters[period.value - 1];
-            var marks = Manager.Child.Marks.Where(m => trimester == null || m.trimesterID == trimester.id);
-            var subjects = Manager.Child.Subjects.OrderBy(s => s.name);
+            var trimester = period.value == 0 ? null : Manager.Data.ActiveChild.Trimesters[period.value - 1];
+            var marks = Manager.Data.ActiveChild.Marks.Where(m => trimester == null || m.trimesterID == trimester.id);
+            var subjects = Manager.Data.ActiveChild.Subjects.OrderBy(s => s.name);
 
             //Average variables
             var subjectSum = 0F;

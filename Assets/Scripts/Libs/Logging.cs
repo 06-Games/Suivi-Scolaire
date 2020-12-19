@@ -7,7 +7,7 @@ public static class Logging
 
     static FileInfo logFile;
     static string logs = "";
-    public static void Log(System.Exception e, LogType type = LogType.Exception) { Log(e.Message, type, e.StackTrace); }
+    public static void Log(System.Exception e, LogType type = LogType.Exception) => Log(e.Message, type, e.StackTrace);
     public static void Log(string logString, LogType type = LogType.Log, string stackTrace = null)
     {
         if (!IsInitialised) Debug.LogError("Not Initialised");
@@ -18,7 +18,7 @@ public static class Logging
         UnityThread.executeInUpdate(() => File.WriteAllText(logFile.FullName, logs));
     }
 
-    public static bool IsInitialised { get { return logFile != null; } }
+    public static bool IsInitialised => logFile != null;
     public static void Initialise()
     {
         if (IsInitialised) return;

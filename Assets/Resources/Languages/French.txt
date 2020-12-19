@@ -3,6 +3,9 @@ welcome.accounts.add = Ajouter un compte
 welcome.connection = Connexion
 welcome.connection.id = Identifiant
 welcome.connection.password = Mot de passe
+welcome.delete = Êtes-vous sûr de vouloir supprimer le compte "<size=20><color=grey>[0]</color></size>" ?
+welcome.delete.yes = Oui
+welcome.delete.no = Non
 
 menu.credits = Réalisé par Evan Galli\nAvec l'aide de MazeWave
 menu.home = Accueil

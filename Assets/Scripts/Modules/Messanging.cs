@@ -14,18 +14,18 @@ namespace Modules
         public void OnEnable()
         {
             if (!Manager.isReady || !Manager.provider.TryGetModule(out module)) { gameObject.SetActive(false); return; }
-            if (Manager.Child.Messages?.Count > 0) Refresh();
+            if (Manager.Data.ActiveChild.Messages?.Count > 0) Refresh();
             else Reload();
         }
         public void Reload() => StartCoroutine(module.GetMessages(() => Refresh()));
-        public void ReloadMessage() => StartCoroutine(module.LoadExtraMessageData(openedMessage, () => OpenMsg(Manager.Child.Messages.FirstOrDefault(m => m.id == openedMessage))));
+        public void ReloadMessage() => StartCoroutine(module.LoadExtraMessageData(openedMessage, () => OpenMsg(Manager.Data.ActiveChild.Messages.FirstOrDefault(m => m.id == openedMessage))));
 
         public void Refresh()
         {
             var content = transform.Find("Content");
             foreach (Transform go in content) go.gameObject.SetActive(false);
 
-            var isntEmpty = Manager.Child.Messages?.Count != 0;
+            var isntEmpty = Manager.Data.ActiveChild.Messages?.Count != 0;
 
             if (!isntEmpty) { content.Find("Empty").gameObject.SetActive(true); return; }
 
@@ -34,7 +34,7 @@ namespace Modules
             var lContent = list.content;
             for (int i = 1; i < lContent.childCount; i++) Destroy(lContent.GetChild(i).gameObject);
 
-            foreach (var message in Manager.Child.Messages)
+            foreach (var message in Manager.Data.ActiveChild.Messages)
             {
                 var go = Instantiate(lContent.GetChild(0).gameObject, lContent).transform;
                 go.GetComponent<Button>().onClick.AddListener(() => OpenMsg(message));

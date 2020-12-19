@@ -7,29 +7,38 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Random = System.Random;
 
-namespace Integrations
+namespace Integrations.Providers
 {
     public class CambridgeKids : Provider, Auth, Homeworks
     {
         public string Name => "Cambridge Kids";
 
         string sessionId = "";
-        public IEnumerator Connect(Account account, Action<Data.Data> onComplete, Action<string> onError)
+        public IEnumerator Connect(KeyValuePair<string, string> account) => Connect(account, null, null);
+        public IEnumerator Connect(KeyValuePair<string, string> account, Action onComplete, Action<string> onError)
         {
             Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
             sessionId = $"PHPSESSID={RandomString(26)}";
 
             //Get Token
             var data = new WWWForm();
-            data.AddField("signin", account.id);
-            data.AddField("password", account.password);
+            data.AddField("signin", account.Key);
+            data.AddField("password", account.Value);
             var accountRequest = UnityWebRequest.Post("https://cambridgekids.sophiacloud.com/console/sophiacloud/login_validate.php?skins=cambridgekids", data);
             accountRequest.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
             accountRequest.SetRequestHeader("Cookie", sessionId);
             accountRequest.redirectLimit = 0;
             yield return accountRequest.SendWebRequest();
 
-            accountRequest = UnityWebRequest.Get(new Uri(accountRequest.uri, accountRequest.GetResponseHeader("Location")));
+            var Location = accountRequest.GetResponseHeader("Location");
+            if (Location == "../index.php?page=login&login_fail=1") onError?.Invoke("Un erreur est survenue");
+            else onComplete?.Invoke();
+            Manager.HideLoadingPanel();
+        }
+
+        public IEnumerator GetInfos(Data.Data data, Action<Data.Data> onComplete)
+        {
+            var accountRequest = UnityWebRequest.Get("https://cambridgekids.sophiacloud.com/console/index.php?page=MyDaily");
             accountRequest.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
             accountRequest.SetRequestHeader("Cookie", sessionId);
             yield return accountRequest.SendWebRequest();
@@ -41,9 +50,10 @@ namespace Integrations
                     response = response.Remove(response.Length - 2);
                     break;
                 }
-            if (string.IsNullOrEmpty(response)) { onError?.Invoke("Un erreur est survenue"); Manager.HideLoadingPanel(); yield break; }
+            if (string.IsNullOrEmpty(response)) { Logging.Log("Un erreur est survenue", LogType.Error); Manager.HideLoadingPanel(); yield break; }
             var json = new FileFormat.JSON(response);
             var userID = json.GetCategory("user_session").GetCategory("settings").Value<string>("user_id");
+
             accountRequest = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=user&user_id={userID}&verbose=page");
             accountRequest.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
             accountRequest.SetRequestHeader("Cookie", sessionId);
@@ -61,13 +71,30 @@ namespace Integrations
                 return new Child { name = name, id = enfant.Value<string>("user_id"), modules = new List<string> { "Homeworks" } };
             }).ToArray();
 
-            account.username = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(json.Value<string>("account_name").ToLower());
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(new Data.Data { Children = enfants });
+            var label = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(json.Value<string>("account_name").ToLower());
+
+            data.Children = enfants;
+            data.Label = label;
+            onComplete?.Invoke(data);
+            Manager.HideLoadingPanel();
         }
         public IEnumerator<Homework.Period> DiaryPeriods()
         {
-            var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={Modules.Accounts.selectedAccount.child}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                bool done = false;
+                string error = null;
+                UnityThread.executeCoroutine(Connect(Modules.Accounts.GetCredential, () => done = true, (e) => error = e));
+                while (!done && error == null) yield return null;
+                if (error != null)
+                {
+                    Logging.Log(error);
+                    yield break;
+                }
+            }
+
+            var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=feed&q=service_search&beneficiaire_user_id={Manager.Data.ActiveChild.id}&interactive_worksheet=1&scl_version=v46-697-gb3c6cf80&mode_debutant=1");
             request.SetRequestHeader("User-Agent", "Mozilla/5.0 Firefox/74.0");
             request.SetRequestHeader("Cookie", sessionId);
             request.SendWebRequest();
@@ -85,6 +112,7 @@ namespace Integrations
         }
         public IEnumerator GetHomeworks(Homework.Period period, Action onComplete)
         {
+            if (string.IsNullOrEmpty(sessionId)) yield return Connect(Modules.Accounts.GetCredential);
             Manager.UpdateLoadingStatus("provider.homeworks", "Getting homeworks");
 
             var request = UnityWebRequest.Get($"https://cambridgekids.sophiacloud.com/console/sophiacloud/data_mgr.php?s=interactive_worksheet&timestamp=0&service_id={period.id}");
@@ -92,9 +120,9 @@ namespace Integrations
             request.SetRequestHeader("Cookie", sessionId);
             yield return request.SendWebRequest();
             var result = new FileFormat.JSON($"{{\"list\":{request.downloadHandler.text}}}");
-            if (Manager.Child.Subjects == null) Manager.Child.Subjects = new List<Subject>();
-            if (Manager.Child.Homeworks == null) Manager.Child.Homeworks = new List<Homework>();
-            Manager.Child.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
+            if (Manager.Data.ActiveChild.Subjects == null) Manager.Data.ActiveChild.Subjects = new List<Subject>();
+            if (Manager.Data.ActiveChild.Homeworks == null) Manager.Data.ActiveChild.Homeworks = new List<Homework>();
+            Manager.Data.ActiveChild.Homeworks.AddRange(result.jToken.SelectToken("list").SelectMany(obj =>
             {
                 var data = obj.SelectToken("page_section");
                 var docs = obj.SelectToken("link_file").Select(doc => new Document
@@ -123,6 +151,7 @@ namespace Integrations
         }
         public IEnumerator OpenHomeworkAttachment(Document doc)
         {
+            if (string.IsNullOrEmpty(sessionId)) yield return Connect(Modules.Accounts.GetCredential);
             UnityWebRequest webRequest = UnityWebRequest.Post($"https://cambridgekids.sophiacloud.com/console/sophiacloud/file_mgr.php?up_file_id={doc.id}",
                 new Dictionary<string, string> { { "User-Agent", "Mozilla/5.0 Firefox/74.0" }, { "Cookie", sessionId } });
             yield return ProviderExtension.DownloadDoc(webRequest, doc);

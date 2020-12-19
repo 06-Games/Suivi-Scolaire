@@ -1,124 +1,154 @@
 ﻿using Integrations;
+using Integrations.Data;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using Credential = System.Collections.Generic.KeyValuePair<string, string>;
 
 namespace Modules
 {
-    public class Accounts : MonoBehaviour
+    /// <remarks>
+    /// Confidential information is safeguarded thanks to a second part of this class kept top secret ;)
+    /// If for some reason you would like to know how it works to improve its reliability, 
+    /// contact me and I will give you the outline of its operation.
+    /// For any security problem, please contact me through my discord server: https://discord.gg/PaFbgFT
+    /// </remarks>
+    public partial class Accounts : MonoBehaviour
     {
         public Sprite defaultChildImage;
 
-        public System.Action<Provider> onComplete;
+        static IEnumerable<FileInfo> accounts;
+        static Dictionary<string, Credential> credentials;
+        public static Credential GetCredential { get { Logging.Log("Credentials have been asked"); credentials.TryGetValue(Manager.Data.ID, out var c); return c; } }
 
-        HashSet<Account> accounts = new HashSet<Account>();
-        public static Account selectedAccount { get; private set; }
-        public void Initialise()
+        public void OnEnable()
         {
-            try { accounts = FileFormat.XML.Utils.XMLtoClass<HashSet<Account>>(Security.Encrypting.Decrypt(PlayerPrefs.GetString("Accounts") ?? "", "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG")) ?? new HashSet<Account>(); }
-            catch (System.Exception e) { Debug.LogError(e); accounts = new HashSet<Account>(); }
+            accounts = Saving.dataPath.EnumerateFiles($"*{Saving.dataExtension}");
+            credentials = SuperSecretAccountsInformationYouWontKnow;
             Refresh();
-            if (accounts?.Count == 1) ConnectTo(accounts.FirstOrDefault());
         }
         public void Refresh()
         {
-            transform.Find("Top").Find("Return").gameObject.SetActive(false);
-            var welcome = transform.Find("Content").Find("Welcome");
-            foreach (Transform gO in welcome.parent) gO.gameObject.SetActive(false);
-            welcome.gameObject.SetActive(true);
+            var selectPanel = transform.Find("Content").Find("Select");
 
-            var accountList = welcome.GetChild(0).GetComponent<ScrollRect>().content;
-            for (int i = 1; i < accountList.childCount; i++) Destroy(accountList.GetChild(i).gameObject);
-            foreach (var account in accounts)
+            var list = selectPanel.Find("List").GetComponent<ScrollRect>().content;
+            for (int i = 1; i < list.childCount; i++) Destroy(list.GetChild(i).gameObject);
+            foreach (var dataFile in accounts)
             {
-                var go = Instantiate(accountList.GetChild(0).gameObject, accountList).transform;
-                go.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>("Providers/" + account.provider);
-                go.GetChild(1).GetChild(0).GetComponent<Text>().text = account.GetProvider?.Name ?? account.provider;
-                go.GetChild(1).GetChild(1).GetComponent<Text>().text = account.username;
-                go.GetChild(2).GetComponent<Button>().onClick.AddListener(() => { accounts.Remove(account); Save(); Refresh(); });
-                go.GetComponent<Button>().onClick.AddListener(() => ConnectTo(account));
+                var account = Saving.LoadData(dataFile);
+                if (account == null) continue;
+                if (account.ID == null) account.ID = dataFile.Name.Substring(0, dataFile.Name.Length - Saving.dataExtension.Length);
+                var credential = credentials.TryGetValue(account.ID, out var c) ? c : (Credential?)null;
+
+                var go = Instantiate(list.GetChild(0).gameObject, list).transform;
+                go.name = $"{account.Provider}: {account.Label}";
+
+                go.Find("Logo").GetComponent<Image>().sprite = Resources.Load<Sprite>("Providers/" + account.Provider);
+                var infos = go.Find("Infos");
+                infos.Find("Provider").GetComponent<Text>().text = account.GetProvider?.Name ?? account.Provider;
+                infos.Find("Label").GetComponent<Text>().text = account.Label;
+                infos.Find("GUID").GetComponent<Text>().text = account.ID;
+                go.Find("Delete").GetComponent<Button>().onClick.AddListener(() => { SetupDeletePanel(dataFile, account); });
+                go.GetComponent<Button>().onClick.AddListener(() => Connect(account?.GetProvider, account, credential));
+
                 go.gameObject.SetActive(true);
             }
 
-            var addList = welcome.Find("Add");
+            var addList = selectPanel.Find("Add");
             for (int i = 2; i < addList.childCount; i++) Destroy(addList.GetChild(i).gameObject);
-            foreach (var provider in Account.Providers)
+            var providers = System.Reflection.Assembly.GetExecutingAssembly().GetTypes().Where(t => t.Namespace == "Integrations.Providers" && t.GetInterface("Provider") != null);
+            foreach (var provider in providers)
             {
+                Provider providerModule = (Provider)System.Activator.CreateInstance(provider);
+
                 var go = Instantiate(addList.GetChild(1).gameObject, addList).transform;
-                go.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>("Providers/" + provider.Key);
-                go.GetChild(1).GetComponent<Text>().text = provider.Value.Name;
-                go.GetComponent<Button>().onClick.AddListener(() => { ConnectWith(provider.Key); addList.GetComponent<SimpleSideMenu>().Close(); });
+                go.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>("Providers/" + provider.Name);
+                go.GetChild(1).GetComponent<Text>().text = providerModule?.Name;
+                go.GetComponent<Button>().onClick.AddListener(() =>
+                {
+                    Connect(providerModule);
+                    addList.GetComponent<SimpleSideMenu>().Close();
+                });
                 go.gameObject.SetActive(true);
             }
             UnityThread.executeInLateUpdate(() => UnityThread.executeInLateUpdate(addList.GetComponent<SimpleSideMenu>().Setup));
-
-            Manager.OpenModule(gameObject);
+            OpenPanel(selectPanel.gameObject);
         }
-        void ConnectTo(Account account)
+
+        void Connect(Provider provider, Data data = null, Credential? credential = null)
         {
-            var Provider = Manager.provider = account.GetProvider;
-            selectedAccount = account;
-            Manager.LoadData();
-
-            if (Manager.Data != null)
+            if (credential == null && provider.TryGetModule<Auth>(out var auth))
             {
-                accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
-                onComplete?.Invoke(Provider);
-                return;
-            }
+                var content = transform.Find("Content");
+                var authPanel = content.Find("Auth");
+                OpenPanel(authPanel.gameObject);
 
-            UnityThread.executeCoroutine(Provider.Connect(account,
-                (data) =>
+                var btn = authPanel.Find("Login").GetComponent<Button>();
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() =>
                 {
-                    selectedAccount = account;
-                    Manager.Data = data;
-                    accounts = new HashSet<Account>(accounts.OrderBy(ac => ac.provider));
-                    Save();
-                    onComplete?.Invoke(Provider);
-                },
-                (error) =>
-                {
-                    if (Provider.TryGetModule<Auth>(out var authModule))
+                    credential = new Credential(authPanel.Find("ID").GetComponent<InputField>().text, authPanel.Find("Password").GetComponent<InputField>().text);
+                    StartCoroutine(auth.Connect(credential.Value, () =>
                     {
-                        transform.Find("Content").Find("Auth").Find("Error").GetComponent<Text>().text = error;
-                        ConnectWith(account.provider);
-                    }
-                }
-            ));
+                        bool dataIsNull = data == null;
+                        if (dataIsNull) data = CreateData();
+
+                        UpdateCredentials(data.ID, credential.Value);
+
+                        if (dataIsNull)
+                        {
+                            Manager.Data = data;
+                            StartCoroutine(provider.GetInfos(data, Complete));
+                        }
+                        else Complete(data);
+                    }, (error) => authPanel.Find("Error").GetComponent<Text>().text = error));
+
+                }); 
+                OpenPanel(authPanel.gameObject);
+            }
+            else if (data == null) StartCoroutine(provider.GetInfos(CreateData(), Complete));
+            else Complete(data);
+
+            Data CreateData() => new Data { ID = System.Guid.NewGuid().ToString("D"), Provider = provider.GetType().Name };
+            void Complete(Data d)
+            {
+                d.LastLogin = System.DateTime.UtcNow;
+                Manager.Data = d;
+                Manager.provider = provider;
+                Manager.instance.Menu.sideMenu.handle.SetActive(true);
+                Menu.SelectChild();
+                Manager.OpenModule(Manager.instance.Home.gameObject);
+            }
         }
 
-        public void ConnectWith(string provider)
+        void UpdateCredentials(string key, KeyValuePair<string, string>? value = null)
         {
-            var Provider = Account.Providers[provider];
-            foreach (Transform gO in transform.Find("Content")) gO.gameObject.SetActive(false);
-            if (Provider.TryGetModule<Auth>(out var authModule))
-            {
-                var auth = transform.Find("Content").Find("Auth");
-
-                var returnBtn = transform.Find("Top").Find("Return").GetComponent<Button>();
-                returnBtn.onClick.RemoveAllListeners();
-                returnBtn.onClick.AddListener(() => { auth.gameObject.SetActive(false); transform.Find("Content").Find("Welcome").gameObject.SetActive(true); returnBtn.gameObject.SetActive(false); });
-                returnBtn.gameObject.SetActive(true);
-
-                auth.Find("Connexion").GetComponent<Button>().onClick.RemoveAllListeners();
-                auth.Find("Connexion").GetComponent<Button>().onClick.AddListener(() =>
-                {
-                    auth.gameObject.SetActive(false);
-                    var account = new Account
-                    {
-                        provider = provider,
-                        id = auth.Find("ID").GetComponent<InputField>().text,
-                        password = auth.Find("PASSWORD").GetComponent<InputField>().text
-                    };
-                    accounts.Add(account);
-                    ConnectTo(account);
-                });
-                auth.gameObject.SetActive(true);
-            }
-            else ConnectTo(new Account { provider = provider });
+            if (credentials.ContainsKey(key)) credentials.Remove(key);
+            if (value.HasValue) credentials.Add(key, value.Value);
+            SuperSecretAccountsInformationYouWontKnow = credentials;
         }
-        void Save() => PlayerPrefs.SetString("Accounts", Security.Encrypting.Encrypt(FileFormat.XML.Utils.ClassToXML(accounts.ToList()), "W#F4iwr@tr~_6yRpnn8W1m~G6eQWi3IDTnf(i5x7bcRmsa~pyG"));
+
+        void SetupDeletePanel(FileInfo file, Data data)
+        {
+            var delete = transform.Find("Content").Find("Delete Confirm");
+            delete.Find("Text").GetComponent<Text>().text = LangueAPI.Get("welcome.delete", "Are you sure you want to delete the \"<size=20><color=grey>[0]</color></size>\" account?", data.ID);
+            var yesBtn = delete.Find("Buttons").Find("Yes").GetComponent<Button>();
+            yesBtn.onClick.RemoveAllListeners();
+            yesBtn.onClick.AddListener(() => {
+                UpdateCredentials(data.ID);
+                file.Delete();
+                Refresh();
+            });
+            OpenPanel(delete.gameObject);
+        }
+        public void OpenPanel(GameObject panel)
+        {
+            foreach (Transform go in transform.Find("Content")) go.gameObject.SetActive(false);
+            panel.SetActive(true);
+        }
+
         public void ShowPassword(InputField pass)
         {
             pass.contentType = pass.contentType == InputField.ContentType.Password ? InputField.ContentType.Standard : InputField.ContentType.Password;
@@ -128,69 +158,6 @@ namespace Modules
             {
                 yield return 0; // Skip the first frame in which this is called.
                 pass.MoveTextEnd(false); // Do this during the next frame.
-            }
-        }
-
-        public static void SelectChild() { SelectChild(Manager.Child); }
-        public static void SelectChild(Integrations.Data.Child selectedChild)
-        {
-            var childSelection = Manager.instance.Menu.transform.Find("Panel").Find("Child").Find("Slide");
-
-            var instance = Manager.instance.FirstStart;
-            selectedAccount.child = selectedChild.id;
-            instance.Save();
-
-            var list = childSelection.Find("List");
-            for (int i = 1; i < list.childCount; i++) Destroy(list.GetChild(i).gameObject);
-            foreach (var child in Manager.Data.Children)
-            {
-                Transform go = null;
-                if (child == selectedChild) go = childSelection.Find("Selected");
-                else
-                {
-                    go = Instantiate(list.GetChild(0).gameObject, list).transform;
-                    go.GetComponent<Button>().onClick.AddListener(() =>
-                    {
-                        instance.ResetData();
-                        SelectChild(child);
-
-                        foreach (Transform module in Manager.instance.transform)
-                            if (module.gameObject.activeInHierarchy && module.TryGetComponent<Module>(out var m)) m.OnEnable();
-                        Manager.instance.Menu.UpdateModules();
-                    });
-                }
-                go.Find("ImageBG").Find("Image").GetComponent<Image>().sprite = child.sprite ?? instance.defaultChildImage;
-                go.Find("Text").GetComponent<Text>().text = child.name;
-                go.gameObject.SetActive(true);
-            }
-            var rect = childSelection.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 40 * (Manager.Data.Children.Length - 1));
-            childSelection.GetComponent<SimpleSideMenu>().Setup();
-            rect.pivot = new Vector2(0.5F, 0);
-        }
-
-        public void Logout()
-        {
-            accounts.Remove(selectedAccount);
-            selectedAccount = null;
-            Save();
-            Manager.OpenModule(gameObject);
-            ResetData();
-            Initialise();
-
-            transform.Find("Top").Find("Return").gameObject.SetActive(false);
-            var auth = transform.Find("Content").Find("Auth");
-            auth.Find("ID").GetComponent<InputField>().text = "";
-            auth.Find("PASSWORD").GetComponent<InputField>().text = "";
-        }
-        public void ResetData() { foreach (var d in Manager.instance.modules) d?.Reset(); }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                var returnBtn = transform.Find("Top").Find("Return").GetComponent<Button>();
-                if (returnBtn.gameObject.activeInHierarchy) returnBtn.onClick.Invoke();
             }
         }
     }

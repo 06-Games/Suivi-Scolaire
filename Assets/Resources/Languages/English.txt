@@ -3,6 +3,9 @@ welcome.accounts.add = Add account
 welcome.connection = Log in
 welcome.connection.id = Username
 welcome.connection.password = Password
+welcome.delete = Are you sure you want to delete the "<size=20><color=grey>[0]</color></size>" account ?
+welcome.delete.yes = Yes
+welcome.delete.no = No
 
 menu.credits = Made by Evan Galli\nWith the help of MazeWave
 menu.home = Home

@@ -62,6 +62,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
+      - name: Write secret file
+        run: 'echo "$FILE_SECURITY" > Assets/Scripts/Security.cs'
+        shell: bash
+        env:
+          FILE_SECURITY: ${{secrets.FILE_SECURITY}}
       - name: Cached libraries
         uses: actions/cache@v1.1.0
         with:

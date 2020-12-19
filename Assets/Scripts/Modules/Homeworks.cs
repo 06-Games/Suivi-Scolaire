@@ -30,7 +30,7 @@ namespace Modules
         {
             if (!Manager.provider.TryGetModule(out Integrations.Homeworks module)) { gameObject.SetActive(false); return; }
             var period = periods.ElementAtOrDefault(periodIndex);
-            StartCoroutine(module.GetHomeworks(period, () => Refresh(Manager.Child.Homeworks.Where(h => period.timeRange.Contains(h.forThe)).OrderBy(h => h.forThe), period)));
+            StartCoroutine(module.GetHomeworks(period, () => Refresh(Manager.Data.ActiveChild.Homeworks.Where(h => period.timeRange.Contains(h.forThe)).OrderBy(h => h.forThe), period)));
         }
 
         public void OnEnable()

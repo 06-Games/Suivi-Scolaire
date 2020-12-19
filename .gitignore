@@ -12,3 +12,4 @@ Temp/
 put
 *.log
 Assets/screen.cs*
+Assets/Scripts/Security.cs*

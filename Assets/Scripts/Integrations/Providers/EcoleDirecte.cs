@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Integrations
+namespace Integrations.Providers
 {
     public class EcoleDirecte : Provider, Auth, Marks, Homeworks, Periods, Schedule, Messanging, Books, Documents
     {
@@ -17,25 +17,36 @@ namespace Integrations
 
         // Auth
         string token;
-        public IEnumerator Connect(Account account, Action<Data.Data> onComplete, Action<string> onError)
+        public IEnumerator Connect(KeyValuePair<string, string> account, Action onComplete, Action<string> onError) => Connect(account, (j) => onComplete?.Invoke(), onError);
+        public IEnumerator Connect(KeyValuePair<string, string> account, Action<FileFormat.JSON> onComplete = null, Action<string> onError = null)
         {
             Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
 
             //Get Token
-            var accountRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.id}\", \"motdepasse\": \"{account.password}\"}}");
+            var accountRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/login.awp", $"data={{\"identifiant\": \"{account.Key}\", \"motdepasse\": \"{account.Value}\"}}");
             yield return accountRequest.SendWebRequest();
             var accountInfos = new FileFormat.JSON(accountRequest.downloadHandler.text);
             if (accountRequest.isNetworkError || accountInfos.Value<int>("code") != 200)
             {
                 onError?.Invoke(accountRequest.isNetworkError ? accountRequest.error : accountInfos.Value<string>("message"));
                 Manager.HideLoadingPanel();
+                Debug.LogError(accountRequest.isNetworkError ? accountRequest.error : accountInfos.Value<string>("message"));
                 yield break;
             }
             token = accountInfos.Value<string>("token");
+            onComplete?.Invoke(accountInfos);
+        }
 
+        // Provider
+        public IEnumerator GetInfos(Data.Data data, Action<Data.Data> onComplete)
+        {
+            Manager.UpdateLoadingStatus("provider.connecting", "Establishing the connection with [0]", true, Name);
+
+            FileFormat.JSON accountInfos = null;
+            yield return Connect(Accounts.GetCredential, (j) => accountInfos = j);
             var Account = accountInfos.jToken.SelectToken("data.accounts").FirstOrDefault();
             var childs = new List<Child>();
-            yield return GetChild(Account, Account.Value<string>("typeCompte") == "E" ? "eleves" : "familles", (c) => { childs.Add(c); account.username = c.name; });
+            yield return GetChild(Account, Account.Value<string>("typeCompte") == "E" ? "eleves" : "familles", (c) => childs.Add(c));
 
             if (Account.Value<string>("typeCompte") != "E")
             {
@@ -44,7 +55,9 @@ namespace Integrations
                 foreach (var eleve in eleves) yield return GetChild(eleve, "eleves", (c) => childs.Add(c));
             }
             Manager.HideLoadingPanel();
-            onComplete?.Invoke(new Data.Data { Provider = "EcoleDirecte", Label = account.username, Children = childs.ToArray() });
+            data.Label = childs.First().name;
+            data.Children = childs.ToArray();
+            onComplete?.Invoke(data);
 
             IEnumerator GetChild(JToken profile, string type, Action<Child> child)
             {
@@ -95,11 +108,11 @@ namespace Integrations
         public IEnumerator GetMarks(Action onComplete)
         {
             FileFormat.JSON result = null;
-            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{Accounts.selectedAccount.child}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/eleves/{Manager.Data.activeChild}/notes.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "marks", (o) => result = o);
             if (result == null) yield break;
 
-            Manager.Child.Trimesters = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Trimester
+            Manager.Data.ActiveChild.Trimesters = result.jToken.SelectToken("data.periodes")?.Values<JObject>().Where(obj => !obj.Value<bool>("annuel")).Select(obj => new Trimester
             {
                 id = obj.Value<string>("idPeriode"),
                 name = obj.Value<string>("periode"),
@@ -107,7 +120,7 @@ namespace Integrations
                 end = obj.Value<DateTime>("dateFin")
             }).ToList();
 
-            Manager.Child.Subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
+            Manager.Data.ActiveChild.Subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
                 .Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>())
                 .Select(obj => new Subject
                 {
@@ -117,10 +130,10 @@ namespace Integrations
                     teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
                 }).ToList();
 
-            Manager.Child.Marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj =>
+            Manager.Data.ActiveChild.Marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj =>
             {
                 var outOf = float.Parse(obj.Value<string>("noteSur").Replace(",", "."));
-                if(!float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var classAverage)) classAverage = -1;
+                if (!float.TryParse(obj.Value<string>("moyenneClasse").Replace(",", "."), out var classAverage)) classAverage = -1;
                 var mark = new Mark.MarkData
                 {
                     mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : -1,
@@ -164,18 +177,18 @@ namespace Integrations
             if (period.timeRange.End == DateTime.MaxValue)
             {
                 FileFormat.JSON result = null;
-                Func<UnityWebRequest> homeworksRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                Func<UnityWebRequest> homeworksRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Manager.Data.activeChild}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return TryConnection(homeworksRequest, "homeworks", (o) => result = o);
                 if (result == null) yield break;
                 dates = result.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
             else dates = period.timeRange.DayList().Select(d => d.ToString("yyyy-MM-dd"));
 
-            var homeworks = Manager.Child.Homeworks ?? new List<Homework>();
+            var homeworks = Manager.Data.ActiveChild.Homeworks ?? new List<Homework>();
             foreach (var date in dates)
             {
                 FileFormat.JSON result = null;
-                Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+                Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Manager.Data.activeChild}/cahierdetexte/{date}.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
                 yield return TryConnection(request, "homeworks", (o) => result = o, false);
                 if (result == null) yield break;
                 if (result.Value<int>("code") != 200)
@@ -207,7 +220,7 @@ namespace Integrations
                     }).ToList()
                 }));
             }
-            Manager.Child.Homeworks = homeworks;
+            Manager.Data.ActiveChild.Homeworks = homeworks;
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
@@ -261,7 +274,7 @@ namespace Integrations
             yield return holidaysRequest.SendWebRequest();
             var holidaysResult = new FileFormat.JSON(holidaysRequest.downloadHandler.text);
             DateTime lastPeriod = DateTime.MinValue;
-            Manager.Child.Periods = holidaysResult.jToken.SelectToken("records").Reverse().SelectMany(v =>
+            Manager.Data.ActiveChild.Periods = holidaysResult.jToken.SelectToken("records").Reverse().SelectMany(v =>
             {
                 var list = new List<Period>();
                 var obj = v.SelectToken("fields");
@@ -291,17 +304,17 @@ namespace Integrations
         public IEnumerator GetSchedule(TimeRange period, Action<IEnumerable<ScheduledEvent>> onComplete)
         {
             FileFormat.JSON result = null;
-            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{Accounts.selectedAccount.child}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/E/{Manager.Data.activeChild}/emploidutemps.awp?verbe=get&", $"data={{\"token\": \"{token}\", \"dateDebut\": \"{period.Start.ToString("yyyy-MM-dd")}\", \"dateFin\": \"{period.End.ToString("yyyy-MM-dd")}\", \"avecTrous\": false }}");
             yield return TryConnection(request, "schedule", (o) => result = o);
             if (result == null) yield break;
 
-            if (Manager.Child.Schedule == null) Manager.Child.Schedule = new List<ScheduledEvent>();
+            if (Manager.Data.ActiveChild.Schedule == null) Manager.Data.ActiveChild.Schedule = new List<ScheduledEvent>();
             var events = result.jToken.SelectToken("data")?.Where(v => !string.IsNullOrWhiteSpace(v.Value<string>("codeMatiere")))?.Select(v =>
             {
-                if (Manager.Child.Subjects == null) Manager.Child.Subjects = new List<Subject>();
-                if (!Manager.Child.Subjects.Any(s => s.id == v.Value<string>("codeMatiere")))
+                if (Manager.Data.ActiveChild.Subjects == null) Manager.Data.ActiveChild.Subjects = new List<Subject>();
+                if (!Manager.Data.ActiveChild.Subjects.Any(s => s.id == v.Value<string>("codeMatiere")))
                 {
-                    Manager.Child.Subjects.Add(new Subject
+                    Manager.Data.ActiveChild.Subjects.Add(new Subject
                     {
                         id = v.Value<string>("codeMatiere"),
                         name = v.Value<string>("matiere"),
@@ -318,8 +331,8 @@ namespace Integrations
                     canceled = v.Value<bool>("isAnnule")
                 };
             });
-            Manager.Child.Schedule.RemoveAll(s => s.start >= period.Start && s.end <= period.End);
-            Manager.Child.Schedule.AddRange(events);
+            Manager.Data.ActiveChild.Schedule.RemoveAll(s => s.start >= period.Start && s.end <= period.End);
+            Manager.Data.ActiveChild.Schedule.AddRange(events);
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke(events);
@@ -329,10 +342,10 @@ namespace Integrations
         public IEnumerator GetMessages(Action onComplete)
         {
             FileFormat.JSON result = null;
-            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Child.GetExtraData("type")}/{Accounts.selectedAccount.child}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{Manager.Data.ActiveChild.GetExtraData("type")}/{Manager.Data.activeChild}/messages.awp?verbe=getall&idClasseur=0", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "messages", (o) => result = o);
             if (result == null) yield break;
-            Manager.Child.Messages = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
+            Manager.Data.ActiveChild.Messages = result.jToken.SelectTokens("data.messages.*").SelectMany(t =>
             {
                 return t.Select(m =>
                 {
@@ -354,10 +367,10 @@ namespace Integrations
         }
         public IEnumerator LoadExtraMessageData(uint messageID, Action onComplete)
         {
-            var message = Manager.Child.Messages.FirstOrDefault(m => m.id == messageID);
+            var message = Manager.Data.ActiveChild.Messages.FirstOrDefault(m => m.id == messageID);
 
             FileFormat.JSON result = null;
-            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{ Manager.Child.GetExtraData("type") }/{Accounts.selectedAccount.child}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/{ Manager.Data.ActiveChild.GetExtraData("type") }/{Manager.Data.activeChild}/messages/{message.id}.awp?verbe=get&mode={(message.type == Message.Type.received ? "destinataire" : "expediteur")}", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "messages.content", (o) => result = o);
             if (result == null) yield break;
 
@@ -382,7 +395,7 @@ namespace Integrations
         public IEnumerator GetBooks(Action onComplete)
         {
             FileFormat.JSON result = null;
-            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Accounts.selectedAccount.child}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
+            Func<UnityWebRequest> request = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Manager.Data.activeChild}/manuelsNumeriques.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(request, "books", (o) => result = o);
             if (result == null) yield break;
 
@@ -404,7 +417,7 @@ namespace Integrations
                     cover = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f))
                 });
             }
-            Manager.Child.Books = books;
+            Manager.Data.ActiveChild.Books = books;
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
@@ -413,7 +426,7 @@ namespace Integrations
         {
             yield return GetBooks(() => { }); // Refresh the URL of the book as it won't work if the token hasn't been regenerated
             Manager.UpdateLoadingStatus("provider.books.opening", "School book being opened");
-            var bookRequest = UnityWebRequest.Post(Manager.Child.Books.FirstOrDefault(b => b.id == book.id).url, new Dictionary<string, string> { { "token", token } });
+            var bookRequest = UnityWebRequest.Post(Manager.Data.ActiveChild.Books.FirstOrDefault(b => b.id == book.id).url, new Dictionary<string, string> { { "token", token } });
             yield return bookRequest.SendWebRequest();
             Manager.HideLoadingPanel();
 
@@ -437,8 +450,8 @@ namespace Integrations
             Manager.UpdateLoadingStatus("provider.documents", "Getting documents");
             var root = new Folder { id = "root", name = LangueAPI.Get("documents.root", "Root") };
 
-            var type = Manager.Child.GetExtraData("type");
-            var modules = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(Manager.Child.GetExtraData("edModules") ?? "");
+            var type = Manager.Data.ActiveChild.GetExtraData("type");
+            var modules = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(Manager.Data.ActiveChild.GetExtraData("edModules") ?? "");
 
             if (type == "eleves")
             {
@@ -470,7 +483,7 @@ namespace Integrations
 
                 if (modules.Contains("CLOUD")) //Cloud
                 {
-                    yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Accounts.selectedAccount.child}.awp?verbe=get&", Result);
+                    yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Manager.Data.activeChild}.awp?verbe=get&", Result);
                     IEnumerator Result(JObject response)
                     {
                         Folder rootFolder = null;
@@ -483,10 +496,10 @@ namespace Integrations
                             if (!jToken.Value<bool>("isLoaded"))
                             {
                                 var id = jToken.Value<string>("id");
-                                var search = $"\\E\\{Accounts.selectedAccount.child}";
+                                var search = $"\\E\\{Manager.Data.activeChild}";
                                 var startIndex = id.IndexOf(search);
                                 var folderID = id.Substring(startIndex == -1 ? 0 : (startIndex + search.Length));
-                                yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Accounts.selectedAccount.child}.awp?verbe=get&idFolder={folderID}", SetJToken);
+                                yield return Request($"https://api.ecoledirecte.com/v3/cloud/E/{Manager.Data.activeChild}.awp?verbe=get&idFolder={folderID}", SetJToken);
                                 IEnumerator SetJToken(JObject token) { jToken = token.SelectToken("data").First; yield break; }
                             }
 
@@ -548,7 +561,7 @@ namespace Integrations
                 yield break;
             }
 
-            Manager.Child.Documents = root;
+            Manager.Data.ActiveChild.Documents = root;
 
             Manager.HideLoadingPanel();
             onComplete?.Invoke();
@@ -566,7 +579,7 @@ namespace Integrations
         {
             var path = ProviderExtension.DocPath(doc);
             if (path.Exists) { ProviderExtension.OpenDoc(path); yield break; }
-            if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
+            if (token == null) yield return Connect(Accounts.GetCredential);
             UnityWebRequest webRequest = UnityWebRequest.Post("https://api.ecoledirecte.com/v3/telechargement.awp?verbe=get", new Dictionary<string, string> {
                 { "token", token },
                 { "leTypeDeFichier", doc.type },
@@ -580,7 +593,7 @@ namespace Integrations
         IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output = null, bool manageErrors = true)
         {
             if (output == null) output = (_) => Manager.HideLoadingPanel();
-            if (token == null) yield return Connect(Accounts.selectedAccount, null, null);
+            if (token == null) { Logging.Log("The token is null, regenerating it"); yield return Connect(Accounts.GetCredential); }
 
             Manager.UpdateLoadingStatus($"provider.{getting}", $"Getting {getting}");
             var _request = request();
@@ -596,7 +609,8 @@ namespace Integrations
             if (!manageErrors) yield break;
             if (new[] { "Session expirée !", "Token invalide !" }.Contains(result.Value<string>("message")))
             {
-                yield return Connect(Accounts.selectedAccount, null, null);
+                Logging.Log("The token has expired, regenerating it");
+                token = null;
                 yield return TryConnection(request, getting, output); //Retry connection
             }
             else Manager.FatalErrorDuringLoading(result.Value<string>("message"),

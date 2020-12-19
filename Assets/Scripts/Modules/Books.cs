@@ -9,7 +9,7 @@ public class Books : MonoBehaviour, Module
     public void OnEnable()
     {
         if (!Manager.isReady) gameObject.SetActive(false);
-        else if (Manager.Child.Books?.Count > 0) Refresh();
+        else if (Manager.Data.ActiveChild.Books?.Count > 0) Refresh();
         else Reload();
     }
     public void Reload()
@@ -23,7 +23,7 @@ public class Books : MonoBehaviour, Module
         var content = transform.Find("Content").GetComponent<ScrollRect>().content;
         for (int i = 1; i < content.childCount; i++) Destroy(content.GetChild(i).gameObject);
 
-        foreach (var book in Manager.Child.Books)
+        foreach (var book in Manager.Data.ActiveChild.Books)
         {
             var go = Instantiate(content.GetChild(0).gameObject, content).transform;
             go.name = go.Find("Title").GetComponent<Text>().text = book.name;

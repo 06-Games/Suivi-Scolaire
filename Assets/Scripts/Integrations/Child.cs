@@ -74,13 +74,13 @@ namespace Integrations.Data
     {
         //Date
         [XmlAttribute] public string trimesterID;
-        [XmlIgnore] public Trimester trimester => Manager.Child.Trimesters.FirstOrDefault(s => s.id == trimesterID);
+        [XmlIgnore] public Trimester trimester => Manager.Data.ActiveChild.Trimesters.FirstOrDefault(s => s.id == trimesterID);
         [XmlAttribute(DataType = "date")] public DateTime date;
         [XmlAttribute(DataType = "date")] public DateTime dateAdded;
 
         //Infos
         [XmlAttribute] public string subjectID;
-        [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
+        [XmlIgnore] public Subject subject => Manager.Data.ActiveChild.Subjects.FirstOrDefault(s => s.id == subjectID);
         [XmlAttribute] public string name;
         [XmlAttribute] public float coef;
         [XmlAttribute] public bool notSignificant;
@@ -116,8 +116,9 @@ namespace Integrations.Data
     public class Homework
     {
         [XmlAttribute] public string id;
+        [XmlAttribute] public string periodID;
         [XmlAttribute] public string subjectID;
-        [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
+        [XmlIgnore] public Subject subject => Manager.Data.ActiveChild.Subjects.FirstOrDefault(s => s.id == subjectID);
         [XmlAttribute(DataType = "date")] public DateTime forThe;
         [XmlAttribute(DataType = "date")] public DateTime addedThe;
         [XmlAttribute] public string addedBy;
@@ -137,7 +138,7 @@ namespace Integrations.Data
     public class ScheduledEvent
     {
         [XmlAttribute] public string subjectID;
-        [XmlIgnore] public Subject subject => Manager.Child.Subjects.FirstOrDefault(s => s.id == subjectID);
+        [XmlIgnore] public Subject subject => Manager.Data.ActiveChild.Subjects.FirstOrDefault(s => s.id == subjectID);
         [XmlAttribute] public string teacher;
         [XmlAttribute] public DateTime start;
         [XmlAttribute] public DateTime end;
@@ -163,7 +164,7 @@ namespace Integrations.Data
     {
         [XmlAttribute] public string id;
         [XmlAttribute] public string[] subjectsID;
-        [XmlIgnore] public IEnumerable<Subject> subjects => Manager.Child.Subjects.Where(s => subjectsID.Contains(s.id));
+        [XmlIgnore] public IEnumerable<Subject> subjects => Manager.Data.ActiveChild.Subjects.Where(s => subjectsID.Contains(s.id));
 
         [XmlAttribute] public string name;
         [XmlAttribute] public string editor;

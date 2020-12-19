@@ -16,7 +16,7 @@ namespace Integrations
         public static T GetModule<T>(this Provider provider)
         {
             var moduleName = typeof(T).ToString().Substring("Integrations.".Length);
-            if (!whiteList.Contains(moduleName) && (!Manager.Child.modules?.Contains(moduleName) ?? false)) return default;
+            if (!whiteList.Contains(moduleName) && (!Manager.Data.ActiveChild.modules?.Contains(moduleName) ?? false)) return default;
             try { return (T)provider; }
             catch { return default; }
         }
@@ -199,8 +199,8 @@ namespace Integrations
             };
             var defaultColor = colorPalette.First();
 
-            foreach (var subject in Manager.Child.Subjects.Where(s => s.color != Color.black)) colorPalette.Remove(subject.color);
-            foreach (var subject in Manager.Child.Subjects.Where(s => s.color == Color.black))
+            foreach (var subject in Manager.Data.ActiveChild.Subjects.Where(s => s.color != Color.black)) colorPalette.Remove(subject.color);
+            foreach (var subject in Manager.Data.ActiveChild.Subjects.Where(s => s.color == Color.black))
             {
                 var index = rnd.Next(colorPalette.Count);
                 subject.color = index < colorPalette.Count ? colorPalette[index] : defaultColor;
