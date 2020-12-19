@@ -83,7 +83,7 @@ jobs:
           versioning: None
           
           # Android
-          androidVersionCode: 0
+          androidVersionCode: 1
           androidKeystoreName: Suivi-Scolaire.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: suivi-scolaire
