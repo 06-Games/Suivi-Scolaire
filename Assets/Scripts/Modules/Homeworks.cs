@@ -58,9 +58,13 @@ namespace Modules
                     Refresh(homeworks.OrderBy(h => h.forThe), period);
                     Manager.OpenModule(gameObject);
                 };
-                var _homeworks = Manager.Child.Homeworks?.Where(h => period.timeRange.Contains(h.forThe)).ToList();
+                List<Homework> GetHomeworks() => Manager.Data.ActiveChild.Homeworks?.Where(h => h.periodID != null ? h.periodID == period.id : period.timeRange.Contains(h.forThe)).ToList();
+
+                var _homeworks = GetHomeworks();
                 if (_homeworks?.Count > 0) action(_homeworks);
-                else StartCoroutine(module.GetHomeworks(period, () => action(Manager.Child.Homeworks.Where(h => period.timeRange.Contains(h.forThe)).ToList())));
+                else StartCoroutine(module.GetHomeworks(period, () => action(GetHomeworks())));
+
+
             }
         }
         bool LoadNext(Action<Homework.Period> onComplete = null)

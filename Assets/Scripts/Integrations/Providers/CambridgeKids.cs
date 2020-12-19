@@ -132,10 +132,11 @@ namespace Integrations.Providers
                 });
                 return data.Select(d =>
                 {
-                    if (!Manager.Child.Subjects.Any(s => s.id == d.Value<string>("page_section_id")))
-                        Manager.Child.Subjects.Add(new Subject { id = d.Value<string>("page_section_id"), name = d.Value<string>("sec_title") });
+                    if (!Manager.Data.ActiveChild.Subjects.Any(s => s.id == d.Value<string>("page_section_id")))
+                        Manager.Data.ActiveChild.Subjects.Add(new Subject { id = d.Value<string>("page_section_id"), name = d.Value<string>("sec_title"), color = new Color(0.3F, 0.3F, 0.3F) });
                     return new Homework
                     {
+                        periodID = period.id,
                         subjectID = d.Value<string>("page_section_id"),
                         forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),
                         addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
