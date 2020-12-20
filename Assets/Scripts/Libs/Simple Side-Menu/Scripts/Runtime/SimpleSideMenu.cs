@@ -118,7 +118,7 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             Debug.LogError("<b>[SimpleSideMenu]</b> The drag handle must be a child of the side menu in order for it to be draggable.", gameObject);
             valid = false;
         }
-        if (handleToggleStateOnPressed && handle.GetComponent<Button>() == null)
+        if (handleToggleStateOnPressed && handle != null && handle.GetComponent<Button>() == null)
         {
             Debug.LogError("<b>[SimpleSideMenu]</b> The handle must have a \"Button\" component attached to it in order for it to be able to toggle the state of the side menu when pressed.", gameObject);
             valid = false;
