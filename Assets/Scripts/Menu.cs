@@ -60,7 +60,7 @@ public class Menu : MonoBehaviour
                 go = Instantiate(list.GetChild(0).gameObject, list).transform;
                 go.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    ChangeAccount();
+                    ResetData();
                     SelectChild(child);
 
                     foreach (Transform module in Manager.instance.transform)
