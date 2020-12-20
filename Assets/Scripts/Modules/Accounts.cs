@@ -23,21 +23,19 @@ namespace Modules
         static Dictionary<string, Credential> credentials;
         public static Credential GetCredential { get { Logging.Log("Credentials have been asked"); credentials.TryGetValue(Manager.Data.ID, out var c); return c; } }
 
-        public void OnEnable()
+        public void OnEnable() => Refresh();
+        public void Refresh()
         {
             accounts = Saving.dataPath.EnumerateFiles($"*{Saving.dataExtension}");
             credentials = SuperSecretAccountsInformationYouWontKnow;
-            Refresh();
-        }
-        public void Refresh()
-        {
             var selectPanel = transform.Find("Content").Find("Select");
 
             var list = selectPanel.Find("List").GetComponent<ScrollRect>().content;
             for (int i = 1; i < list.childCount; i++) Destroy(list.GetChild(i).gameObject);
             foreach (var dataFile in accounts)
             {
-                var account = Saving.LoadData(dataFile);
+                Data account = null;
+                try { Saving.LoadData(dataFile); } catch { Logging.Log($"The data file named \"{dataFile?.Name ?? "Null"}\" could not be parsed", LogType.Error); }
                 if (account == null) continue;
                 if (account.ID == null) account.ID = dataFile.Name.Substring(0, dataFile.Name.Length - Saving.dataExtension.Length);
                 var credential = credentials.TryGetValue(account.ID, out var c) ? c : (Credential?)null;
