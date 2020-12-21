@@ -19,7 +19,7 @@ namespace Modules
     {
         public Sprite defaultChildImage;
 
-        static IEnumerable<FileInfo> accounts;
+        IEnumerable<FileInfo> accounts;
         static Dictionary<string, Credential> credentials;
         public static Credential GetCredential { get { Logging.Log("Credentials have been asked"); credentials.TryGetValue(Manager.Data.ID, out var c); return c; } }
 
@@ -34,8 +34,7 @@ namespace Modules
             for (int i = 1; i < list.childCount; i++) Destroy(list.GetChild(i).gameObject);
             foreach (var dataFile in accounts)
             {
-                Data account = null;
-                try { Saving.LoadData(dataFile); } catch { Logging.Log($"The data file named \"{dataFile?.Name ?? "Null"}\" could not be parsed", LogType.Error); }
+                Data account = Saving.LoadData(dataFile);
                 if (account == null) continue;
                 if (account.ID == null) account.ID = dataFile.Name.Substring(0, dataFile.Name.Length - Saving.dataExtension.Length);
                 var credential = credentials.TryGetValue(account.ID, out var c) ? c : (Credential?)null;

@@ -160,7 +160,7 @@ namespace Integrations.Providers
                     coef = float.TryParse(obj.Value<string>("coef").Replace(",", "."), out var coef) ? coef : 1,
                     absent = mark.mark < 0 && !mark.skills.Any(s => s.value >= 0),
                     mark = mark,
-                    classAverage = classAverage < 0 ? null : new Mark.MarkData { mark = classAverage, markOutOf = outOf == 0 ? 20 : outOf },
+                    classAverage = classAverage < 0 ? null : new Mark.MarkData { mark = classAverage, markOutOf = outOf <= 0 ? 20 : outOf },
                     notSignificant = obj.Value<bool>("nonSignificatif")
                 };
             }).ToList();

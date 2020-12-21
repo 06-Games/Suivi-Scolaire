@@ -5,7 +5,7 @@ using System.IO.Compression;
 
 namespace Integrations
 {
-    public class Saving
+    public static class Saving
     {
         public static System.IO.DirectoryInfo dataPath
         {
@@ -22,21 +22,22 @@ namespace Integrations
     public static string dataExtension => ".xml.gz";
 #endif
         static System.IO.FileInfo dataFile => new System.IO.FileInfo($"{dataPath.FullName}/{Manager.Data.ID}{dataExtension}");
-        public static Data.Data LoadData(System.IO.FileInfo file = null)
+        public static Data.Data LoadData() => LoadData(dataFile);
+        public static Data.Data LoadData(System.IO.FileInfo file)
         {
-            if (file == null) file = dataFile;
             if (file.Exists)
             {
                 string text;
 #if UNITY_EDITOR
                 text = System.IO.File.ReadAllText(file.FullName);
 #else
-            using (var msi = dataFile.OpenRead())
+            using (var msi = file.OpenRead())
             using (var gs = new GZipStream(msi, CompressionMode.Decompress))
             using (var mso = new System.IO.StreamReader(gs)) text = mso.ReadToEnd();
 #endif
                 Logging.Log("Data loaded");
-                return FileFormat.XML.Utils.XMLtoClass<Data.Data>(text);
+                try { return FileFormat.XML.Utils.XMLtoClass<Data.Data>(text); } 
+                catch (System.Exception e) { Logging.Log($"The data file named \"{file.Name}\" could not be parsed: \n{e}", LogType.Error); }
             }
             return null;
         }

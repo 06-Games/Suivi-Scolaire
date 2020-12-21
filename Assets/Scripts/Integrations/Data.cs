@@ -27,7 +27,7 @@ namespace Integrations.Data
         {
             get
             {
-                if (Children == null || Children.Length == 0) throw new System.ArgumentNullException("Children");
+                if (Children == null || Children.Length == 0) throw new System.InvalidOperationException("Children must be defined");
                 for (int i = 0; i < Children.Length; i++) { if (Children[i].id == activeChild) return ref Children[i]; }
                 return ref Children[0];
             }
