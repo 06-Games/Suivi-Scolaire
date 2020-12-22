@@ -82,6 +82,9 @@ updateWarn = An update is available. Would you like to install it ?
 updateWarn.yes = Yes
 updateWarn.no = No
 updateWarn.downloading = Downloading the update...
+updateWarn.seeChangelog = See the changelog
+updateWarn.changelog = Changelog
+updateWarn.changelog.update = Update
 
 settings = Settings
 settings.language = Language
@@ -89,4 +92,6 @@ settings.size = Interface size
 settings.logs = Logs
 settings.logs.open = Open the folder
 settings.logs.delete = Delete logs ([0] KB)
+settings.changelog = Changelog
+settings.changelog.open = View them
 settings.infos = [0] (v[1])\nBuild: [2] ([3])

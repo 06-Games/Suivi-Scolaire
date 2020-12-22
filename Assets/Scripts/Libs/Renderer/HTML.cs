@@ -27,6 +27,9 @@ namespace Integrations.Renderer
                     else if (itemName == "br") result.AppendLine("");
                     else if (itemName == "ul") result.Append(AnalyseNode(item));
                     else if (itemName == "li") result.AppendLine($"• {AnalyseNode(item)}");
+                    else if (itemName == "h1") result.AppendLine($"<style=H1>{AnalyseNode(item)}</style>");
+                    else if (itemName == "h2") result.AppendLine($"<style=H2>{AnalyseNode(item)}</style>");
+                    else if (itemName == "h3") result.AppendLine($"<style=H3>{AnalyseNode(item)}</style>");
                     else if (itemName == "span" || itemName == "body")
                     {
                         string style = item.Attributes["style"]?.Value.ToLower() ?? "";

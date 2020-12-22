@@ -82,6 +82,9 @@ updateWarn = Une mise à jour est disponible. Souhaitez-vous l'installer?
 updateWarn.yes = Oui
 updateWarn.no = Non
 updateWarn.downloading = Téléchargement de la mise à jour...
+updateWarn.seeChangelog = Voir les nouveautés
+updateWarn.changelog = Notes de version
+updateWarn.changelog.update = Mettre à jour
 
 settings = Paramètres
 settings.language = Langue
@@ -89,4 +92,6 @@ settings.size = Taille de l'interface
 settings.logs = Fichiers journaux
 settings.logs.open = Ouvrir le dossier
 settings.logs.delete = Supprimer ([0] Ko)
+settings.changelog = Notes de version
+settings.changelog.open = Les visualiser
 settings.infos = [0] (v[1])\nBuild: [2] ([3])
