@@ -138,10 +138,10 @@ namespace Integrations.Providers
                     {
                         periodID = period.id,
                         subjectID = d.Value<string>("page_section_id"),
-                        forThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0),
+                        forThe = (double.TryParse(obj.Value<string>("date_evenement"), out var date) ? date : 0).UnixTimeStampToDateTime(),
                         addedBy = data.First.Value<string>("prenom") + " " + data.First.Value<string>("nom"),
-                        addedThe = UnixTimeStampToDateTime(double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0),
-                        content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(d.Value<string>("text"))),
+                        addedThe = (double.TryParse(obj.Value<string>("date_creation"), out var _d) ? _d : 0).UnixTimeStampToDateTime(),
+                        content = Renderer.HTML.ToRichText(d.Value<string>("text")).RemoveEmptyLines(),
                         documents = docs.ToList()
                     };
                 });
@@ -159,20 +159,13 @@ namespace Integrations.Providers
         }
         public IEnumerator HomeworkDoneStatus(Homework homework) { yield break; }
 
-
+        // Utils
         private static Random random = new Random();
         static string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, length)
               .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-        static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
-        {
-            // Unix timestamp is seconds past epoch
-            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
-            return dtDateTime;
         }
     }
 }

@@ -102,7 +102,7 @@ namespace Modules
                         else Complete(data);
                     }, (error) => authPanel.Find("Error").GetComponent<Text>().text = error));
 
-                }); 
+                });
                 OpenPanel(authPanel.gameObject);
             }
             else if (data == null) StartCoroutine(provider.GetInfos(CreateData(), Complete));
@@ -133,7 +133,8 @@ namespace Modules
             delete.Find("Text").GetComponent<Text>().text = LangueAPI.Get("welcome.delete", "Are you sure you want to delete the \"<size=20><color=grey>[0]</color></size>\" account?", data.ID);
             var yesBtn = delete.Find("Buttons").Find("Yes").GetComponent<Button>();
             yesBtn.onClick.RemoveAllListeners();
-            yesBtn.onClick.AddListener(() => {
+            yesBtn.onClick.AddListener(() =>
+            {
                 UpdateCredentials(data.ID);
                 file.Delete();
                 Refresh();

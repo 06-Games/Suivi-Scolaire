@@ -206,7 +206,7 @@ namespace Integrations.Providers
                     forThe = dateTime,
                     addedThe = v.SelectToken("aFaire").Value<DateTime>("donneLe"),
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
-                    content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(v.SelectToken("aFaire").Value<string>("contenu")))),
+                    content = Renderer.HTML.ToRichText(v.SelectToken("aFaire").Value<string>("contenu").FromBase64()).RemoveEmptyLines(),
                     done = v.SelectToken("aFaire").Value<bool>("effectue"),
                     exam = v.Value<bool>("interrogation"),
                     documents = v.SelectToken("aFaire.documents").Select(doc =>
@@ -256,7 +256,7 @@ namespace Integrations.Providers
             Func<UnityWebRequest> establishmentRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/contactetablissement.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
             yield return TryConnection(establishmentRequest, "holidays", (o) => establishmentResult = o);
             if (establishmentResult == null) yield break;
-            var adress = FromBase64(establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse")).Replace("\r", "").Replace("\n", " ");
+            var adress = establishmentResult.jToken.SelectToken("data[0]")?.Value<string>("adresse").FromBase64().Replace("\r", "").Replace("\n", " ");
             Logging.Log("The address of the establishment is " + adress);
 
             var adressRequest = UnityWebRequest.Get($"https://api-adresse.data.gouv.fr/search/?q={adress}&limit=1");
@@ -375,7 +375,7 @@ namespace Integrations.Providers
             if (result == null) yield break;
 
             var data = result.jToken.SelectToken("data");
-            message.content = ProviderExtension.RemoveEmptyLines(ProviderExtension.HtmlToRichText(FromBase64(data.Value<string>("content"))));
+            message.content = Renderer.HTML.ToRichText(data.Value<string>("content").FromBase64()).RemoveEmptyLines();
             message.documents = data.SelectToken("files").Select(doc =>
                  {
                      return new Document
@@ -589,7 +589,6 @@ namespace Integrations.Providers
         }
 
         // Utils
-        string FromBase64(string b64) => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
         IEnumerator TryConnection(Func<UnityWebRequest> request, string getting, Action<FileFormat.JSON> output = null, bool manageErrors = true)
         {
             if (output == null) output = (_) => Manager.HideLoadingPanel();

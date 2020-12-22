@@ -36,7 +36,7 @@ namespace Integrations
             using (var mso = new System.IO.StreamReader(gs)) text = mso.ReadToEnd();
 #endif
                 Logging.Log("Data loaded");
-                try { return FileFormat.XML.Utils.XMLtoClass<Data.Data>(text); } 
+                try { return FileFormat.XML.Utils.XMLtoClass<Data.Data>(text); }
                 catch (System.Exception e) { Logging.Log($"The data file named \"{file.Name}\" could not be parsed: \n{e}", LogType.Error); }
             }
             return null;
