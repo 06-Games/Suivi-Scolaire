@@ -43,6 +43,7 @@ namespace Integrations.Data
         public List<Trimester> Trimesters;
         public List<Mark> Marks;
         public List<Homework> Homeworks;
+        public List<SessionContent> SessionsContents;
         public List<ScheduledEvent> Schedule;
         public List<Message> Messages;
         public List<Book> Books;
@@ -133,6 +134,17 @@ namespace Integrations.Data
             public string id;
             public TimeRange timeRange;
         }
+    }
+
+    public class SessionContent
+    {
+        [XmlAttribute] public string id;
+        [XmlAttribute] public string subjectID;
+        [XmlIgnore] public Subject subject => Manager.Data.ActiveChild.Subjects.FirstOrDefault(s => s.id == subjectID);
+        [XmlAttribute(DataType = "date")] public DateTime date;
+        [XmlAttribute] public string addedBy;
+        public string content;
+        public List<Document> documents = new List<Document>();
     }
 
     public class ScheduledEvent

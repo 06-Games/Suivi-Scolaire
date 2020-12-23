@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 public class LangueAPI
@@ -69,4 +70,6 @@ public class LangueAPI
         data = dic;
         return dic;
     }
+
+    public static CultureInfo Culture => CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(language));
 }

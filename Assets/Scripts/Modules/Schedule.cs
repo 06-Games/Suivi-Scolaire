@@ -36,7 +36,7 @@ namespace Modules
         }
         public void OnEnable()
         {
-            language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
+            language = LangueAPI.Culture;
             StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
             Initialise(periodStart, defaultAction);

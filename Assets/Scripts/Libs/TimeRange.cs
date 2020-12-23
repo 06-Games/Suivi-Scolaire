@@ -17,4 +17,6 @@ public class TimeRange
     {
         for (var day = Start.Date; day.Date <= End.Date; day = day.AddDays(1)) yield return day;
     }
+
+    public static TimeRange operator +(TimeRange A, TimeSpan B) => new TimeRange(A.Start + B, A.End + B);
 }

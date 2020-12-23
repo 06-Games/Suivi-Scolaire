@@ -12,6 +12,7 @@ menu.home = Accueil
 menu.schedule = Emploi du temps
 menu.marks = Notes
 menu.homeworks = Cahier de texte
+menu.sessionContent = Contenus de séances
 menu.messanging = Messagerie
 menu.books = Manuels scolaires
 menu.documents = Documents
@@ -56,6 +57,8 @@ homeworks.upcomming = A Venir
 homeworks.period = du [0] au [1]
 homeworks.added = Ajouté le [0] par [1]
 homeworks.downloading = Téléchargement: [0]%
+
+sessionContent = Contenus de séances
 
 messanging = Messagerie
 messanging.empty = Aucun message

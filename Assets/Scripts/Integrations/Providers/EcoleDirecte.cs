@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 
 namespace Integrations.Providers
 {
-    public class EcoleDirecte : Provider, Auth, Marks, Homeworks, Periods, Schedule, Messanging, Books, Documents
+    public class EcoleDirecte : Provider, Auth, Marks, Homeworks, SessionContent, Periods, Schedule, Messanging, Books, Documents
     {
         // Provider
         public string Name => "EcoleDirecte";
@@ -82,7 +82,7 @@ namespace Integrations.Providers
                     { "NOTES", new []{ "Marks" } },
                     { "MESSAGERIE", new []{ "Messanging" } },
                     { "EDT", new []{ "Schedule" } },
-                    { "CAHIER_DE_TEXTES", new []{ "Homeworks", "Books" } },
+                    { "CAHIER_DE_TEXTES", new []{ "Homeworks", "SessionContent", "Books" } },
                     { "CLOUD", new[]{ "Documents" } },
                     { "VIE_DE_LA_CLASSE", new[]{ "Documents" } },
                     { "DOCUMENTS_ELEVE", new[]{ "Documents" } },
@@ -170,11 +170,11 @@ namespace Integrations.Providers
         }
 
         // Homeworks
-        public IEnumerator GetHomeworks(Homework.Period period, Action onComplete)
+        public IEnumerator GetHomeworks(Homework.Period period, Action onComplete) => GetHomeworks(period.timeRange, onComplete);
+        public IEnumerator GetHomeworks(TimeRange period, Action onComplete)
         {
-
             IEnumerable<string> dates = null;
-            if (period.timeRange.End == DateTime.MaxValue)
+            if (period.End == DateTime.MaxValue)
             {
                 FileFormat.JSON result = null;
                 Func<UnityWebRequest> homeworksRequest = () => UnityWebRequest.Post($"https://api.ecoledirecte.com/v3/Eleves/{Manager.Data.activeChild}/cahierdetexte.awp?verbe=get&", $"data={{\"token\": \"{token}\"}}");
@@ -182,9 +182,10 @@ namespace Integrations.Providers
                 if (result == null) yield break;
                 dates = result.jToken.SelectToken("data").Select(v => v.Path.Split('.').LastOrDefault()).Distinct();
             }
-            else dates = period.timeRange.DayList().Select(d => d.ToString("yyyy-MM-dd"));
+            else dates = period.DayList().Select(d => d.ToString("yyyy-MM-dd"));
 
             var homeworks = Manager.Data.ActiveChild.Homeworks ?? new List<Homework>();
+            var sessionsContents = Manager.Data.ActiveChild.SessionsContents ?? new List<Data.SessionContent>();
             foreach (var date in dates)
             {
                 FileFormat.JSON result = null;
@@ -198,8 +199,10 @@ namespace Integrations.Providers
                 }
                 DateTime.TryParse(date, out var dateTime);
                 homeworks.RemoveAll(s => s.forThe == dateTime.Date);
+                sessionsContents.RemoveAll(s => s.date == dateTime.Date);
 
-                homeworks.AddRange(result.jToken.SelectToken("data.matieres")?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
+                var matieres = result.jToken.SelectToken("data.matieres");
+                homeworks.AddRange(matieres?.Where(v => v.SelectToken("aFaire") != null).Select(v => new Homework
                 {
                     id = v.Value<string>("id"),
                     subjectID = v.Value<string>("codeMatiere"),
@@ -210,6 +213,22 @@ namespace Integrations.Providers
                     done = v.SelectToken("aFaire").Value<bool>("effectue"),
                     exam = v.Value<bool>("interrogation"),
                     documents = v.SelectToken("aFaire.documents").Select(doc =>
+                    {
+                        return new Document
+                        {
+                            name = doc.Value<string>("libelle"),
+                            id = doc.Value<string>("id"),
+                            type = doc.Value<string>("type")
+                        };
+                    }).ToList()
+                }));
+                sessionsContents.AddRange(matieres?.Select(v => new Data.SessionContent {
+                    id = v.Value<string>("id"),
+                    subjectID = v.Value<string>("codeMatiere"),
+                    date = dateTime,
+                    addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
+                    content = Renderer.HTML.ToRichText(v.SelectToken("contenuDeSeance").Value<string>("contenu").FromBase64()).RemoveEmptyLines(),
+                    documents = v.SelectToken("contenuDeSeance.documents").Select(doc =>
                     {
                         return new Document
                         {
@@ -248,6 +267,9 @@ namespace Integrations.Providers
                 name = pEnd == DateTime.MaxValue ? LangueAPI.Get("homeworks.upcomming", "Upcomming") : LangueAPI.Get("homeworks.period", "from [0] to [1]", pStart.ToString("dd/MM"), pEnd.ToString("dd/MM"))
             };
         }
+
+        // Session Content
+        public IEnumerator GetSessionContent(TimeRange period, Action onComplete) => GetHomeworks(period, onComplete);
 
         // Periods
         public IEnumerator GetPeriods(Action onComplete)

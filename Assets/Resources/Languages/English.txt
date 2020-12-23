@@ -12,6 +12,7 @@ menu.home = Home
 menu.schedule = Schedule
 menu.marks = Marks
 menu.homeworks = Text book
+menu.sessionContent = Sessions contents
 menu.messanging = Messanging
 menu.books = School books
 menu.documents = Documents
@@ -56,6 +57,8 @@ homeworks.upcomming = Upcomming
 homeworks.period = from [0] to [1]
 homeworks.added = Added on [0] by [1]
 homeworks.downloading = Downloading: [0]%
+
+sessionContent = Sessions contents
 
 messanging = Messanging
 messanging.empty = No message

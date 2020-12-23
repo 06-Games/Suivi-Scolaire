@@ -19,6 +19,7 @@ namespace Integrations
         IEnumerator OpenHomeworkAttachment(Data.Document document);
         IEnumerator HomeworkDoneStatus(Data.Homework homework);
     }
+    public interface SessionContent : Provider { IEnumerator GetSessionContent(TimeRange period, Action onComplete); }
     public interface Marks : Provider { IEnumerator GetMarks(Action onComplete = null); }
     public interface Messanging : Provider
     {

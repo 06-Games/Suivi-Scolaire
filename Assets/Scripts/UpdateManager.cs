@@ -41,7 +41,7 @@ public class UpdateManager : MonoBehaviour
         var content = panel.Find("Content").GetComponent<ScrollRect>().content;
         for (int i = 1; i < content.childCount; i++) Destroy(content.GetChild(i).gameObject);
 
-        var culture = System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(Application.systemLanguage.ToString()));
+        var culture = LangueAPI.Culture;
         foreach (var release in releases)
         {
             var go = Instantiate(content.GetChild(0).gameObject, content).transform;

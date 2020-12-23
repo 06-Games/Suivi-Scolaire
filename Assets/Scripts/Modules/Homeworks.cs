@@ -98,7 +98,7 @@ namespace Modules
             transform.Find("Content").Find("Empty").gameObject.SetActive(!homeworks.Any());
             if (!homeworks.Any()) return;
 
-            var language = CultureInfo.GetCultures(CultureTypes.AllCultures).FirstOrDefault(c => c.EnglishName.Contains(LangueAPI.language));
+            var language = LangueAPI.Culture;
             foreach (var Homeworks in homeworks.GroupBy(h => h.forThe))
             {
                 var datePanel = Instantiate(Content.GetChild(0).gameObject, Content).transform;
@@ -148,7 +148,7 @@ namespace Modules
                 datePanel.gameObject.SetActive(true);
             }
         }
-        void SetColor(Image img, Color color) => img.color = new Color(color.r, color.g, color.b, img.color.a);
+        public static void SetColor(Image img, Color color) => img.color = new Color(color.r, color.g, color.b, img.color.a);
 
         public void ChangePeriod(bool next)
         {
