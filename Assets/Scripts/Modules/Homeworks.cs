@@ -35,7 +35,6 @@ namespace Modules
 
         public void OnEnable()
         {
-            StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
             if (periodIndex == 0) Initialise();
             else Manager.OpenModule(gameObject);
@@ -109,11 +108,10 @@ namespace Modules
                 foreach (var homework in Homeworks)
                 {
                     var go = Instantiate(panel.GetChild(0).gameObject, panel).transform;
-                    go.GetComponent<LayoutSwitcher>().Switch(Screen.width > Screen.height ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
 
                     // Set to subect color
                     SetColor(go.GetComponent<Image>(), homework.subject?.color ?? new Color());
-                    SetColor(go.Find("Tint").GetComponent<Image>(), homework.subject?.color ?? new Color());
+                    SetColor(go.Find("Tint").GetComponentInChildren<Image>(), homework.subject?.color ?? new Color());
 
                     // Infos
                     var infos = go.Find("Infos");
@@ -154,24 +152,6 @@ namespace Modules
         {
             periodIndex += next ? -1 : 1;
             Initialise();
-        }
-
-
-        IEnumerator CheckOriantation()
-        {
-            var Top = transform.Find("Top").GetComponent<LayoutSwitcher>();
-            var Content = transform.Find("Content").GetComponent<ScrollRect>().content;
-            while (true)
-            {
-                bool paysage = Screen.width > Screen.height;
-                Top.Switch(paysage ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
-                for (int i = 1; i < Content.childCount; i++)
-                {
-                    foreach (var switcher in Content.GetChild(i).Find("Panel").GetComponentsInChildren<LayoutSwitcher>())
-                        switcher.Switch(paysage ? LayoutSwitcher.Mode.Horizontal : LayoutSwitcher.Mode.Vertical);
-                }
-                yield return new WaitWhile(() => paysage == Screen.width > Screen.height);
-            }
         }
 
         public void ShowHide(Transform go)

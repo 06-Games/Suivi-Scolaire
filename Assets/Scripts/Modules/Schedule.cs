@@ -33,11 +33,11 @@ namespace Modules
             {
                 Refresh(schedule.Where(e => Screen.width > Screen.height || e.start.Date == periodStart).OrderBy(e => e.start), Screen.width > Screen.height ? period : new TimeRange(periodStart, periodStart));
             };
+            transform.Find("Top").GetComponent<LayoutSwitcher>().switched += (mode) => Initialise(periodStart, defaultAction);
         }
         public void OnEnable()
         {
             language = LangueAPI.Culture;
-            StartCoroutine(CheckOriantation());
             if (!Manager.isReady) { gameObject.SetActive(false); return; }
             Initialise(periodStart, defaultAction);
             Manager.OpenModule(gameObject);
@@ -87,7 +87,7 @@ namespace Modules
                     }
 
                     var go = Instantiate(dateContent.GetChild(0).gameObject, dateContent).transform;
-                    var goColor = Event.subject.color;
+                    var goColor = Event.subject?.color ?? Color.gray;
                     goColor.a = Event.canceled ? 0.4F : 1;
                     go.GetComponent<Image>().color = goColor;
                     var subject = Event.subject;
@@ -112,19 +112,6 @@ namespace Modules
                 Initialise(periodStart.AddDays(delta > 0 ? delta - 7 : delta) + new TimeSpan(next ? 7 : -7, 0, 0, 0), defaultAction);
             }
             else Initialise(periodStart.AddDays(next ? 1 : -1), defaultAction);
-        }
-
-
-        IEnumerator CheckOriantation()
-        {
-            var Top = transform.Find("Top").GetComponent<LayoutSwitcher>();
-            while (true)
-            {
-                bool paysage = Screen.width > Screen.height;
-                yield return new WaitWhile(() => paysage == Screen.width > Screen.height);
-                Top.Switch(paysage ? LayoutSwitcher.Mode.Vertical : LayoutSwitcher.Mode.Horizontal);
-                Initialise(periodStart, defaultAction);
-            }
         }
 
         public void ShowHide(Transform go)

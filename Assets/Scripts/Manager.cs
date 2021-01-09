@@ -26,6 +26,7 @@ public class Manager : MonoBehaviour
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         UnityThread.initUnityThread();
         Logging.Initialise();
+
         instance = this;
         for (int i = 0; i < instance.transform.childCount; i++) instance.transform.GetChild(i).gameObject.SetActive(false); //Close all modules
     }

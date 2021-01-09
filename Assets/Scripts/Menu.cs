@@ -27,7 +27,7 @@ public class Menu : MonoBehaviour
     public void UpdateModules()
     {
         if (!Manager.isReady) return;
-        var modulePanel = transform.Find("Panel").Find("Modules").GetComponent<UnityEngine.UI.ScrollRect>().content;
+        var modulePanel = transform.Find("Panel").GetChild(0).Find("Modules").GetComponent<ScrollRect>().content;
         var modules = Manager.Data.ActiveChild.modules;
         foreach (Transform module in modulePanel) module.gameObject.SetActive(module.name == "Home" | modules?.Contains(module.name) ?? false);
     }
@@ -44,7 +44,7 @@ public class Menu : MonoBehaviour
     public static void SelectChild() { SelectChild(Manager.Data.ActiveChild); }
     public static void SelectChild(Integrations.Data.Child selectedChild)
     {
-        var childSelection = Manager.instance.Menu.transform.Find("Panel").Find("Child").Find("Slide");
+        var childSelection = Manager.instance.Menu.transform.Find("Panel").GetChild(0).Find("Child").Find("Slide");
 
         var instance = Manager.instance.Account;
         Manager.Data.activeChild = selectedChild.id;

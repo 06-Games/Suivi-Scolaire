@@ -738,9 +738,9 @@ namespace MimeTypes
 
         public static string GetExtension(string mimeType)
         {
-             return GetExtension(mimeType, true);
+            return GetExtension(mimeType, true);
         }
-        
+
         public static string GetExtension(string mimeType, bool throwErrorIfNotFound)
         {
             if (mimeType == null)
@@ -765,7 +765,7 @@ namespace MimeTypes
             }
             else
             {
-                return string.Empty;   
+                return string.Empty;
             }
         }
     }

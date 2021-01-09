@@ -1,8 +1,10 @@
 {
   "dependencies": {
     "com.drstc.documenthandler": "https://github.com/Draudastic26/document-handler.git#upm",
+    "com.e7.notch-solution": "git://github.com/5argon/NotchSolution.git",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
+    "com.unity.device-simulator": "2.2.4-preview",
     "com.unity.ext.nunit": "1.0.5",
     "com.unity.ide.rider": "1.2.1",
     "com.unity.ide.visualstudio": "2.0.5",

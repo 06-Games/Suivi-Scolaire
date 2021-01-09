@@ -58,7 +58,7 @@ namespace Modules
 
                     // Set to subect color
                     Homeworks.SetColor(go.GetComponent<Image>(), sessionContent.subject?.color ?? new Color());
-                    Homeworks.SetColor(go.Find("Tint").GetComponent<Image>(), sessionContent.subject?.color ?? new Color());
+                    Homeworks.SetColor(go.Find("Tint").GetComponentInChildren<Image>(), sessionContent.subject?.color ?? new Color());
 
                     // Infos
                     var infos = go.Find("Infos");

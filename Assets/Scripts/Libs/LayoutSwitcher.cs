@@ -1,83 +1,47 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-//[ExecuteAlways] //Edit mode
 [AddComponentMenu("Layout/Layout Switcher")]
-public class LayoutSwitcher : MonoBehaviour
+public class LayoutSwitcher : HorizontalOrVerticalLayoutGroup
 {
+    /// <summary>Called by the layout system. Also see ILayoutElement</summary>
+    public override void CalculateLayoutInputHorizontal()
+    {
+        base.CalculateLayoutInputHorizontal();
+        CalcAlongAxis(0, mode == Mode.Vertical);
+    }
+    /// <summary>Called by the layout system. Also see ILayoutElement</summary>
+    public override void CalculateLayoutInputVertical() => CalcAlongAxis(1, mode == Mode.Vertical);
+    /// <summary>Called by the layout system. Also see ILayoutElement</summary>
+    public override void SetLayoutHorizontal() => SetChildrenAlongAxis(0, mode == Mode.Vertical);
+    /// <summary>Called by the layout system. Also see ILayoutElement</summary>
+    public override void SetLayoutVertical() => SetChildrenAlongAxis(1, mode == Mode.Vertical);
+
     public enum Mode { Horizontal, Vertical }
     public Mode mode;
+    public bool autoSwitch = true;
 
-    [Header("Default values")]
-    public RectOffset padding;
-    public float spacing;
-    public TextAnchor childAlignment;
-
-    [System.Serializable] public class WH { public bool width; public bool height; }
-    public WH controlChildSize;
-    public WH useChildSize;
-    public WH childForceExpand;
-
-    [Header("Events")]
-    public LayoutSwitcher[] childs;
-    public bool Inversed;
-
-    Mode lastMode = (Mode)(-1);
-    void Update()
+    public Mode lastMode;
+    protected override void Update()
     {
-        if (lastMode != mode)
-        {
-            Switch();
-            LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
-        }
+        base.Update();
+        mode = GetMode();
+        if (mode != lastMode) { lastMode = mode; Switch(mode); }
+    }
+    protected override void Awake() { base.Awake(); Switch(GetMode()); }
+    Mode GetMode()
+    {
+        if (autoSwitch) return Screen.width > Screen.height ? Mode.Horizontal : Mode.Vertical;
+        else return mode;
     }
 
-    HorizontalOrVerticalLayoutGroup LayoutGroup;
-    public void Switch(Mode _mode) { mode = _mode; Switch(); }
-    public void Switch()
+    public event System.Action<Mode> switched;
+    public void Switch(Mode _mode)
     {
-        if (lastMode == mode) return;
-        if (LayoutGroup != null) Destroy(LayoutGroup);
-        foreach (var c in GetComponents<HorizontalOrVerticalLayoutGroup>()) Destroy(c);
-        UnityThread.executeInLateUpdate(() =>
-        {
-            if (gameObject == null) return;
-            switch (mode)
-            {
-                case Mode.Horizontal: LayoutGroup = gameObject.AddComponent<HorizontalLayoutGroup>(); break;
-                case Mode.Vertical: LayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>(); break;
-            };
-            if (LayoutGroup == null) { Switch(); return; }
-            LayoutGroup.hideFlags = HideFlags.HideAndDontSave;
-            LayoutGroup.padding = padding;
-            LayoutGroup.spacing = spacing;
-            LayoutGroup.childAlignment = childAlignment;
-            LayoutGroup.childControlWidth = controlChildSize.width;
-            LayoutGroup.childControlHeight = controlChildSize.height;
-            LayoutGroup.childScaleWidth = useChildSize.width;
-            LayoutGroup.childScaleHeight = useChildSize.height;
-            LayoutGroup.childForceExpandWidth = childForceExpand.width;
-            LayoutGroup.childForceExpandHeight = childForceExpand.height;
-            lastMode = mode;
-
-            UnityThread.executeInUpdate(() =>
-            {
-                foreach (var child in childs)
-                {
-                    if (child == null) continue;
-                    child.Switch(Inversed ? (mode == Mode.Vertical ? Mode.Horizontal : Mode.Vertical) : mode);
-                    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)child.transform);
-                }
-            });
-        });
-    }
-
-    new void Destroy(Object obj)
-    {
-#if UNITY_EDITOR
-        if (!UnityEditor.EditorApplication.isPlaying) DestroyImmediate(obj);
-        else
-#endif
-            Object.Destroy(obj);
+        mode = _mode;
+        GetComponent<SafeArea>()?.UpdateValues();
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
+        GetComponent<SafeArea>()?.UpdateValues();
+        switched?.Invoke(mode);
     }
 }

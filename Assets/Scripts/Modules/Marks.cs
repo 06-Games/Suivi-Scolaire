@@ -81,7 +81,7 @@ namespace Modules
 
                     //Color
                     SetColor(markGo.GetComponent<Image>(), subjectColor);
-                    SetColor(markGo.Find("Tint").GetComponent<Image>(), subjectColor);
+                    SetColor(markGo.Find("Tint").GetComponentInChildren<Image>(), subjectColor);
 
                     //Texts
                     markGo.Find("Name").GetComponent<Text>().text = $"{mark.name} <size=12><color=grey>({mark.date.ToString("dd/MM/yyyy")})</color></size>";
