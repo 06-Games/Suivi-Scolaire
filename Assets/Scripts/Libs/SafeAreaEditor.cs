@@ -1,6 +1,6 @@
 ﻿#if UNITY_EDITOR
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(SafeArea)), CanEditMultipleObjects]
 public class SafeAreaEditor : Editor

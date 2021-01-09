@@ -7,13 +7,6 @@
       "dependencies": {},
       "hash": "a97ff76c7ff897ae2d1a6d28346f3fa87d3f0a7a"
     },
-    "com.e7.notch-solution": {
-      "version": "git://github.com/5argon/NotchSolution.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "c5feabc4a688f5733eacb04c5ae33b1be992416a"
-    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

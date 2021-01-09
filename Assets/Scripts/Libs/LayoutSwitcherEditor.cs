@@ -1,7 +1,6 @@
 ﻿#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 ///   Custom Editor for the LayoutSwitcher Component.

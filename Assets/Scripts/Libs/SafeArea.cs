@@ -18,7 +18,7 @@ public class SafeArea : UnityEngine.EventSystems.UIBehaviour, ILayoutSelfControl
 
     //Default values
     public bool overrideMinSize, overridePreferredSize, overrideMinPadding = true;
-    public Vector2 minSize, preferredSize = new Vector2(-1, -1);
+    public Vector2 minSize = new Vector2(-1, -1), preferredSize = new Vector2(-1, -1);
     public RectOffset minPadding = new RectOffset();
     public void UpdateValues(bool force = false)
     {
@@ -36,7 +36,7 @@ public class SafeArea : UnityEngine.EventSystems.UIBehaviour, ILayoutSelfControl
         }
         if (force || !overrideMinPadding) minPadding = Group == null ? new RectOffset() : new RectOffset(Group.padding.left, Group.padding.right, Group.padding.top, Group.padding.bottom);
     }
-    
+
 
     //Layout updates
     protected override void Start()
@@ -55,6 +55,13 @@ public class SafeArea : UnityEngine.EventSystems.UIBehaviour, ILayoutSelfControl
         if (!IsActive()) return;
         if (Rect == null) Rect = GetComponent<RectTransform>();
         LayoutRebuilder.MarkLayoutForRebuild(Rect);
+
+        UnityThread.executeCoroutine(D());
+        System.Collections.IEnumerator D()
+        {
+            yield return new WaitForEndOfFrame(); //Corrects some layout issues during the first frame
+            LayoutRebuilder.MarkLayoutForRebuild(Rect);
+        }
     }
 
 

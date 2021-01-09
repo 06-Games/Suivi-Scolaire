@@ -222,7 +222,8 @@ namespace Integrations.Providers
                         };
                     }).ToList()
                 }));
-                sessionsContents.AddRange(matieres?.Select(v => new Data.SessionContent {
+                sessionsContents.AddRange(matieres?.Select(v => new Data.SessionContent
+                {
                     id = v.Value<string>("id"),
                     subjectID = v.Value<string>("codeMatiere"),
                     date = dateTime,
