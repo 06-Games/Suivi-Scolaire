@@ -145,6 +145,7 @@ namespace Modules
         {
             foreach (Transform go in transform.Find("Content")) go.gameObject.SetActive(false);
             panel.SetActive(true);
+            transform.Find("Top").Find("Return").gameObject.SetActive(panel.name == "Auth");
         }
 
         public void ShowPassword(InputField pass)
