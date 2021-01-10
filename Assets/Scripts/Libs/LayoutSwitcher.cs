@@ -22,9 +22,13 @@ public class LayoutSwitcher : HorizontalOrVerticalLayoutGroup
     public bool autoSwitch = true;
 
     public Mode lastMode;
-    protected override void Update()
+#if UNITY_EDITOR
+    protected override void Update() { base.Update(); CheckMode(); }
+#else
+    void Update() => CheckMode();
+#endif
+    void CheckMode()
     {
-        base.Update();
         mode = GetMode();
         if (mode != lastMode) { lastMode = mode; Switch(mode); }
     }
