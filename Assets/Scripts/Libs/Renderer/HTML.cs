@@ -30,34 +30,48 @@ namespace Integrations.Renderer
                     else if (itemName == "h1") result.AppendLine($"<style=H1>{AnalyseNode(item)}</style>");
                     else if (itemName == "h2") result.AppendLine($"<style=H2>{AnalyseNode(item)}</style>");
                     else if (itemName == "h3") result.AppendLine($"<style=H3>{AnalyseNode(item)}</style>");
-                    else if (itemName == "span" || itemName == "body")
+                    else if (itemName == "span" || itemName == "font" || itemName == "body")
                     {
-                        string style = item.Attributes["style"]?.Value.ToLower() ?? "";
-                        if (style.StartsWith("font-size:"))
+                        string styleAttribute = item.GetAttributeValue("style", null);
+                        var css = new System.Collections.Generic.List<string>();
+                        css.AddRange(styleAttribute?.Split(new[] { ";" }, System.StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim(' ')) ?? System.Array.Empty<string>());
+                        css.AddRange(item.Attributes.Where(a => a.Name != "style").Select(a => $"{a.Name}={a.Value}") ?? System.Array.Empty<string>());
+                        if (css.Count == 0) result.Append(AnalyseNode(item));
+                        else
                         {
-                            var value = style.Substring("font-size:".Length).TrimStart(' ').TrimEnd(';');
-                            var medium = 20F;
-                            var parsedValue = medium;
-                            if (value.EndsWith("px")) parsedValue = float.TryParse(value.Replace("px", ""), out var vFloat) ? vFloat : medium;
-                            else if (value == "xx-small") parsedValue = 0.6F * medium;
-                            else if (value == "x-small") parsedValue = 0.75F * medium;
-                            else if (value == "small") parsedValue = 8F / 9F * medium;
-                            else if (value == "medium") parsedValue = 1F * medium;
-                            else if (value == "large") parsedValue = 1.2F * medium;
-                            else if (value == "x-large") parsedValue = 1.5F * medium;
-                            else if (value == "xx-large") parsedValue = 2F * medium;
-                            result.Append($"<size={parsedValue}>{AnalyseNode(item)}</size>");
+                            var styles = css.Select(s => AnalyseCSS(s));
+                            result.Append($"{string.Join("", styles.Select(s => s.Item1))}{AnalyseNode(item)}{string.Join("", styles.Select(s => s.Item2))}");
                         }
-                        else if (style.StartsWith("color:"))
+
+                        (string, string) AnalyseCSS(string style)
                         {
-                            var value = style.Substring("color:".Length).TrimStart(' ').TrimEnd(';');
-                            if (value.StartsWith("rgb("))
-                                value = "#" + string.Join("", value.Substring("rgb(".Length).TrimEnd(')').Replace(" ", "").Split(',').Select(d => byte.TryParse(d, out var b) ? b.ToString("X2") : "00"));
-                            else if (value.StartsWith("rgba("))
-                                value = "#" + string.Join("", value.Substring("rgba(".Length).TrimEnd(')').Split(',').Cast<byte>().Select(d => d.ToString("X2")));
-                            result.Append($"<color={value}>{AnalyseNode(item)}</color>");
+                            var property = style.Split(':', '=').FirstOrDefault().ToLower();
+                            var value = style.Substring(property.Length + 1).Trim(' ');
+                            if (property == "font-size" || property == "size")
+                            {
+                                var medium = 20F;
+                                var parsedValue = medium;
+                                if (value.EndsWith("px")) parsedValue = float.TryParse(value.Replace("px", ""), out var vFloat) ? vFloat : medium;
+                                else if (value == "xx-small") parsedValue = 0.6F * medium;
+                                else if (value == "x-small") parsedValue = 0.75F * medium;
+                                else if (value == "small") parsedValue = 8F / 9F * medium;
+                                else if (value == "medium") parsedValue = 1F * medium;
+                                else if (value == "large") parsedValue = 1.2F * medium;
+                                else if (value == "x-large") parsedValue = 1.5F * medium;
+                                else if (value == "xx-large") parsedValue = 2F * medium;
+                                return ($"<size={parsedValue}>", "</size>");
+                            }
+                            else if (property == "color" || property == "text")
+                            {
+                                UnityEngine.ColorUtility.TryParseHtmlString(value, out var c);
+                                UnityEngine.Color.RGBToHSV(c, out var h, out var s, out var v);
+                                var color = UnityEngine.Color.HSVToRGB(h, s, v < 0.5F ? 1 - v : v);
+                                color.a = c.a;
+                                return ($"<color=#{UnityEngine.ColorUtility.ToHtmlStringRGBA(color)}>", "</color>");
+                            }
+                            else if (property.StartsWith("mso-")) return ("", ""); //MS Office related style
+                            else Logging.Log("Unknown CSS element: " + property + "\nAt: " + item.OuterHtml, UnityEngine.LogType.Warning); return ("", "");
                         }
-                        else result.Append(AnalyseNode(item));
                     }
                     else if (itemName == "table")
                     {
