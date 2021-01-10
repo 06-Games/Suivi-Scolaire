@@ -64,7 +64,7 @@ namespace Modules
             {
                 var detail = content.Find("Detail");
 
-                var top = detail.Find("Top");
+                var top = detail.Find("Top").Find("Infos");
                 top.Find("Subject").GetComponent<Text>().text = message.subject;
                 top.Find("Correspondents").GetComponent<Text>().text = string.Join(" / ", message.correspondents);
                 top.Find("Date").GetComponent<Text>().text = message.date.ToString("dd/MM/yyyy HH:mm");

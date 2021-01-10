@@ -111,9 +111,10 @@ namespace Modules
                     // Set to subect color
                     SetColor(go.GetComponent<Image>(), homework.subject?.color ?? new Color());
                     SetColor(go.Find("Tint").GetComponentInChildren<Image>(), homework.subject?.color ?? new Color());
+                    var goContent = go.Find("Content");
 
                     // Infos
-                    var infos = go.Find("Infos");
+                    var infos = goContent.Find("Infos");
                     infos.Find("Subject").GetComponent<Text>().text = homework.subject?.name;
                     infos.Find("Extra").GetComponent<Text>().text = LangueAPI.Get("homeworks.added", "Added on [0] by [1]", homework.addedThe.ToString("dd/MM"), homework.addedBy);
                     var docs = infos.Find("Docs");
@@ -126,10 +127,10 @@ namespace Modules
                     }
 
                     // Content
-                    go.Find("Content").GetComponent<TMPro.TMP_InputField>().text = homework.content;
+                    goContent.Find("Content").GetComponent<TMPro.TMP_InputField>().text = homework.content;
 
                     // Indicator
-                    var indicator = go.Find("Indicator");
+                    var indicator = goContent.Find("Indicator");
                     SetIndicator();
                     if (!homework.exam) indicator.GetComponent<Button>().onClick.AddListener(() =>
                     {

@@ -59,9 +59,10 @@ namespace Modules
                     // Set to subect color
                     Homeworks.SetColor(go.GetComponent<Image>(), sessionContent.subject?.color ?? new Color());
                     Homeworks.SetColor(go.Find("Tint").GetComponentInChildren<Image>(), sessionContent.subject?.color ?? new Color());
+                    var goContent = go.Find("Content");
 
                     // Infos
-                    var infos = go.Find("Infos");
+                    var infos = goContent.Find("Infos");
                     infos.Find("Subject").GetComponent<Text>().text = sessionContent.subject?.name;
                     infos.Find("AddedBy").GetComponent<Text>().text = sessionContent.addedBy;
                     var docs = infos.Find("Docs");
@@ -74,7 +75,7 @@ namespace Modules
                     }
 
                     // Content
-                    go.Find("Content").GetComponent<TMPro.TMP_InputField>().text = sessionContent.content;
+                    goContent.Find("Content").GetComponent<TMPro.TMP_InputField>().text = sessionContent.content;
 
                     go.gameObject.SetActive(true);
                 }
