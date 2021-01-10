@@ -23,10 +23,8 @@ public class Settings : MonoBehaviour
 #if !UNITY_STANDALONE || !UNITY_EDITOR
         logs.Find("Open").gameObject.SetActive(false);
 #endif
-        var logsSize = new DirectoryInfo(Application.persistentDataPath + "/logs/").EnumerateFiles().Sum(file => file.Length) / 1000F;
-        logs.Find("Delete").GetChild(0).GetComponent<Text>().text = LangueAPI.Get("settings.logs.delete", "Delete logs ([0] KB)",
-            logsSize.ToString(logsSize < 10 ? "0.#" : "0") //Dir size
-        );
+        var logsSize = UpdateManager.SizeUnit(new DirectoryInfo(Application.persistentDataPath + "/logs/").EnumerateFiles().Sum(file => file.Length));
+        logs.Find("Delete").GetChild(0).GetComponent<Text>().text = LangueAPI.Get("settings.logs.delete", "Delete logs ([0])", logsSize);
 
         Content.Find("App Infos").GetComponent<Text>().text = LangueAPI.Get(
             "settings.infos", "[0] (v[1])\nBuild: [2] ([3])",

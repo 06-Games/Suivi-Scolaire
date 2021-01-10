@@ -94,7 +94,12 @@ settings.language = Language
 settings.size = Interface size
 settings.logs = Logs
 settings.logs.open = Open the folder
-settings.logs.delete = Delete logs ([0] KB)
+settings.logs.delete = Delete logs ([0])
 settings.changelog = Changelog
 settings.changelog.open = View them
 settings.infos = [0] (v[1])\nBuild: [2] ([3])
+
+units.b = [0] B
+units.kb = [0] KB
+units.mb = [0] MB
+units.gb = [0] GB

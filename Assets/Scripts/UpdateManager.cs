@@ -90,7 +90,7 @@ public class UpdateManager : MonoBehaviour
         {
             progressBar.size = request.downloadProgress;
             progressText.text = $"{(request.downloadProgress * 100).ToString("0")}%";
-            progressData.text = $"{(request.downloadedBytes / pow).ToString("0.00")} MB / {(request.downloadedBytes / request.downloadProgress / pow).ToString("0.00")} MB";
+            progressData.text = $"{SizeUnit(request.downloadedBytes / pow, "0.00")} / {SizeUnit(request.downloadedBytes / request.downloadProgress / pow, "0.00")}";
             yield return new WaitForEndOfFrame();
         }
         var path = Application.temporaryCachePath + "/installer" + ext;
@@ -98,5 +98,13 @@ public class UpdateManager : MonoBehaviour
 
         System.Diagnostics.Process.Start(path);
         Application.Quit();
+    }
+
+    public static string SizeUnit(float size, string accuracy = "0")
+    {
+        var units = new[] { "B", "KB", "MB", "GB" };
+        int i;
+        for (i = 0; i < units.Length && size >= 1000; i++) size /= 1000F;
+        return LangueAPI.Get($"units.{units[i].ToLower()}", $"[0] {units[i]}", size.ToString(accuracy));
     }
 }
