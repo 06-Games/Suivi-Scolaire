@@ -20,7 +20,11 @@ namespace Modules
         public void Reload()
         {
             if (!Manager.provider.TryGetModule(out Integrations.SessionContent module)) { gameObject.SetActive(false); return; }
-            StartCoroutine(module.GetSessionContent(week, () => Refresh(Manager.Data.ActiveChild.SessionsContents.Where(h => week.Contains(h.date)))));
+            StartCoroutine(module.GetSessionContent(week, () =>
+            {
+                ProviderExtension.GenerateSubjectColors();
+                Refresh(Manager.Data.ActiveChild.SessionsContents?.Where(h => week.Contains(h.date)));
+            }));
         }
 
         public void ChangeOfWeek(bool next)
@@ -31,7 +35,7 @@ namespace Modules
         void LoadWeek()
         {
             if (week == null) week = GetWeek(DateTime.Now);
-            var sessionsContents = Manager.Data.ActiveChild.SessionsContents.Where(h => week.Contains(h.date));
+            var sessionsContents = Manager.Data.ActiveChild.SessionsContents?.Where(h => week.Contains(h.date));
             if (sessionsContents?.Count() > 0) Refresh(sessionsContents);
             else Reload();
         }

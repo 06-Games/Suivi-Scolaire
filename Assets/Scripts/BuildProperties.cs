@@ -1,15 +1,14 @@
 ﻿#if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
-using UnityEngine;
 
-public class BuildProperties : MonoBehaviour
+public class BuildProperties
 {
-    [PostProcessBuild]
+    [UnityEditor.Callbacks.PostProcessBuild]
     public static void ChangeXcodePlist(BuildTarget buildTarget, string pathToBuiltProject)
     {
         if (buildTarget != BuildTarget.iOS) return;
+
         // Get plist
         string plistPath = pathToBuiltProject + "/Info.plist";
         PlistDocument plist = new PlistDocument();
