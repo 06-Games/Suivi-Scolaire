@@ -6650,8 +6650,8 @@ MonoBehaviour:
   overrideMinSize: 0
   overridePreferredSize: 0
   overrideMinPadding: 1
-  minSize: {x: 0, y: 0}
-  preferredSize: {x: 0, y: 0}
+  minSize: {x: 0, y: 99}
+  preferredSize: {x: 0, y: 99}
   minPadding:
     m_Left: 0
     m_Right: 0
@@ -6672,8 +6672,8 @@ MonoBehaviour:
   m_Padding:
     m_Left: 0
     m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
+    m_Top: 56
+    m_Bottom: 43
   m_ChildAlignment: 0
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
@@ -12593,6 +12593,7 @@ GameObject:
   - component: {fileID: 639312418}
   - component: {fileID: 639312421}
   - component: {fileID: 639312419}
+  - component: {fileID: 639312420}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -12651,6 +12652,26 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &639312420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639312417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: 1
+  m_LayoutPriority: 1
 --- !u!222 &639312421
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -18709,7 +18730,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 246746648}
   m_HandleRect: {fileID: 246746647}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -21755,6 +21776,7 @@ GameObject:
   - component: {fileID: 1012052008}
   - component: {fileID: 1012052010}
   - component: {fileID: 1012052009}
+  - component: {fileID: 1012052011}
   m_Layer: 5
   m_Name: Changelog
   m_TagString: Untagged
@@ -21821,6 +21843,32 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1012052007}
   m_CullTransparentMesh: 0
+--- !u!114 &1012052011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012052007}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1015495913
 GameObject:
   m_ObjectHideFlags: 0
