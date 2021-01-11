@@ -54,7 +54,7 @@ public class Documents : MonoBehaviour, Module
         {
             var go = Instantiate(content.GetChild(1).gameObject, content).transform;
             go.name = go.Find("Name").GetComponent<Text>().text = file.name;
-            go.Find("Infos").GetComponent<Text>().text = file.added?.ToShortDateString() + (file.added.HasValue && file.size.HasValue ? " - " : "") + FileSize(file.size);
+            go.Find("Infos").GetComponent<Text>().text = file.added?.ToString("d", LangueAPI.Culture) + (file.added.HasValue && file.size.HasValue ? " - " : "") + FileSize(file.size);
             go.GetComponent<Button>().onClick.AddListener(() => UnityThread.executeCoroutine(Manager.provider.GetModule<Integrations.Documents>().OpenDocument(file)));
             go.gameObject.SetActive(true);
         }

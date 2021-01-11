@@ -61,7 +61,9 @@ namespace Integrations
             var path = Application.temporaryCachePath + Path.DirectorySeparatorChar;
 #endif
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-            return new FileInfo(path + doc.name);
+            var fileName = doc.id + " - " + doc.name;
+            foreach (var chara in Path.GetInvalidFileNameChars()) fileName = fileName.Replace(chara, '.');
+            return new FileInfo(path + fileName);
         }
         public static void OpenDoc(FileInfo path)
         {
