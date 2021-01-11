@@ -212,15 +212,12 @@ namespace Integrations.Providers
                     content = Renderer.HTML.ToRichText(v.SelectToken("aFaire").Value<string>("contenu").FromBase64()).RemoveEmptyLines(),
                     done = v.SelectToken("aFaire").Value<bool>("effectue"),
                     exam = v.Value<bool>("interrogation"),
-                    documents = v.SelectToken("aFaire.documents").Select(doc =>
+                    documents = v.SelectToken("aFaire.documents").Select(doc => new Document
                     {
-                        return new Document
-                        {
-                            name = doc.Value<string>("libelle"),
-                            id = doc.Value<string>("id"),
-                            type = doc.Value<string>("type")
-                        };
-                    }).ToList()
+                        name = doc.Value<string>("libelle"),
+                        id = doc.Value<string>("id"),
+                        type = doc.Value<string>("type")
+                    }).OrderBy(d => d.name).ToList()
                 }));
                 sessionsContents.AddRange(matieres?.Select(v => new Data.SessionContent
                 {
@@ -229,15 +226,12 @@ namespace Integrations.Providers
                     date = dateTime,
                     addedBy = v.Value<string>("nomProf").Replace(" par ", ""),
                     content = Renderer.HTML.ToRichText(v.SelectToken("contenuDeSeance").Value<string>("contenu").FromBase64()).RemoveEmptyLines(),
-                    documents = v.SelectToken("contenuDeSeance.documents").Select(doc =>
+                    documents = v.SelectToken("contenuDeSeance.documents").Select(doc => new Document
                     {
-                        return new Document
-                        {
-                            name = doc.Value<string>("libelle"),
-                            id = doc.Value<string>("id"),
-                            type = doc.Value<string>("type")
-                        };
-                    }).ToList()
+                        name = doc.Value<string>("libelle"),
+                        id = doc.Value<string>("id"),
+                        type = doc.Value<string>("type")
+                    }).OrderBy(d => d.name).ToList()
                 }));
             }
             Manager.Data.ActiveChild.Homeworks = homeworks;
@@ -399,15 +393,12 @@ namespace Integrations.Providers
 
             var data = result.jToken.SelectToken("data");
             message.content = Renderer.HTML.ToRichText(data.Value<string>("content").FromBase64()).RemoveEmptyLines();
-            message.documents = data.SelectToken("files").Select(doc =>
-                 {
-                     return new Document
-                     {
-                         id = doc.Value<string>("id"),
-                         name = doc.Value<string>("libelle"),
-                         type = doc.Value<string>("type")
-                     };
-                 }).ToList();
+            message.documents = data.SelectToken("files").Select(doc => new Document
+            {
+                id = doc.Value<string>("id"),
+                name = doc.Value<string>("libelle"),
+                type = doc.Value<string>("type")
+            }).OrderBy(d => d.name).ToList();
 
             Manager.HideLoadingPanel();
             onComplete.Invoke();
@@ -497,8 +488,8 @@ namespace Integrations.Providers
                                     name = f.Value<string>("libelle"),
                                     size = f.Value<uint>("taille"),
                                     type = f.Value<string>("type")
-                                }).ToList()
-                            }).ToList()
+                                }).OrderBy(d => d.name).ToList()
+                            }).OrderBy(f => f.name).ToList()
                         });
                         yield break;
                     }
@@ -542,7 +533,7 @@ namespace Integrations.Providers
                                     added = f.Value<DateTime>("date"),
                                     size = f.Value<uint>("taille"),
                                     type = "CLOUD"
-                                }).ToList()
+                                }).OrderBy(f => f.name).ToList()
                             });
                         }
                     }
@@ -570,17 +561,14 @@ namespace Integrations.Providers
                 {
                     id = f.Name,
                     name = f.Name,
-                    documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d =>
+                    documents = f.Where(d => d.Type != JTokenType.Object).SelectMany(d => d.Value<JToken>().Values<JToken>()).Select(d => new Document
                     {
-                        return new Document
-                        {
-                            id = d.Value<string>("id"),
-                            name = d.Value<string>("libelle") + ".pdf",
-                            added = d.Value<DateTime>("date"),
-                            type = d.Value<string>("type")
-                        };
-                    }).ToList()
-                }).ToList());
+                        id = d.Value<string>("id"),
+                        name = d.Value<string>("libelle") + ".pdf",
+                        added = d.Value<DateTime>("date"),
+                        type = d.Value<string>("type")
+                    }).OrderBy(d => d.name).ToList()
+                }).OrderBy(f => f.name).ToList());
                 yield break;
             }
 
