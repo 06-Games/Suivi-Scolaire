@@ -16,7 +16,7 @@ public class Settings : MonoBehaviour
         LanguageChanged(PlayerPrefs.GetString("settings.language", Application.systemLanguage.ToString()));
 
         var size = Content.Find("Size").GetComponentInChildren<Slider>();
-        size.value = PlayerPrefs.GetInt("settings.size", 300 / Screen.dpi < 300 ? 2 : 3);
+        size.value = PlayerPrefs.GetInt("settings.size", 300 / Screen.dpi < 300 ? 3 : 5);
         if (!Content.gameObject.activeInHierarchy) ChangeSize(size);
 
         var logs = Content.Find("Logs").Find("List");
@@ -58,7 +58,7 @@ public class Settings : MonoBehaviour
         slider.handleRect.GetComponentInChildren<Text>().text = slider.value.ToString();
         PlayerPrefs.SetInt("settings.size", (int)slider.value);
 
-        var factor = 1.6F - 0.3F * (slider.value - 1);
+        var factor = 1.6F - 0.15F * (slider.value - 1);
         foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
         {
             var component = root.GetComponent<CanvasScaler>();
