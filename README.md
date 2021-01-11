@@ -9,10 +9,10 @@
   
 ## Supported School life services
 
-| Platform                                                  | Homeworks | Schedule | Marks | School books | Messanging | Documents |
-|:---------------------------------------------------------:|:---------:|:--------:|:-----:|:------------:|:----------:|:---------:|
-| [EcoleDirecte](https://www.ecoledirecte.com)              | ✅       | ✅       | ✅    | ✅           | ✅         | ✅       |
-| [Cambridge Kids](https://cambridgekids.sophiacloud.com)   | ✅       | ❌       | ❌    | ❌           | ❌         | ❌       |
+| Platform                                                | Schedule | Marks | Homeworks | Session Content | School books | Messanging | Documents |
+|:-------------------------------------------------------:|:--------:|:-----:|:---------:|:---------------:|:------------:|:----------:|:---------:|
+| [EcoleDirecte](https://www.ecoledirecte.com)            | ✅      | ✅    | ✅        | ✅             | ✅           | ✅        | ✅        |
+| [Cambridge Kids](https://cambridgekids.sophiacloud.com) | ❌      | ❌    | ✅        | ❌             | ❌           | ❌        | ❌        |
 
 ## Installation
 <a href="https://play.google.com/apps/testing/com.fr_06Games.SuiviScolaire">
