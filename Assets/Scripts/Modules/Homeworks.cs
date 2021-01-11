@@ -130,7 +130,7 @@ namespace Modules
                     goContent.Find("Content").GetComponent<TMPro.TMP_InputField>().text = homework.content;
 
                     // Indicator
-                    var indicator = goContent.Find("Indicator");
+                    var indicator = go.Find("Indicator");
                     SetIndicator();
                     if (!homework.exam) indicator.GetComponent<Button>().onClick.AddListener(() =>
                     {
