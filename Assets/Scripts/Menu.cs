@@ -7,8 +7,20 @@ using UnityEngine.UI;
 public class Menu : MonoBehaviour
 {
     public SimpleSideMenu sideMenu { get; private set; }
+    RectTransform handle;
     Transform manager;
-    private void Awake() { sideMenu = GetComponent<SimpleSideMenu>(); }
+
+#if UNITY_IOS && !UNITY_EDITOR
+    float size = 50;
+#else
+    float size = 25;
+#endif
+
+    private void Awake()
+    {
+        sideMenu = GetComponent<SimpleSideMenu>();
+        handle = sideMenu.handle.GetComponent<RectTransform>();
+    }
     void Start()
     {
         UnityThread.executeInUpdate(() =>
@@ -22,6 +34,9 @@ public class Menu : MonoBehaviour
             UpdateModules();
         };
         manager = Manager.instance.transform;
+
+        handle.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
+        handle.anchoredPosition = new Vector2(size / 2F, handle.anchoredPosition.y);
     }
 
     public void UpdateModules()
@@ -37,7 +52,7 @@ public class Menu : MonoBehaviour
         if (sideMenu.CurrentState == SimpleSideMenu.State.Open && Input.GetKeyDown(KeyCode.Escape)) sideMenu.Close();
 
         var openModule = manager.GetEnumerator().ToIEnumerable().OfType<Transform>().FirstOrDefault(c => c.gameObject.activeInHierarchy)?.Find("Top");
-        if (openModule != null) sideMenu.handle.GetComponent<RectTransform>().offsetMax = new Vector2(25, -openModule.GetComponent<RectTransform>().sizeDelta.y);
+        if (openModule != null) handle.offsetMax = new Vector2(size, -openModule.GetComponent<RectTransform>().sizeDelta.y);
     }
 
 
