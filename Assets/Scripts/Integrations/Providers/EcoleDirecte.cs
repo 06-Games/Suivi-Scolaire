@@ -120,15 +120,19 @@ namespace Integrations.Providers
                 end = obj.Value<DateTime>("dateFin")
             }).ToList();
 
-            Manager.Data.ActiveChild.Subjects = result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines")
-                .Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>())
-                .Select(obj => new Subject
-                {
-                    id = obj.SelectToken("codeMatiere").Value<string>(),
-                    name = obj.SelectToken("discipline").Value<string>(),
-                    coef = float.TryParse(obj.SelectToken("coef").Value<string>().Replace(",", "."), out var coef) ? coef : 1,
-                    teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
-                }).ToList();
+            var subjects = Manager.Data.ActiveChild.Subjects;
+            foreach (var obj in result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines").Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>()))
+            {
+                if (!subjects.Any(s => s.id == obj.Value<string>("codeMatiere")))
+                    subjects.Add(new Subject
+                    {
+                        id = obj.SelectToken("codeMatiere").Value<string>(),
+                        name = obj.SelectToken("discipline").Value<string>(),
+                        coef = float.TryParse(obj.SelectToken("coef").Value<string>().Replace(",", "."), out var coef) ? coef : 1,
+                        teachers = obj.SelectToken("professeurs").Select(o => o.SelectToken("nom").Value<string>()).ToArray()
+                    });
+            }
+            Manager.Data.ActiveChild.Subjects = subjects;
 
             Manager.Data.ActiveChild.Marks = result.jToken.SelectToken("data.notes")?.Values<JObject>().Select(obj =>
             {
@@ -219,7 +223,7 @@ namespace Integrations.Providers
                         type = doc.Value<string>("type")
                     }).OrderBy(d => d.name).ToList()
                 }));
-                sessionsContents.AddRange(matieres?.Select(v => new Data.SessionContent
+                sessionsContents.AddRange(matieres?.Where(v => v.SelectToken("contenuDeSeance") != null).Select(v => new Data.SessionContent
                 {
                     id = v.Value<string>("id"),
                     subjectID = v.Value<string>("codeMatiere"),
