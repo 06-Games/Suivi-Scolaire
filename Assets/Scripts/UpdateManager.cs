@@ -21,7 +21,7 @@ public class UpdateManager : MonoBehaviour
         var request = UnityWebRequest.Get("https://api.github.com/repos/06-Games/Suivi-Scolaire/releases");
         yield return request.SendWebRequest();
         if (request.isNetworkError) yield break;
-        releases = JArray.Parse(request.downloadHandler.text).OrderByDescending(v => v.Value<string>("published_at")).ToList();
+        releases = JArray.Parse(request.downloadHandler.text).OrderByDescending(v => v.Value<System.DateTime>("published_at")).ToList();
 
         lastestRelease = releases.FirstOrDefault();
         var popup = transform.Find("Popup");
