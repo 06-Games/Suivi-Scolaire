@@ -16,19 +16,20 @@ public class UpdateManager : MonoBehaviour
     JToken lastestRelease;
     IEnumerator CheckUpdate()
     {
-        yield return new WaitForSeconds(5);
-
         var request = UnityWebRequest.Get("https://api.github.com/repos/06-Games/Suivi-Scolaire/releases");
         yield return request.SendWebRequest();
         if (request.isNetworkError) yield break;
         releases = JArray.Parse(request.downloadHandler.text).OrderByDescending(v => v.Value<System.DateTime>("published_at")).ToList();
-
         lastestRelease = releases.FirstOrDefault();
+
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID
         var popup = transform.Find("Popup");
         var version = lastestRelease.Value<string>("tag_name");
         popup.Find("Text").Find("Infos").Find("Versions").GetComponent<Text>().text = $"{Application.version} -> {version}";
-#if (UNITY_STANDALONE || UNITY_ANDROID) && !UNITY_EDITOR
+#if !UNITY_EDITOR
+        yield return new WaitForSeconds(5);
         if (version != Application.version) popup.GetComponent<SimpleSideMenu>().Open();
+#endif
 #endif
     }
 
