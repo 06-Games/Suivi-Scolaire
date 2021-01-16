@@ -16,7 +16,7 @@ public class Settings : MonoBehaviour
         LanguageChanged(PlayerPrefs.GetString("settings.language", Application.systemLanguage.ToString()));
 
         var size = Content.Find("Size").GetComponentInChildren<Slider>();
-        size.value = PlayerPrefs.GetInt("settings.size", 300 / Screen.dpi < 300 ? 3 : 5);
+        size.value = PlayerPrefs.GetInt("settings.size", 300 / Screen.dpi < 300 ? 3 : 4);
         if (!Content.gameObject.activeInHierarchy) ChangeSize(size);
 
         var logs = Content.Find("Logs").Find("List");

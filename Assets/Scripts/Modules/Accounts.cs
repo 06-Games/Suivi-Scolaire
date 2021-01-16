@@ -79,7 +79,12 @@ namespace Modules
                 });
                 go.gameObject.SetActive(true);
             }
-            UnityThread.executeInLateUpdate(() => UnityThread.executeInLateUpdate(addList.GetComponent<SimpleSideMenu>().Setup));
+            UnityThread.executeCoroutine(SetupAddMenu());
+            System.Collections.IEnumerator SetupAddMenu()
+            {
+                yield return new WaitForFixedUpdate();
+                addList.GetComponent<SimpleSideMenu>().Setup();
+            }
             OpenPanel(selectPanel.gameObject);
         }
 
