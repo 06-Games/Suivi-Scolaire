@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.fr_06Games.SuiviScolaire">
+	<application>
+    <provider android:name="android.support.v4.content.FileProvider" android:authorities="com.fr_06Games.SuiviScolaire.fileprovider" android:exported="false" android:grantUriPermissions="true" >
+      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/filepaths" />
+    </provider>
+	</application>
+  <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+  <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="29" />
+</manifest>

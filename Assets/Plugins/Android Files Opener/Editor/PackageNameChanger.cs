@@ -20,13 +20,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#if UNITY_EDITOR && UNITY_ANDROID
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using ICSharpCode.SharpZipLib.Zip;
-using ICSharpCode.SharpZipLib.Core;
-using System;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 
 namespace UnityAndroidOpenUrl.EditorScripts
 {
@@ -34,10 +33,10 @@ namespace UnityAndroidOpenUrl.EditorScripts
     /// Static class whose task is to update the package name in AndroidManifest.xml if it has been changed
     /// </summary>
     [InitializeOnLoad]
-    public static class PackageNameChanger
+    public class PackageNameChanger : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
         private const string PLUGINS_DIR = "Plugins/Android Files Opener";
-        private const string TEMP_DIR = "Temp";
+        private const string TEMP_DIR = ".AAR Plugin";
         private const string AAR_NAME = "release.aar";
         private const string MANIFEST_NAME = "AndroidManifest.xml";
         private const string PROVIDER_PATHS_NAME = "res/xml/filepaths.xml";
@@ -48,8 +47,7 @@ namespace UnityAndroidOpenUrl.EditorScripts
 
         private static string lastPackageName = "com.company.product";
 
-        private static bool stopedByError;
-        static PackageNameChanger()
+        public PackageNameChanger()
         {
             pathToPluginsFolder = Path.Combine(Application.dataPath, PLUGINS_DIR);
             if (!Directory.Exists(pathToPluginsFolder))
@@ -59,77 +57,28 @@ namespace UnityAndroidOpenUrl.EditorScripts
             }
             pathToTempFolder = Path.Combine(pathToPluginsFolder, TEMP_DIR);
             pathToBinary = Path.Combine(pathToPluginsFolder, AAR_NAME);
-            if (!File.Exists(pathToBinary))
-            {
-                Debug.LogError("File release.aar not found. Please re-import asset. See README.md for details...");
-                return;
-            }
 
-            EditorApplication.update += Update;
-            TryUpdatePackageName();
-        }
-
-        static void Update()
-        {
-            if (stopedByError) return;
-            if (lastPackageName != PlayerSettings.applicationIdentifier) TryUpdatePackageName();
-        }
-
-        private static void TryUpdatePackageName() => RepackBinary();
-
-        private static void RepackBinary()
-        {
-            try { ExtractBinary(); }
-            catch (Exception e)
-            {
-                Debug.LogError("Extract release.aar error: " + e.Message);
-                stopedByError = true;
-                return;
-            }
-            
+            EditorApplication.update += () => { if (lastPackageName != PlayerSettings.applicationIdentifier) ChangePackageName(); };
             ChangePackageName();
-
-            try { ZippingBinary(); }
-            catch (Exception e)
-            {
-                Debug.LogError("Zipping release.aar error: " + e.Message);
-                stopedByError = true;
-                return;
-            }
-
-            Directory.Delete(pathToTempFolder, true);
         }
 
-        private static void ExtractBinary()
+        public int callbackOrder => 0;
+        public void OnPreprocessBuild(BuildReport report)
         {
-            if (!File.Exists(pathToBinary)) throw new Exception("File release.aar not found. Please reimport asset. See README.md for details...");
-            if (!Directory.Exists(pathToTempFolder)) Directory.CreateDirectory(pathToTempFolder);
-
-            using (FileStream fs = new FileStream(pathToBinary, FileMode.Open))
-            using (ZipFile zf = new ZipFile(fs))
+            if (report.summary.platform == BuildTarget.Android)
             {
+                ChangePackageName();
 
-                for (int i = 0; i < zf.Count; ++i)
-                {
-                    ZipEntry zipEntry = zf[i];
-                    string fileName = zipEntry.Name;
-
-                    if (zipEntry.IsDirectory)
-                    {
-                        Directory.CreateDirectory(Path.Combine(pathToTempFolder, fileName));
-                        continue;
-                    }
-
-                    using (Stream zipStream = zf.GetInputStream(zipEntry))
-                    using (FileStream streamWriter = File.Create(Path.Combine(pathToTempFolder, fileName)))
-                        zipStream.CopyTo(streamWriter);
-                }
-
-                if (zf != null)
-                {
-                    zf.IsStreamOwner = true;
-                    zf.Close();
-                }
+                if (!Directory.Exists(pathToTempFolder)) Debug.LogError("Temp folder not found. See README.md for details...");
+                new ICSharpCode.SharpZipLib.Zip.FastZip().CreateZip(pathToBinary, pathToTempFolder, true, "");
+            }
+        }
+        public void OnPostprocessBuild(BuildReport report)
+        {
+            if (report.summary.platform == BuildTarget.Android)
+            {
+                File.Delete(pathToBinary);
+                File.Delete(pathToBinary + ".meta");
             }
         }
 
@@ -144,7 +93,7 @@ namespace UnityAndroidOpenUrl.EditorScripts
                 + $"\n    </provider>"
                 + $"\n	</application>"
                 + $"\n  <uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\" />"
-                + $"\n  <uses-sdk android:minSdkVersion=\"{(int)PlayerSettings.Android.minSdkVersion}\" android:targetSdkVersion=\"{(int)PlayerSettings.Android.targetSdkVersion}\" />"
+                + $"\n  <uses-sdk android:minSdkVersion=\"{GetSDK(PlayerSettings.Android.minSdkVersion, 16)}\" android:targetSdkVersion=\"{GetSDK(PlayerSettings.Android.targetSdkVersion, 29)}\" />"
                 + $"\n</manifest>";
             File.WriteAllText(manifestPath, manifestText);
 
@@ -156,21 +105,8 @@ namespace UnityAndroidOpenUrl.EditorScripts
                 + $"\n</paths>";
             File.WriteAllText(filepathsPath, filepathsText);
             lastPackageName = PlayerSettings.applicationIdentifier;
-        }
 
-        private static void ZippingBinary()
-        {
-            if (!File.Exists(pathToBinary)) throw new Exception("File release.aar not found. Please reimport asset. See README.md for details...");
-            if (!Directory.Exists(pathToTempFolder)) throw new Exception("Temp folder not found. See README.md for details...");
-
-            using (FileStream zipStream = new FileStream(pathToBinary, FileMode.Open))
-            using (ZipFile zipFile = new ZipFile(zipStream))
-            {
-                zipFile.BeginUpdate();
-                zipFile.Add(Path.Combine(pathToTempFolder, MANIFEST_NAME), MANIFEST_NAME);
-                zipFile.Add(Path.Combine(pathToTempFolder, PROVIDER_PATHS_NAME), PROVIDER_PATHS_NAME);
-                zipFile.CommitUpdate();
-            }
+            int GetSDK(AndroidSdkVersions sdkVersions, int defaultSdk) => sdkVersions == AndroidSdkVersions.AndroidApiLevelAuto ? defaultSdk : (int)sdkVersions;
         }
     }
 }
