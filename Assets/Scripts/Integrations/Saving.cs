@@ -25,7 +25,7 @@ namespace Integrations
         public static Data.Data LoadData() => LoadData(dataFile);
         public static Data.Data LoadData(System.IO.FileInfo file)
         {
-            if (file.Exists)
+            if (file?.Exists ?? false)
             {
                 string text;
 #if UNITY_EDITOR

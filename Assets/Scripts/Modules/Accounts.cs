@@ -23,11 +23,20 @@ namespace Modules
         static Dictionary<string, Credential> credentials;
         public static Credential GetCredential { get { Logging.Log("Credentials have been asked"); credentials.TryGetValue(Manager.Data.ID, out var c); return c; } }
 
+        bool Startup = true;
         public void OnEnable() => Refresh();
         public void Refresh()
         {
-            accounts = Saving.dataPath.EnumerateFiles($"*{Saving.dataExtension}");
+            accounts = Saving.dataPath.EnumerateFiles($"*{Saving.dataExtension}").OrderByDescending(a => a.LastAccessTime);
             credentials = SuperSecretAccountsInformationYouWontKnow;
+
+            if (Startup)
+            {
+                Startup = false;
+                var account = Saving.LoadData(accounts.FirstOrDefault());
+                if (account != null) { Connect(account?.GetProvider, account, credentials.TryGetValue(account.ID, out var c) ? c : (Credential?)null); return; }
+            }
+
             var selectPanel = transform.Find("Content").Find("Select");
 
             var list = selectPanel.Find("List").GetComponent<ScrollRect>().content;
