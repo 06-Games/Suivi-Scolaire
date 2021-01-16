@@ -45,7 +45,9 @@ namespace Integrations
         {
             if (!Manager.isReady || Manager.Data == null) return;
 
-            var text = FileFormat.XML.Utils.ClassToXML(Manager.Data, false);
+            var text = "";
+            try {
+                text = FileFormat.XML.Utils.ClassToXML<Data.Data>(Manager.Data, false);
 #if UNITY_EDITOR
             System.IO.File.WriteAllText(dataFile.FullName, text);
 #else
@@ -58,6 +60,8 @@ namespace Integrations
 #endif
 
             Logging.Log("Data saved");
+            }
+            catch (System.Exception e) { Debug.LogError(e); }
         }
     }
 }

@@ -20,15 +20,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#if UNITY_EDITOR && UNITY_ANDROID
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using System.Collections.Generic;
 using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Core;
 using System;
 
-#if UNITY_EDITOR && UNITY_ANDROID
 namespace UnityAndroidOpenUrl.EditorScripts
 {
     /// <summary>
@@ -72,43 +71,25 @@ namespace UnityAndroidOpenUrl.EditorScripts
 
         static void Update()
         {
-            if (stopedByError)
-                return;
-
-            if (lastPackageName != PlayerSettings.applicationIdentifier)
-            {
-                TryUpdatePackageName();
-            }
+            if (stopedByError) return;
+            if (lastPackageName != PlayerSettings.applicationIdentifier) TryUpdatePackageName();
         }
 
-        private static void TryUpdatePackageName()
-        {
-            FileInfo fileInfo = new FileInfo(pathToBinary);
-            if (!IsFileAlreadyOpen(fileInfo))
-            {
-                RepackBinary();
-            }
-        }
+        private static void TryUpdatePackageName() => RepackBinary();
 
         private static void RepackBinary()
         {
-            try
-            {
-                ExtractBinary();
-            }
+            try { ExtractBinary(); }
             catch (Exception e)
             {
                 Debug.LogError("Extract release.aar error: " + e.Message);
                 stopedByError = true;
                 return;
             }
-
+            
             ChangePackageName();
 
-            try
-            {
-                ZippingBinary();
-            }
+            try { ZippingBinary(); }
             catch (Exception e)
             {
                 Debug.LogError("Zipping release.aar error: " + e.Message);
@@ -121,47 +102,33 @@ namespace UnityAndroidOpenUrl.EditorScripts
 
         private static void ExtractBinary()
         {
-            if (!File.Exists(pathToBinary))
-            {
-                throw new Exception("File release.aar not found. Please reimport asset. See README.md for details...");
-            }
-
-            if (!Directory.Exists(pathToTempFolder))
-            {
-                Directory.CreateDirectory(pathToTempFolder);
-            }
+            if (!File.Exists(pathToBinary)) throw new Exception("File release.aar not found. Please reimport asset. See README.md for details...");
+            if (!Directory.Exists(pathToTempFolder)) Directory.CreateDirectory(pathToTempFolder);
 
             using (FileStream fs = new FileStream(pathToBinary, FileMode.Open))
+            using (ZipFile zf = new ZipFile(fs))
             {
-                using (ZipFile zf = new ZipFile(fs))
+
+                for (int i = 0; i < zf.Count; ++i)
                 {
+                    ZipEntry zipEntry = zf[i];
+                    string fileName = zipEntry.Name;
 
-                    for (int i = 0; i < zf.Count; ++i)
+                    if (zipEntry.IsDirectory)
                     {
-                        ZipEntry zipEntry = zf[i];
-                        string fileName = zipEntry.Name;
-
-                        if (zipEntry.IsDirectory)
-                        {
-                            Directory.CreateDirectory(Path.Combine(pathToTempFolder, fileName));
-                            continue;
-                        }
-
-                        byte[] buffer = new byte[4096];
-                        using (Stream zipStream = zf.GetInputStream(zipEntry))
-                        {
-                            using (FileStream streamWriter = File.Create(Path.Combine(pathToTempFolder, fileName)))
-                            {
-                                StreamUtils.Copy(zipStream, streamWriter, buffer);
-                            }
-                        }
+                        Directory.CreateDirectory(Path.Combine(pathToTempFolder, fileName));
+                        continue;
                     }
 
-                    if (zf != null)
-                    {
-                        zf.IsStreamOwner = true;
-                        zf.Close();
-                    }
+                    using (Stream zipStream = zf.GetInputStream(zipEntry))
+                    using (FileStream streamWriter = File.Create(Path.Combine(pathToTempFolder, fileName)))
+                        zipStream.CopyTo(streamWriter);
+                }
+
+                if (zf != null)
+                {
+                    zf.IsStreamOwner = true;
+                    zf.Close();
                 }
             }
         }
@@ -172,75 +139,38 @@ namespace UnityAndroidOpenUrl.EditorScripts
             string manifestText = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
                 + $"\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"{PlayerSettings.applicationIdentifier}\">"
                 + $"\n	<application>"
-                + $"\n    <provider"
-                + $"\n        android:name=\"android.support.v4.content.FileProvider\""
-                + $"\n        android:authorities=\"{PlayerSettings.applicationIdentifier}.fileprovider\""
-                + $"\n        android:exported=\"false\""
-                + $"\n        android:grantUriPermissions=\"true\" >"
-                + $"\n      <meta-data"
-                + $"\n          android:name=\"android.support.FILE_PROVIDER_PATHS\""
-                + $"\n          android:resource=\"@xml/filepaths\" />"
+                + $"\n    <provider android:name=\"android.support.v4.content.FileProvider\" android:authorities=\"{PlayerSettings.applicationIdentifier}.fileprovider\" android:exported=\"false\" android:grantUriPermissions=\"true\" >"
+                + $"\n      <meta-data android:name=\"android.support.FILE_PROVIDER_PATHS\" android:resource=\"@xml/filepaths\" />"
                 + $"\n    </provider>"
                 + $"\n	</application>"
                 + $"\n  <uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\" />"
-                + $"\n  <uses-sdk android:minSdkVersion=\"16\" android:targetSdkVersion=\"29\" />"
+                + $"\n  <uses-sdk android:minSdkVersion=\"{(int)PlayerSettings.Android.minSdkVersion}\" android:targetSdkVersion=\"{(int)PlayerSettings.Android.targetSdkVersion}\" />"
                 + $"\n</manifest>";
             File.WriteAllText(manifestPath, manifestText);
 
             string filepathsPath = Path.Combine(pathToTempFolder, PROVIDER_PATHS_NAME);
-            string filepathsText = File.ReadAllText(filepathsPath);
-
-            int filepathsPackageNameStartIndex = filepathsText.IndexOf("data/") + 5;
-            int filepathsPackageNameEndIndex = filepathsText.IndexOf("\" name", filepathsPackageNameStartIndex);
-            string filepathsPackageName = filepathsText.Substring(filepathsPackageNameStartIndex, filepathsPackageNameEndIndex - filepathsPackageNameStartIndex);
-
-            filepathsText = filepathsText.Replace("data/" + filepathsPackageName, "data/" + PlayerSettings.applicationIdentifier);
+            string filepathsText = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                + $"\n<paths xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+                + $"\n  <external-path path=\"Android/data/{PlayerSettings.applicationIdentifier}\" name=\"files_root\" />"
+                + $"\n  <external-path path=\".\" name=\"external_storage_root\" />"
+                + $"\n</paths>";
             File.WriteAllText(filepathsPath, filepathsText);
-
             lastPackageName = PlayerSettings.applicationIdentifier;
         }
 
-        private static void ZippingBinary() // используется ДОзапись, обычным методом .Add(filePath, entryName), для перезаписи с нуля нужно использовать ZipOutputStream zipToWrite = new ZipOutputStream(zipStream) и FileStream targetFile
+        private static void ZippingBinary()
         {
-            if (!File.Exists(pathToBinary))
-            {
-                throw new Exception("File release.aar not found. Please reimport asset. See README.md for details...");
-            }
-
-            if (!Directory.Exists(pathToTempFolder))
-            {
-                throw new Exception("Temp folder not found. See README.pdf for details...");
-            }
+            if (!File.Exists(pathToBinary)) throw new Exception("File release.aar not found. Please reimport asset. See README.md for details...");
+            if (!Directory.Exists(pathToTempFolder)) throw new Exception("Temp folder not found. See README.md for details...");
 
             using (FileStream zipStream = new FileStream(pathToBinary, FileMode.Open))
+            using (ZipFile zipFile = new ZipFile(zipStream))
             {
-                using (ZipFile zipFile = new ZipFile(zipStream))
-                {
-                    zipFile.BeginUpdate();
-                    zipFile.Add(Path.Combine(pathToTempFolder, MANIFEST_NAME), MANIFEST_NAME);
-                    zipFile.Add(Path.Combine(pathToTempFolder, PROVIDER_PATHS_NAME), PROVIDER_PATHS_NAME);
-                    zipFile.CommitUpdate();
-                }
+                zipFile.BeginUpdate();
+                zipFile.Add(Path.Combine(pathToTempFolder, MANIFEST_NAME), MANIFEST_NAME);
+                zipFile.Add(Path.Combine(pathToTempFolder, PROVIDER_PATHS_NAME), PROVIDER_PATHS_NAME);
+                zipFile.CommitUpdate();
             }
-        }
-
-        private static bool IsFileAlreadyOpen(FileInfo file)
-        {
-            try
-            {
-                using (FileStream stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None))
-                {
-                    stream.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.ToString() + ": " + e.Message);
-                stopedByError = true;
-                return true;
-            }
-
-            return false;
         }
     }
 }

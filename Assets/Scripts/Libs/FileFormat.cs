@@ -40,7 +40,7 @@ namespace FileFormat
         {
             public static string ClassToXML<T>(T data, bool minimised = true)
             {
-                System.Xml.Serialization.XmlSerializer _serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+                var _serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
                 var settings = new System.Xml.XmlWriterSettings
                 {
                     NewLineHandling = System.Xml.NewLineHandling.Entitize,
@@ -52,27 +52,23 @@ namespace FileFormat
                 using (var writer = System.Xml.XmlWriter.Create(stream, settings))
                 {
                     _serializer.Serialize(writer, data);
-
                     return stream.ToString();
                 }
             }
             public static T XMLtoClass<T>(string data)
             {
                 System.Xml.Serialization.XmlSerializer _serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                if (string.IsNullOrEmpty(data))
-                    return default(T);
+                if (string.IsNullOrEmpty(data)) return default;
 
                 using (var stream = new StringReader(data))
-                using (var reader = System.Xml.XmlReader.Create(stream))
-                {
+                using (var reader = System.Xml.XmlReader.Create(stream)) 
                     return (T)_serializer.Deserialize(reader);
-                }
             }
 
             public static bool IsValid(string xmlFile)
             {
                 try { new System.Xml.XmlDocument().LoadXml(xmlFile); }
-                catch { return false; }
+                catch(System.Exception e) { Logging.Log(e); return false; }
                 return true;
             }
         }
