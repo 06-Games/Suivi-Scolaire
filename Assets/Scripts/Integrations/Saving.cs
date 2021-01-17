@@ -46,22 +46,23 @@ namespace Integrations
             if (!Manager.isReady || Manager.Data == null) return;
 
             var text = "";
-            try {
+            try
+            {
                 text = FileFormat.XML.Utils.ClassToXML<Data.Data>(Manager.Data, false);
 #if UNITY_EDITOR
-            System.IO.File.WriteAllText(dataFile.FullName, text);
+                System.IO.File.WriteAllText(dataFile.FullName, text);
 #else
-        using (var msi = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(text)))
-        using (var mso = new System.IO.MemoryStream())
-        {
-            using (var gs = new GZipStream(mso, CompressionMode.Compress)) msi.CopyTo(gs);
-            System.IO.File.WriteAllBytes(dataFile.FullName, mso.ToArray());
-        }
+            using (var msi = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(text)))
+            using (var mso = new System.IO.MemoryStream())
+            {
+                using (var gs = new GZipStream(mso, CompressionMode.Compress)) msi.CopyTo(gs);
+                System.IO.File.WriteAllBytes(dataFile.FullName, mso.ToArray());
+            }
 #endif
 
-            Logging.Log("Data saved");
+                Logging.Log("Data saved");
             }
-            catch (System.Exception e) { Debug.LogError(e); }
+            catch (System.Exception e) { Debug.LogError($"Error while saving: {e.Message}\n{e.StackTrace}"); }
         }
     }
 }
