@@ -126,7 +126,7 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 0.6
+  bundleVersion: 0.6.1
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -174,8 +174,8 @@ PlayerSettings:
     Standalone: com.fr06Games.SuiviScolaire
   buildNumber:
     Standalone: 0
-    iPhone: 11
-  AndroidBundleVersionCode: 11
+    iPhone: 12
+  AndroidBundleVersionCode: 12
   AndroidMinSdkVersion: 19
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1

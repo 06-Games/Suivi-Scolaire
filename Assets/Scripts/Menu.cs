@@ -11,9 +11,9 @@ public class Menu : MonoBehaviour
     Transform manager;
 
 #if UNITY_IOS && !UNITY_EDITOR
-    float size = 50;
+    readonly float size = 50;
 #else
-    float size = 25;
+    readonly float size = 25;
 #endif
 
     private void Awake()
