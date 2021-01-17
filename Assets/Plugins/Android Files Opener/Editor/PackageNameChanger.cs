@@ -84,11 +84,12 @@ namespace UnityAndroidOpenUrl.EditorScripts
 
         private static void ChangePackageName()
         {
+            var appId = PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android);
             string manifestPath = Path.Combine(pathToTempFolder, MANIFEST_NAME);
             string manifestText = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-                + $"\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"{PlayerSettings.applicationIdentifier}\">"
+                + $"\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"{appId}\">"
                 + $"\n	<application>"
-                + $"\n    <provider android:name=\"android.support.v4.content.FileProvider\" android:authorities=\"{PlayerSettings.applicationIdentifier}.fileprovider\" android:exported=\"false\" android:grantUriPermissions=\"true\" >"
+                + $"\n    <provider android:name=\"android.support.v4.content.FileProvider\" android:authorities=\"{appId}.fileprovider\" android:exported=\"false\" android:grantUriPermissions=\"true\" >"
                 + $"\n      <meta-data android:name=\"android.support.FILE_PROVIDER_PATHS\" android:resource=\"@xml/filepaths\" />"
                 + $"\n    </provider>"
                 + $"\n	</application>"
@@ -100,7 +101,7 @@ namespace UnityAndroidOpenUrl.EditorScripts
             string filepathsPath = Path.Combine(pathToTempFolder, PROVIDER_PATHS_NAME);
             string filepathsText = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
                 + $"\n<paths xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-                + $"\n  <external-path path=\"Android/data/{PlayerSettings.applicationIdentifier}\" name=\"files_root\" />"
+                + $"\n  <external-path path=\"Android/data/{appId}\" name=\"files_root\" />"
                 + $"\n  <external-path path=\".\" name=\"external_storage_root\" />"
                 + $"\n</paths>";
             File.WriteAllText(filepathsPath, filepathsText);
