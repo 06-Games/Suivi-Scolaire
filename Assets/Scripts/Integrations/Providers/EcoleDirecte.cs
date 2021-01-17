@@ -120,7 +120,7 @@ namespace Integrations.Providers
                 end = obj.Value<DateTime>("dateFin")
             }).ToList();
 
-            var subjects = Manager.Data.ActiveChild.Subjects;
+            var subjects = Manager.Data.ActiveChild.Subjects ?? new List<Subject>();
             foreach (var obj in result.jToken.SelectToken("data.periodes[0].ensembleMatieres.disciplines").Where(obj => !obj.SelectToken("groupeMatiere").Value<bool>()))
             {
                 if (!subjects.Any(s => s.id == obj.Value<string>("codeMatiere")))

@@ -127,6 +127,7 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     }
     public void Setup()
     {
+        if (gameObject == null) return; //The gameobject has been destroyed
         if (!Validate()) throw new Exception("Invalid inspector input.");
 
         //Placement
@@ -175,6 +176,9 @@ public class SimpleSideMenu : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         //Overlay
         if (useOverlay)
         {
+            foreach (Transform child in rectTransform.parent)
+                if (child.name == $"{name} (Overlay)") Destroy(child.gameObject); //Removes all existing overlays
+
             overlay = new GameObject(gameObject.name + " (Overlay)");
             overlay.transform.parent = transform.parent;
             overlay.transform.SetSiblingIndex(transform.GetSiblingIndex());

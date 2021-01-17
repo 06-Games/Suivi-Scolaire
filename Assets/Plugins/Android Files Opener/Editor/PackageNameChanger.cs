@@ -37,7 +37,7 @@ namespace UnityAndroidOpenUrl.EditorScripts
     {
         private const string PLUGINS_DIR = "Plugins/Android Files Opener";
         private const string TEMP_DIR = ".AAR Plugin";
-        private const string AAR_NAME = "release.aar";
+        private const string AAR_NAME = "Android Files Opener.aar";
         private const string MANIFEST_NAME = "AndroidManifest.xml";
         private const string PROVIDER_PATHS_NAME = "res/xml/filepaths.xml";
 
