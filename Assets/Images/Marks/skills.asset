@@ -34,6 +34,7 @@ Material:
     m_Colors:
     - _ClipRect: {r: -32767, g: -32767, b: 32767, a: 32767}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50,49 +51,54 @@ MonoBehaviour:
   material: {fileID: -7671192080079635134}
   materialHashCode: 0
   m_Version: 1.1.0
+  m_FaceInfo:
+    m_FamilyName: 
+    m_StyleName: 
+    m_PointSize: 0
+    m_Scale: 0
+    m_LineHeight: 0
+    m_AscentLine: 0
+    m_CapLine: 0
+    m_MeanLine: 0
+    m_Baseline: 0
+    m_DescentLine: 0
+    m_SuperscriptOffset: 0
+    m_SuperscriptSize: 0
+    m_SubscriptOffset: 0
+    m_SubscriptSize: 0
+    m_UnderlineOffset: 0
+    m_UnderlineThickness: 0
+    m_StrikethroughOffset: 0
+    m_StrikethroughThickness: 0
+    m_TabWidth: 0
   spriteSheet: {fileID: 2800000, guid: a8cfcc9f76ad0da458d405cda97e4b68, type: 3}
   m_SpriteCharacterTable:
   - m_ElementType: 2
     m_Unicode: 0
     m_GlyphIndex: 3
     m_Scale: 1
-    m_Name: skills
-    m_HashCode: 174390530
+    m_Name: 0
+    m_HashCode: 48
   - m_ElementType: 2
     m_Unicode: 0
     m_GlyphIndex: 2
     m_Scale: 1
-    m_Name: skills
-    m_HashCode: 174390530
+    m_Name: 1
+    m_HashCode: 49
   - m_ElementType: 2
     m_Unicode: 0
     m_GlyphIndex: 1
     m_Scale: 1
-    m_Name: skills
-    m_HashCode: 174390530
+    m_Name: 2
+    m_HashCode: 50
   - m_ElementType: 2
     m_Unicode: 0
     m_GlyphIndex: 0
     m_Scale: 1
-    m_Name: skills
-    m_HashCode: 174390530
+    m_Name: 3
+    m_HashCode: 51
   m_SpriteGlyphTable:
-  - m_Index: 0
-    m_Metrics:
-      m_Width: 128
-      m_Height: 128
-      m_HorizontalBearingX: 0
-      m_HorizontalBearingY: 114
-      m_HorizontalAdvance: 128
-    m_GlyphRect:
-      m_X: 0
-      m_Y: 128
-      m_Width: 128
-      m_Height: 128
-    m_Scale: 1
-    m_AtlasIndex: 0
-    sprite: {fileID: 21300000, guid: a8cfcc9f76ad0da458d405cda97e4b68, type: 3}
-  - m_Index: 1
+  - m_Index: 3
     m_Metrics:
       m_Width: 128
       m_Height: 128
@@ -101,7 +107,7 @@ MonoBehaviour:
       m_HorizontalAdvance: 128
     m_GlyphRect:
       m_X: 128
-      m_Y: 128
+      m_Y: 0
       m_Width: 128
       m_Height: 128
     m_Scale: 1
@@ -122,7 +128,7 @@ MonoBehaviour:
     m_Scale: 1
     m_AtlasIndex: 0
     sprite: {fileID: 21300000, guid: a8cfcc9f76ad0da458d405cda97e4b68, type: 3}
-  - m_Index: 3
+  - m_Index: 1
     m_Metrics:
       m_Width: 128
       m_Height: 128
@@ -131,7 +137,22 @@ MonoBehaviour:
       m_HorizontalAdvance: 128
     m_GlyphRect:
       m_X: 128
-      m_Y: 0
+      m_Y: 128
+      m_Width: 128
+      m_Height: 128
+    m_Scale: 1
+    m_AtlasIndex: 0
+    sprite: {fileID: 21300000, guid: a8cfcc9f76ad0da458d405cda97e4b68, type: 3}
+  - m_Index: 0
+    m_Metrics:
+      m_Width: 128
+      m_Height: 128
+      m_HorizontalBearingX: 0
+      m_HorizontalBearingY: 114
+      m_HorizontalAdvance: 128
+    m_GlyphRect:
+      m_X: 0
+      m_Y: 128
       m_Width: 128
       m_Height: 128
     m_Scale: 1
