@@ -120,8 +120,8 @@ namespace Modules
             var overallClassAverage = subjectClassSum / subjectClassCoefSum;
 
             var footer = transform.Find("Bottom");
-            footer.Find("Average").GetComponent<Text>().text = $"Ma moyenne générale: {overallAverage.ToString("0.00")}<size=12>/20</size>";
-            footer.Find("Class Average").GetComponent<Text>().text = $"Moyenne générale de la classe: {overallClassAverage.ToString("0.00")}<size=12>/20</size>";
+            footer.Find("Average").GetComponent<Text>().text = float.IsNaN(overallAverage) ? "": $"Ma moyenne générale: {overallAverage.ToString("0.00")}<size=12>/20</size>";
+            footer.Find("Class Average").GetComponent<Text>().text = float.IsNaN(overallClassAverage) ? "" : $"Moyenne générale de la classe: {overallClassAverage.ToString("0.00")}<size=12>/20</size>";
         }
         void SetColor(Image img, Color color) => img.color = new Color(color.r, color.g, color.b, img.color.a);
         public static string DisplayMark(Mark.MarkData value, Mark m = null)
