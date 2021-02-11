@@ -94,7 +94,7 @@ namespace Modules
 
                 //Average
                 var average = markSum / coefSum * 20F;
-                var classAverage = classSum / coefSum * 20F;
+                var classAverage = classSum / classCoefSum * 20F;
                 if (!float.IsNaN(average))
                 {
                     subjectSum += average * subject.coef;
