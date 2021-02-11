@@ -79,7 +79,7 @@ namespace Modules
                     var go = Instantiate(lastMarks.Find("Template").gameObject, lastMarks).transform;
                     go.Find("Date").GetComponent<Text>().text = m.date.ToString("dd/MM");
                     go.Find("Subject").GetComponent<Text>().text = m.subject.name;
-                    go.Find("Value").GetComponent<TMPro.TextMeshProUGUI>().text = Marks.DisplayMark(m, m.mark);
+                    go.Find("Value").GetComponent<TMPro.TextMeshProUGUI>().text = Marks.DisplayMark(m.mark, m);
                     go.Find("Coef").GetComponent<Text>().text = m.coef == 0 ? "" : LangueAPI.Get("marks.coef", "coef [0]", m.coef);
                     go.gameObject.SetActive(true);
                 }

@@ -124,9 +124,9 @@ namespace Modules
             footer.Find("Class Average").GetComponent<Text>().text = $"Moyenne générale de la classe: {overallClassAverage.ToString("0.00")}<size=12>/20</size>";
         }
         void SetColor(Image img, Color color) => img.color = new Color(color.r, color.g, color.b, img.color.a);
-        public static string DisplayMark(Mark m, Mark.MarkData value)
+        public static string DisplayMark(Mark.MarkData value, Mark m = null)
         {
-            if (m.absent) return $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>";
+            if (m?.absent ?? false) return $"<color=#aaa>{LangueAPI.Get("marks.absent", "Abs")}</color>";
             else if (value == null) return null;
 
             var txt = "";
@@ -136,7 +136,7 @@ namespace Modules
                 if (txt != "") txt += " ";
                 txt += string.Join(" ", value.skills.Select(s => s.value >= 0 ? $"<sprite name=\"{s.value}\">" : "D"));
             }
-            return m.notSignificant ? $"<color=#aaa>({txt})</color>" : txt;
+            return (m?.notSignificant ?? false) ? $"<color=#aaa>({txt})</color>" : txt;
         }
     }
 }
