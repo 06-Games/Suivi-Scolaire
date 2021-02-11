@@ -134,7 +134,7 @@ namespace Modules
             if (value.skills != null && value.skills.Length > 0)
             {
                 if (txt != "") txt += " ";
-                txt += string.Join(" ", value.skills.Select(s => $"<sprite index={s.value}>"));
+                txt += string.Join(" ", value.skills.Select(s => s.value >= 0 ? $"<sprite name=\"{s.value}\">" : "D"));
             }
             return m.notSignificant ? $"<color=#aaa>({txt})</color>" : txt;
         }

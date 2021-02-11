@@ -142,13 +142,21 @@ namespace Integrations.Providers
                 {
                     mark = float.TryParse(obj.Value<string>("valeur").Replace(",", "."), out var value) ? value : -1,
                     markOutOf = outOf > 0 ? outOf : 20,
-                    skills = obj.Value<JArray>("elementsProgramme").Select(c => new Mark.MarkData.Skill
-                    {
-                        id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
-                        name = c.Value<string>("descriptif"),
-                        value = int.TryParse(c.Value<string>("valeur"), out var v) ? v - 1 : -1,
-                        categoryID = c.Value<string>("idCompetence"),
-                        categoryName = c.Value<string>("libelleCompetence")
+                    skills = obj.Value<JArray>("elementsProgramme").Select(c => {
+                        if (int.TryParse(c.Value<string>("valeur"), out var v))
+                        {
+                            if (v >= 1) v -= 1; //Note
+                            else if (v == -2) { /* TO DO */ } //Dispensé
+                        }
+                        else v = -1;
+                        return new Mark.MarkData.Skill
+                        {
+                            id = uint.TryParse(c.Value<string>("idElemProg"), out var idComp) ? idComp : 0,
+                            name = c.Value<string>("descriptif"),
+                            value = v,
+                            categoryID = c.Value<string>("idCompetence"),
+                            categoryName = c.Value<string>("libelleCompetence")
+                        };
                     }).ToArray()
                 };
                 return new Mark
