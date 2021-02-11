@@ -24,7 +24,7 @@ public class LangueAPI
     /// <param name="arg">Text parsing arguments</param>
     public static string Get(string id, string dontExists, params string[] arg)
     {
-        string c = "";
+        string c;
         if (string.IsNullOrEmpty(id)) c = dontExists;
         else if (!Load().TryGetValue(id, out c)) c = dontExists; //If nothing is found, return the text of the variable "dontExists"
         for (int i = 0; i < arg.Length; i++) c = c?.Replace("[" + i + "]", arg[i]); //Insert the arguments in the text

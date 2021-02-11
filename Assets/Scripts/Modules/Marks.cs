@@ -85,9 +85,9 @@ namespace Modules
 
                     //Texts
                     markGo.Find("Name").GetComponent<Text>().text = $"{mark.name} <size=12><color=grey>({mark.date.ToString("dd/MM/yyyy")})</color></size>";
-                    markGo.Find("Class Value").GetComponent<TMPro.TextMeshProUGUI>().text = $"Classe: {DisplayMark(mark, mark.classAverage)}";
-                    markGo.Find("Value").GetComponent<TMPro.TextMeshProUGUI>().text = DisplayMark(mark, mark.mark);
-                    markGo.Find("Coef").GetComponent<TMPro.TextMeshProUGUI>().text = $"Coef {mark.coef}";
+                    markGo.Find("Class Value").GetComponent<TMPro.TextMeshProUGUI>().text = LangueAPI.Get("marks.class", "Classe: [0]", DisplayMark(mark.classAverage));
+                    markGo.Find("Value").GetComponent<TMPro.TextMeshProUGUI>().text = DisplayMark(mark.mark, mark);
+                    markGo.Find("Coef").GetComponent<TMPro.TextMeshProUGUI>().text = LangueAPI.Get("marks.coef", "Coef [0]", mark.coef);
 
                     markGo.gameObject.SetActive(true);
                 }
