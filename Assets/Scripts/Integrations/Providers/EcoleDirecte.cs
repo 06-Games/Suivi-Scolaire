@@ -28,9 +28,15 @@ namespace Integrations.Providers
             var accountInfos = new FileFormat.JSON(accountRequest.downloadHandler.text);
             if (accountRequest.isNetworkError || accountInfos.Value<int>("code") != 200)
             {
-                onError?.Invoke(accountRequest.isNetworkError ? accountRequest.error : accountInfos.Value<string>("message"));
+                string errorMsg = accountRequest.error;
+                if (!accountRequest.isNetworkError)
+                {
+                    if (accountInfos.jToken.TryGetValue("message", out var v)) errorMsg = v.Value<string>();
+                    else errorMsg = accountRequest.downloadHandler.text;
+                }
+                onError?.Invoke(errorMsg);
                 Manager.HideLoadingPanel();
-                Debug.LogError(accountRequest.isNetworkError ? accountRequest.error : accountInfos.Value<string>("message"));
+                Debug.LogError(errorMsg);
                 yield break;
             }
             token = accountInfos.Value<string>("token");
